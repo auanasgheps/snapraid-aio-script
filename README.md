@@ -7,20 +7,28 @@ It is highly customizable to user needs.
 
 It has been tested with Debian 10 and OpenMediaVault 5.
 
-Contributions are welcome.
+Contributions are welcome: there's always room for improvement!
+
+This readme has some rough edges which will be smoothened over time.
 
 # Features
 [WIP]
 
 # Requirements
-- Markdown to have a nicely formatted email - `apt install python-markdown`
+- Markdown to have nice emails
 - Hd-Idle to spin down disks - [Link TBD]
 
 # Installation
 [WIP]
+1. Install markdown `apt install python-markdown`
+2. Place the script wherever you prefer e.g. /usr/sbin/snapraid 
+3. Give executable rights to root user
+3. Open the script and add your email address at line 74 - more configs below
+4. Tweak the script as required
+5. Schedule the script execution time
 
 # Known Issues
-Hard disk spin down does not work. The script probably does not handle this correctly while running.
+Hard disk spin down does not work: they are immediately woken up. The script probably does not handle this correctly while running.
 
 # Credits
 All rights belong to the respective creators. 
