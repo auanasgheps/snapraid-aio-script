@@ -24,63 +24,12 @@
 #   6) Once all jobs are completed, it sends an email with the output to user
 #      (if configured).
 #
+#   Project page: https://github.com/auanasgheps/snapraid-aio-script
+#
 #   Original by Zack Reed https://zackreed.me/snapraid-split-parity-sync-script/
 #   + mtompkins https://gist.github.com/mtompkins/91cf0b8be36064c237da3f39ff5cc49d
-#   Maintained by auanasgheps
-#   CHANGELOG
-# - version 2.0 changelog by auanasgheps
-#   - Removed DIFF output from email (still present in logs) - credits to metagliatore
-#   - Fixed script for Debian 10/OMV5 - credits to sburke
-#   - Added alternative way of spinning down disks with hdparm
-# - version 2.1 changelog by auanasgheps
-#   - disabled disk spindown (code is commented) since it's not working properly
-# - version 2.2 changelog by auanasgheps
-#   - Redone changelog section
-#   - Added 'Prehash Data' feature - credits to Zack Reed
-#   - Added HTML formatting - NOTE: requires python-markdown
-# - version 2.3 changelog by auanasgheps
-#   - Removed TOUCH output from email (still present in logs)
-#   - Fixed small typos
-# - version 2.4 changelog by auanasgheps
-#    Send an email alert if parity or content files are not found, then exit gracefully
-# - version 2.5 changelog by auanasgheps
-#   - Added configurable options for disk spindown and email verbosity
-#   - Added syslog features
-# - version 2.6 changelog by auanasgheps
-#   - Fixed sed error caused by a slash when updated/deleted threshold is breached
-#   - Fixed violation message not shown when threshold is reached but not exceeded
-#   - Fixed concurrent (deleted AND updated) violation message and mail subject
-#   - Added message and mail subject when sync is forced with breached thresholds (deleted, changed or both)
-# - version 2.6.1 changelog by auanasgheps
-#    Disabled clean_desc function in main script, caused {out} file in /root
-# - version 2.6.2 changelog by auanasgheps
-#   - Added SnapRAID version to output
-#   - Added variable for script version
-#   - Removed timestamps from logs text since it's already added by the system
-# - version 2.6.3 changelog by auanasgheps
-#    Small change to email subject when forcing syncs with violations
-# - version 2.6.4 changelog by auanasgheps
-#    Removed unnecessary capitalized letters in email subject
-# - version 2.6.5 changelog by ozboss
-#   - Replaced tabs with spaces
-#   - Change default of 'SYNC_WARN_THRESHOLD' to '-1', will not force a sync
-#   - Added requirements
-#   - Added alternative spindown method (hd-idle)
-#   - Added automatic detection of rotational devices for spindown (hdparm and hd-idle)
-# - version 2.6.6 changelog by auanasgheps
-#	- removed code for Docker Container management, was unreliable
-# KNOWN ISSUES:
-# - Spindown does not work correctly: drives are immediately spun up after spindown.
+#   
 SNAPSCRIPTVERSION="2.6.6"
-########################################################################
-
-######################
-#   REQUIREMENTS     #
-######################
-
-# This script requires the python markdown module.
-# Install procedure (Debian):
-# `apt install python-markdown`
 
 ########################################################################
 
