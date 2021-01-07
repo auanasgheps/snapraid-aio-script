@@ -1,11 +1,12 @@
 # snapraid-aio-script
 The definitive all-in-one [SnapRAID](https://github.com/amadvance/snapraid) script.
 
-This script is a collection of many scripts and ideas.
-It is meant to be run periodically (e.g. daily) and do the heavy lifting, then send an email you can actually read.
+This script is a collection of many scripts with added improvements.
+It is meant to be run periodically (e.g. daily) and do the heavy lifting, then send an email you will actually read.
 It is highly customizable to user needs.
 
 It has been tested with Debian 10 and OpenMediaVault 5.
+
 # Features
 [WIP]
 
