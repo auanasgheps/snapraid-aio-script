@@ -23,8 +23,8 @@ This readme has some rough edges which will be smoothened over time.
 1. Install markdown `apt install python-markdown`
 2. Place the script wherever you prefer e.g. /usr/sbin/snapraid 
 3. Give executable rights to root user
-3. Open the script and add your email address at line 74 - more configs below
-4. Tweak the script as required
+3. Open the script and add your email address at line 43
+4. Tweak the script if needed
 5. Schedule the script execution time
 
 # Known Issues
