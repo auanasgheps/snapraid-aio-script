@@ -7,6 +7,8 @@ It is highly customizable to user needs.
 
 It has been tested with Debian 10 and OpenMediaVault 5.
 
+Contributions are welcome.
+
 # Features
 [WIP]
 
