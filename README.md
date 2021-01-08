@@ -15,18 +15,20 @@ This readme has some rough edges which will be smoothened over time.
  
 ## Safety thresholds
 If file update/delete thresholds are reached the sync will not be run and the script will stop.
+
 Pre-hashing is enabled by default to avoid silent read errors. It mitigates the lack of ECC memory.
 ## A nice email report
 This report produces emails that don't contain a list of changed files to improve clarity.
 
 You can re-enable full output in the email changing the option `VERBOSITY`, but either way the full report will always be available in `/tmp/snapRAID.out` and will be replaced after each run or deleted when the system is shut down.
 
-SMART drive report from SnapRAID is also included.
-
-Example:
+SMART drive report from SnapRAID is also included by default.
 
 ## Customization
-All the above options can be either turned on or off.
+All the above options can be either turned on or off. 
+
+You can also change more advanced options such as mail binary (by default uses mailx), Snapraid binary location, log file location.
+
 
 # Requirements
 - Markdown to have nice emails
@@ -35,10 +37,10 @@ All the above options can be either turned on or off.
 # Installation
 [Better instructions on the way]
 1. Install markdown `apt install python-markdown`
-2. Place the script wherever you prefer e.g. `/usr/sbin/snapraid`
-3. Give executable rights - `chmod +x snapraid-aio-script.sh`
-4. Edit the script and add your email address at line 43
-5. Tweak the script if needed
+2. Download config file and script, then place wherever you prefer e.g. `/usr/sbin/snapraid`
+3. Give executable rights to the script - `chmod +x snapraid-aio-script.sh`
+4. Edit the config and add your email address at line 43
+5. Tweak the config file if needed
 6. Schedule the script execution time
 
 # Known Issues
