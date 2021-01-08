@@ -1,10 +1,10 @@
 # snapraid-aio-script
 The definitive all-in-one [SnapRAID](https://github.com/amadvance/snapraid) script.
 
-This script is a collection of many scripts with added improvements.
-It is meant to be run periodically (e.g. daily) and do the heavy lifting, then send an email you will actually read.
-It is highly customizable to user needs.
+There are many SnapRAID scripts out there, but none could fit my needs. So I took the best of them to start a new one.
 
+It is meant to be run periodically (e.g. daily) and do the heavy lifting, then send an email you will actually read.
+It is highly customizable.
 It has been tested with Debian 10 and OpenMediaVault 5.
 
 Contributions are welcome: there's always room for improvement!
@@ -16,16 +16,16 @@ This readme has some rough edges which will be smoothened over time.
 
 # Requirements
 - Markdown to have nice emails
-- Hd-Idle to spin down disks - [Link TBD]
+- Hd-idle to spin down disks - [Link TBD]
 
 # Installation
 [WIP]
 1. Install markdown `apt install python-markdown`
-2. Place the script wherever you prefer e.g. /usr/sbin/snapraid 
-3. Give executable rights to root user
-3. Open the script and add your email address at line 43
-4. Tweak the script if needed
-5. Schedule the script execution time
+2. Place the script wherever you prefer e.g. `/usr/sbin/snapraid`
+3. Give executable rights - `chmod +x snapraid-aio-script.sh`
+4. Open the script and add your email address at line 43
+5. Tweak the script if needed
+6. Schedule the script execution time
 
 # Known Issues
 Hard disk spin down does not work: they are immediately woken up. The script probably does not handle this correctly while running.
