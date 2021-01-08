@@ -39,7 +39,7 @@ You can also change more advanced options such as mail binary (by default uses m
 1. Install markdown `apt install python-markdown`
 2. Download config file and script, then place wherever you prefer e.g. `/usr/sbin/snapraid`
 3. Give executable rights to the script - `chmod +x snapraid-aio-script.sh`
-4. Edit the config and add your email address at line 43
+4. Edit the config file and add your email address at line 43
 5. Tweak the config file if needed
 6. Schedule the script execution time
 
