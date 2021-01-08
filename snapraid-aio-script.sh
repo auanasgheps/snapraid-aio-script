@@ -29,7 +29,7 @@
 #   Original by Zack Reed https://zackreed.me/snapraid-split-parity-sync-script/
 #   + mtompkins https://gist.github.com/mtompkins/91cf0b8be36064c237da3f39ff5cc49d
 #   
-SNAPSCRIPTVERSION="2.7.0.DEV-1"
+SNAPSCRIPTVERSION="2.7.0.DEV-2"
 
 ########################################################################
 
@@ -79,6 +79,17 @@ function main(){
   else
 	echo "Configuration file found! Proceeding."
 	mklog "INFO: Script configuration file found! Proceeding."
+  fi
+  
+  # install markdown if not present
+  if [ $(dpkg-query -W -f='${Status}' python-markdown 2>/dev/null | grep -c "ok installed") -eq 0 ];
+  then
+	echo "**Markdown has not been found and will be installed.**"
+	mklog "WARN: Markdown has not been found and will be installed."
+	# super silent and secret install command 
+	export DEBIAN_FRONTEND=noninteractive
+	apt-get install -qq -o=Dpkg::Use-Pty=0 python-markdown;
+	echo 
   fi
   
   # sanity check first to make sure we can access the content and parity files
