@@ -29,7 +29,7 @@ Pre-hashing is enabled by default to avoid silent read errors. It mitigates the 
 ## A nice email report
 This report produces emails that don't contain a list of changed files to improve clarity.
 
-You can re-enable full output in the email changing the option `VERBOSITY`, but either way the full report will always be available in `/tmp/snapRAID.out` and will be replaced after each run or deleted when the system is shut down.
+You can re-enable full output in the email by switching the option `VERBOSITY` but either way, the full report will always be available in `/tmp/snapRAID.out` and will be replaced after each run or deleted when the system is shut down if kept there.
 
 SMART drive report from SnapRAID is also included by default.
 
