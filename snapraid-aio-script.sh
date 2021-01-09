@@ -1,35 +1,9 @@
 #!/bin/bash
 ########################################################################
-# This is a helper script that keeps snapraid parity info in sync with
-# your data and optionally verifies the parity info. Here's how it works:
-#   1) Calls diff to figure out if the parity info is out of sync.
-#   2) If parity info is out of sync, AND the number of deleted or changed files exceed
-#      X (each configurable), it triggers an alert email and stops. (In case of
-#      accidental deletions, you have the opportunity to recover them from
-#      the existing parity info. This also mitigates to a degree encryption malware.)
-#   3) If parity info is out of sync, AND the number of deleted or changed files exceed X
-#      AND it has reached/exceeded Y (configurable) number of warnings, force
-#      a sync. (Useful when you get a false alarm above and you can't be bothered
-#      to login and do a manual sync. Note the risk is if its not a false alarm
-#      and you can't access the server to fix the issue before the job is run Y number of
-#      times... Well I hope you have other backups...)
-#   4) If parity info is out of sync BUT the number of deleted files did NOT
-#      exceed X, it calls sync to update the parity info.
-#   5) If the parity info is in sync (either because nothing changed or after it
-#      has successfully completed the sync job, it runs the scrub command to
-#      validate the integrity of the data (both the files and the parity info).
-#      Note that each run of the scrub command will validate only a (configurable)
-#      portion of parity info to avoid having a long running job and affecting
-#      the performance of the server.
-#   6) Once all jobs are completed, it sends an email with the output to user
-#      (if configured).
 #
 #   Project page: https://github.com/auanasgheps/snapraid-aio-script
 #
-#   Original by Zack Reed https://zackreed.me/snapraid-split-parity-sync-script/
-#   + mtompkins https://gist.github.com/mtompkins/91cf0b8be36064c237da3f39ff5cc49d
-#   
-SNAPSCRIPTVERSION="2.7.0.DEV-2"
+SNAPSCRIPTVERSION="2.7.0.DEV-3"
 
 ########################################################################
 
