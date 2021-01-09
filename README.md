@@ -50,7 +50,6 @@ You can also change more advanced options such as mail binary (by default uses `
 - ~~Hd-idle to spin down disks - [Link TBD] - currently not required since spin down does not work properly.~~
 
 # Installation
-[WIP]
 1. Install markdown `apt install python-markdown`. You can skip this step since the script will check and install it for you.
 2. Download config file and script, then place wherever you prefer e.g. `/usr/sbin/snapraid`
 3. Give executable rights to the main script - `chmod +x snapraid-aio-script.sh`
@@ -59,7 +58,8 @@ You can also change more advanced options such as mail binary (by default uses `
 6. Schedule the script execution time
 
 # Known Issues
-Hard disk spin down does not work: they are immediately woken up. The script probably does not handle this correctly while running.
+- Hard disk spin down does not work: they are immediately woken up. The script probably does not handle this correctly while running.
+- Some tables and tabs are spaced incorrectly: this issue can't be solved, SnapRAID should add native support to Markdown. 
 
 # Credits
 All rights belong to the respective creators. 
