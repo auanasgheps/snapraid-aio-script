@@ -4,17 +4,16 @@
 #   Project page: https://github.com/auanasgheps/snapraid-aio-script
 #
 SNAPSCRIPTVERSION="2.7.0.DEV-3"
-
 ########################################################################
 
 ######################
 #   USER VARIABLES   #
 ######################
 
-# declare the current path
+# find the current path
 CURRENT_DIR="$(dirname "${0}")"
 
-# declare config file variable for this script 
+# import the config file for this script which contains all user variables 
 source $CURRENT_DIR/config.sh
 
 ########################################################################
