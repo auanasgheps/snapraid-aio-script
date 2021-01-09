@@ -32,7 +32,7 @@ function main(){
   # timestamp the job
   echo "SnapRAID Script Job started [`date`]"
   echo "Running SnapRAID version $SNAPRAIDVERSION"
-  echo "SnapRAID Script version $SNAPSCRIPTVERSION"
+  echo "SnapRAID AIO Script version $SNAPSCRIPTVERSION"
   echo
   echo "----------------------------------------"
   mklog "INFO: ----------------------------------------"
