@@ -33,8 +33,9 @@ You can re-enable full output in the email by switching the option `VERBOSITY` b
 
 SMART drive report from SnapRAID is also included by default.
 
-[Screen1](Snapraid AIO Script 1.jpg)
+Here's a sneak peek
 
+![Screen](Snapraid%20AIO%20Script%201.jpg)
 
 ## Customization
 All the above options can be either turned on or off. 
