@@ -7,7 +7,7 @@ It is meant to be run periodically (e.g. daily) and do the heavy lifting, then s
 
 Supports single and dual parity configurations.
 
-It is customizable and has been tested with Debian 10 and OpenMediaVault 5.
+It is customizable and has been tested with Debian 10 and [OpenMediaVault 5](https://github.com/openmediavault/openmediavault).
 
 Contributions are welcome: there's always room for improvement!
 
@@ -170,6 +170,8 @@ You can also change more advanced options such as mail binary (by default uses `
 - ~~Hd-idle to spin down disks - [Link TBD] - currently not required since spin down does not work properly.~~
 
 # Installation
+If you want to use this script on OMV, don't worry about the section _Diff Script Settings_ in the main page of the SnapRAID plugin. These settings only apply to the plugin built-in script. Also don't forget to remove from scheduling the built-in script.  
+
 1. Install markdown `apt install python-markdown`. You can skip this step since the script will check and install it for you.
 2. Download config file and script, then place wherever you prefer e.g. `/usr/sbin/snapraid`
 3. Give executable rights to the main script - `chmod +x snapraid-aio-script.sh`
