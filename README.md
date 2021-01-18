@@ -179,7 +179,7 @@ You can also change more advanced options such as mail binary (by default uses `
 
 # Known Issues
 - Hard disk spin down does not work: they are immediately woken up. The script probably does not handle this correctly while running.
-- Some tables and tabs are spaced incorrectly: this issue can't be solved, SnapRAID should add native support to Markdown. 
+- The report is not perfect, we can't be solve this because SnapRAID does not natively support Markdown. 
 
 # Credits
 All rights belong to the respective creators. 
