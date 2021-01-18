@@ -3,7 +3,7 @@
 #
 #   Project page: https://github.com/auanasgheps/snapraid-aio-script
 #
-SNAPSCRIPTVERSION="2.7"
+SNAPSCRIPTVERSION="2.7.0.1-DEV1"
 ########################################################################
 
 ######################
@@ -203,6 +203,7 @@ function main(){
   # Show SnapRAID Status information if enabled
   if [ $SNAP_STATUS -eq 1 ]; then
     echo
+    echo "###SnapRAID Status"
     $SNAPRAID_BIN status
     close_output_and_wait
     output_to_file_screen
