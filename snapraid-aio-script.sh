@@ -3,7 +3,7 @@
 #
 #   Project page: https://github.com/auanasgheps/snapraid-aio-script
 #
-SNAPSCRIPTVERSION="2.7.0.DEV-7"
+SNAPSCRIPTVERSION="2.7"
 ########################################################################
 
 ######################
