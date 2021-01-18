@@ -3,7 +3,7 @@
 #
 #   Project page: https://github.com/auanasgheps/snapraid-aio-script
 #
-SNAPSCRIPTVERSION="2.7.0.DEV-5"
+SNAPSCRIPTVERSION="2.7.0.DEV-7"
 ########################################################################
 
 ######################
@@ -13,8 +13,9 @@ SNAPSCRIPTVERSION="2.7.0.DEV-5"
 # find the current path
 CURRENT_DIR="$(dirname "${0}")"
 
-# import the config file for this script which contains all user variables 
-source $CURRENT_DIR/script-config.sh
+# import the config file for this script which contain user configuration 
+CONFIG_FILE=$CURRENT_DIR/script-config.sh
+source $CONFIG_FILE
 
 ########################################################################
 
@@ -44,7 +45,7 @@ function main(){
   echo "##Preprocessing"
 
  # Check if script configuration file has been found
-  if [ ! -f $CURRENT_DIR/config.sh ]; 
+  if [ ! -f $CONFIG_FILE ]; 
   then
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
 	mklog "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
@@ -190,13 +191,24 @@ function main(){
   echo "----------------------------------------"
   echo "##Postprocessing"
 
-  # Moving onto logging SMART info if enabled
+  # Show SnapRAID SMART info if enabled
   if [ $SMART_LOG -eq 1 ]; then
     echo
     $SNAPRAID_BIN smart
     close_output_and_wait
     output_to_file_screen
+	echo
   fi
+  
+  # Show SnapRAID Status information if enabled
+  if [ $SNAP_STATUS -eq 1 ]; then
+    echo
+    $SNAPRAID_BIN status
+    close_output_and_wait
+    output_to_file_screen
+	echo
+  fi  
+  
 
   # Spinning down disks (Method 1: snapraid - preferred)
   if [ $SPINDOWN -eq 1 ]; then
@@ -237,14 +249,14 @@ function main(){
     echo
     echo "----------------------------------------"
     echo "##Total time elapsed for SnapRAID: $ELAPSED"
-  mklog "INFO: Total time elapsed for SnapRAID: $ELAPSED"
+	mklog "INFO: Total time elapsed for SnapRAID: $ELAPSED"
 
     # Add a topline to email body
     sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
   if [ $VERBOSITY -eq 1 ]; then
    send_mail_verbose
   else
-     send_mail
+   send_mail
   fi
   fi
 
