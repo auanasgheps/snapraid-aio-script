@@ -3,7 +3,7 @@
 #
 #   Project page: https://github.com/auanasgheps/snapraid-aio-script
 #
-SNAPSCRIPTVERSION="2.7.0.1-DEV1"
+SNAPSCRIPTVERSION="2.7.0.1-DEV3"
 ########################################################################
 
 ######################
@@ -129,6 +129,7 @@ function main(){
 
   # Now run sync if conditions are met
   if [ $DO_SYNC -eq 1 ]; then
+    echo "SYNC is authorized."
     echo "###SnapRAID SYNC [`date`]"
   mklog "INFO: SnapRAID SYNC Job started"
   if [ $PREHASH -eq 1 ]; then
@@ -157,6 +158,7 @@ function main(){
     # YES, first let's check if delete threshold has been breached and we have not forced a sync.
     if [ $CHK_FAIL -eq 1 -a $DO_SYNC -eq 0 ]; then
       # YES, parity is out of sync so let's not run scrub job
+	  echo
       echo "Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached). [`date`]"
     mklog "INFO: Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached)."
     else
@@ -323,20 +325,29 @@ function sed_me(){
 
 function chk_del(){
   if [ $DEL_COUNT -lt $DEL_THRESHOLD ]; then
-    # NO, delete threshold not reached, lets run the sync job
-    echo "There are deleted files. The number of deleted files, ($DEL_COUNT), is below the threshold of ($DEL_THRESHOLD). SYNC Authorized."
+	if [ $DEL_COUNT -eq 0 ]; then
+	echo "There are no deleted files, that's fine."
+	DO_SYNC=1
+	else 
+    echo "There are deleted files. The number of deleted files, ($DEL_COUNT), is below the threshold of ($DEL_THRESHOLD)."
     DO_SYNC=1
+	fi
   else
     echo "**WARNING** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
   mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
     CHK_FAIL=1
   fi
-}  
+}
 
 function chk_updated(){
   if [ $UPDATE_COUNT -lt $UP_THRESHOLD ]; then
-    echo "There are updated files. The number of updated files, ($UPDATE_COUNT), is below the threshold of ($UP_THRESHOLD). SYNC Authorized."
+	if [ $UPDATE_COUNT -eq 0 ]; then
+	echo "There are no updated files, that's fine."
+	DO_SYNC=1
+	else 
+    echo "There are updated files. The number of updated files, ($UPDATE_COUNT), is below the threshold of ($UP_THRESHOLD)."
     DO_SYNC=1
+	fi
   else
     echo "**WARNING** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
   mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
@@ -346,25 +357,39 @@ function chk_updated(){
 
 function chk_sync_warn(){
   if [ $SYNC_WARN_THRESHOLD -gt -1 ]; then
-    echo "Forced sync is enabled. [`date`]"
+	if [ $SYNC_WARN_THRESHOLD -eq 0 ]; then
+	echo "Forced sync is enabled. [`date`]"
   mklog "INFO: Forced sync is enabled."
-
+	else 
+	echo "Sync with threshold warning(s) is enabled."
     SYNC_WARN_COUNT=$(sed 'q;/^[0-9][0-9]*$/!d' $SYNC_WARN_FILE 2>/dev/null)
     SYNC_WARN_COUNT=${SYNC_WARN_COUNT:-0} #value is zero if file does not exist or does not contain what we are expecting
-
-    if [ $SYNC_WARN_COUNT -ge $SYNC_WARN_THRESHOLD ]; then
-      # YES, lets force a sync job. Do not need to remove warning marker here as it is automatically removed when the sync job is run by this script
+    fi
+	if [ $SYNC_WARN_COUNT -ge $SYNC_WARN_THRESHOLD ]; then
+      # if there are 0 warn counts do not output a message and force a sync job.
+      if [ $SYNC_WARN_COUNT -eq 0 ]; then
+	  echo
+	  DO_SYNC=1
+	  else
+      # if there are more than one warn count, output a message and force a sync job. Do not need to remove warning marker here as it is automatically removed when the sync job is run by this script
       echo "Number of threshold warning(s) ($SYNC_WARN_COUNT) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run. [`date`]"
     mklog "INFO: Number of threshold warning(s) ($SYNC_WARN_COUNT) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run." 
       DO_SYNC=1
+	  fi
     else
       # NO, so let's increment the warning count and skip the sync job
       ((SYNC_WARN_COUNT += 1))
       echo $SYNC_WARN_COUNT > $SYNC_WARN_FILE
-      echo "$((SYNC_WARN_THRESHOLD - SYNC_WARN_COUNT)) threshold warning(s) until the next forced sync. NOT proceeding with SYNC job. [`date`]"
-    mklog "INFO: $((SYNC_WARN_THRESHOLD - SYNC_WARN_COUNT)) threshold warning(s) until the next forced sync. NOT proceeding with SYNC job."
-      DO_SYNC=0
+	  if [ $SYNC_WARN_COUNT == $SYNC_WARN_THRESHOLD ]; then
+		echo  "This is the **last** warning left. NOT proceeding with SYNC job. [`date`]"
+		mklog "This is the **last** warning left. NOT proceeding with SYNC job. [`date`]"
+		DO_SYNC=0
+	  else 
+		echo "$((SYNC_WARN_THRESHOLD - SYNC_WARN_COUNT)) threshold warning(s) until the next forced sync. NOT proceeding with SYNC job. [`date`]"
+		mklog "INFO: $((SYNC_WARN_THRESHOLD - SYNC_WARN_COUNT)) threshold warning(s) until the next forced sync. NOT proceeding with SYNC job."
+		DO_SYNC=0
     fi
+	fi
   else
     # NO, so let's skip SYNC
     echo "Forced sync is not enabled. Check $TMP_OUTPUT for details. NOT proceeding with SYNC job. [`date`]"
