@@ -16,12 +16,13 @@ _This readme has some rough edges which will be smoothened over time._
 # Highlights
 
 ## How it works
-- After some preliminary checks, the script will execute `snapraid diff` to figure out if parity info is out of date, which means checking for changes since the last execution.
+- After some preliminary checks, the script will execute `snapraid diff` to figure out if parity info is out of date, which means checking for changes since the last execution. During this step, the script will ensure drives are fine by reading parity and content files. 
 - One of the following will happen:     
     - If parity info is out of sync **and** the number of deleted or changed files exceed the threshold you have configured it **stops**. You may want to take a look to the output log.
-    - If parity info is out of sync **and** the number of deleted or changed files exceed the threshold, you can still **force a sync** after a number of warnings. It's useful If  you often get a false alarm but you're confident enough.
+    - If parity info is out of sync **and** the number of deleted or changed files exceed the threshold, you can still **force a sync** after a number of warnings. It's useful If  you often get a false alarm but you're confident enough. This is called "Sync with threshold warnings"
     - If parity info is out of sync **but** the number of deleted or changed files did not exceed the treshold, it **executes a sync** to update the parity info.
-- When the parity info is in sync, either because nothing has changed or after a successfully sync, it runs the `snapraid scrub` command to validate the integrity of the data, both the files and the parity info. _Note that each run of the scrub command will validate only a configurable portion of parity info to avoid having a long running job and affecting the performance of the server._
+- When the parity info is in sync, either because nothing has changed or after a successfully sync, it runs the `snapraid scrub` command to validate the integrity of the data, both the files and the parity info. If sync was cancelled or other issues were found, scrub will not be run. _Note that each run of the scrub command will validate only a configurable portion of parity info to avoid having a long running job and affecting the performance of the server._
+- Extra information is be added, like SnapRAID's disk health report.  
 - When the script is done sends an email with the results, both in case of error or success.
 
 Pre-hashing is enabled by default to avoid silent read errors. It mitigates the lack of ECC memory.
@@ -29,7 +30,7 @@ Pre-hashing is enabled by default to avoid silent read errors. It mitigates the 
 ## A nice email report
 This report produces emails that don't contain a list of changed files to improve clarity.
 
-You can re-enable full output in the email by switching the option `VERBOSITY` but the full report will always be available in `/tmp/snapRAID.out` and will be replaced after each run or deleted when the system is shut down if kept there.
+You can re-enable full output in the email by switching the option `VERBOSITY` but the full report will always be available in `/tmp/snapRAID.out` but will be replaced after each run, or deleted when the system is shut down. You can change the location of the file, if needed.
 
 SMART drive report from SnapRAID is also included by default.
 
@@ -66,8 +67,9 @@ DIFF finished [Sat Jan 9 02:07:46 CET 2021]
 
 **SUMMARY of changes - Added [2] - Deleted [0] - Moved [0] - Copied [0] - Updated [0]**
 
-There are deleted files. The number of deleted files, (0), is below the threshold of (2). SYNC Authorized.  
-There are updated files. The number of updated files, (0), is below the threshold of (2). SYNC Authorized.
+There are no deleted files, that's fine.
+There are no updated files, that's fine.
+SYNC is authorized.
 
 ### SnapRAID SYNC [Sat Jan 9 02:07:46 CET 2021]
 
@@ -166,7 +168,7 @@ You can also change more advanced options such as mail binary (by default uses `
 
 
 # Requirements
-- Markdown to have nice emails
+- Markdown to have nice emails - will be installed if not found
 - ~~Hd-idle to spin down disks - [Link TBD] - currently not required since spin down does not work properly.~~
 
 # Installation
@@ -176,6 +178,8 @@ You can also change more advanced options such as mail binary (by default uses `
 4. Edit the config file and add your email address at line 9
 5. Tweak the config file if needed
 6. Schedule the script execution time
+
+It is tested on OMV5, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
 
 # Known Issues
 - Hard disk spin down does not work: they are immediately woken up. The script probably does not handle this correctly while running.
