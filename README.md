@@ -25,7 +25,14 @@ _This readme has some rough edges which will be smoothened over time._
 - Extra information is be added, like SnapRAID's disk health report.  
 - When the script is done sends an email with the results, both in case of error or success.
 
+## Customization
+Many options can be changed to your taste, their behaviour is documented in the script config file.
+
 Pre-hashing is enabled by default to avoid silent read errors. It mitigates the lack of ECC memory.
+
+If you don't know what to do, I recommend using the default values and see how it performs. 
+
+You can also change more advanced options such as mail binary (by default uses `mailx`), SnapRAID binary location, log file location.
 
 ## A nice email report
 This report produces emails that don't contain a list of changed files to improve clarity.
@@ -158,14 +165,6 @@ Probability that at least one disk is going to fail in the next year is 0%.
 All jobs ended. [Sat Jan 9 02:07:49 CET 2021]  
 Email address is set. Sending email report to example@example.com [Sat Jan 9 02:07:49 CET 2021]
 ```
-
-## Customization
-Many options can be changed to your taste, their behaviour is documented in the script config file.
-
-If you don't know what to do, I recommend using the default values and see how it performs. 
-
-You can also change more advanced options such as mail binary (by default uses `mailx`), SnapRAID binary location, log file location.
-
 
 # Requirements
 - Markdown to have nice emails - will be installed if not found
