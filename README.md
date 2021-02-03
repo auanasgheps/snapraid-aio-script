@@ -20,17 +20,30 @@ _This readme has some rough edges which will be smoothened over time._
 - One of the following will happen:     
     - If parity info is out of sync **and** the number of deleted or changed files exceed the threshold you have configured it **stops**. You may want to take a look to the output log.
     - If parity info is out of sync **and** the number of deleted or changed files exceed the threshold, you can still **force a sync** after a number of warnings. It's useful If  you often get a false alarm but you're confident enough. This is called "Sync with threshold warnings"
-    - If parity info is out of sync **but** the number of deleted or changed files did not exceed the treshold, it **executes a sync** to update the parity info.
+    - If parity info is out of sync **but** the number of deleted or changed files did not exceed the threshold, it **executes a sync** to update the parity info.
 - When the parity info is in sync, either because nothing has changed or after a successfully sync, it runs the `snapraid scrub` command to validate the integrity of the data, both the files and the parity info. If sync was cancelled or other issues were found, scrub will not be run. _Note that each run of the scrub command will validate only a configurable portion of parity info to avoid having a long running job and affecting the performance of the server._
 - Extra information is be added, like SnapRAID's disk health report.  
 - When the script is done sends an email with the results, both in case of error or success.
 
 ## Customization
-Many options can be changed to your taste, their behaviour is documented in the script config file.
+Many options can be changed to your taste, their behavior is documented in the script config file.
+If you don't know what to do, I recommend using the default values and see how it performs.
 
-Pre-hashing is enabled by default to avoid silent read errors. It mitigates the lack of ECC memory.
-
-If you don't know what to do, I recommend using the default values and see how it performs. 
+### Customizable features
+- Sync options
+	- Sync always (forced sync)
+	- Sync after a number of breached threshold warnings 
+	- Sync only if thresholds warnings are not breached (enabled by default)
+	- Thresholds for deleted and updated files	
+- Scrub options 
+	- Enable or disable scrub
+	- Data to be scrubbed - by default 5% older than 10 days
+- Pre-hashing - enabled by default to avoid silent read errors. It mitigates the lack of ECC memory.
+- SMART Log - enabled by default, a SnapRAID report for disks health status
+- Verbosity - disabled by default, does not include the TOUCH and DIFF output to have a better email
+- Spindown - to spindown drives after the script, disabled because is currently not working 
+- Snapraid Status - show the status of the array, disabled because the report output is not rendered correctly 
+ 
 
 You can also change more advanced options such as mail binary (by default uses `mailx`), SnapRAID binary location, log file location.
 
@@ -38,8 +51,6 @@ You can also change more advanced options such as mail binary (by default uses `
 This report produces emails that don't contain a list of changed files to improve clarity.
 
 You can re-enable full output in the email by switching the option `VERBOSITY` but the full report will always be available in `/tmp/snapRAID.out` but will be replaced after each run, or deleted when the system is shut down. You can change the location of the file, if needed.
-
-SMART drive report from SnapRAID is also included by default.
 
 Here's a sneak peek of the email report.
 
