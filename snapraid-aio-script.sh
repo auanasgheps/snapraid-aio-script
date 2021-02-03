@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="2.7.0.1-DEV4"
+SNAPSCRIPTVERSION="2.7.0.1-DEV6"
 
 # find the current path
 CURRENT_DIR="$(dirname "${0}")"
@@ -129,7 +129,7 @@ function main(){
 
   # Now run sync if conditions are met
   if [ $DO_SYNC -eq 1 ]; then
-    echo "SYNC is authorized."
+    echo "SYNC is authorized. [`date`]"
     echo "###SnapRAID SYNC [`date`]"
   mklog "INFO: SnapRAID SYNC Job started"
   if [ $PREHASH -eq 1 ]; then
@@ -263,8 +263,6 @@ function main(){
   fi
   fi
 
-  #clean_desc
-
   exit 0;
 }
 
@@ -358,7 +356,7 @@ function chk_updated(){
 function chk_sync_warn(){
   if [ $SYNC_WARN_THRESHOLD -gt -1 ]; then
 	if [ $SYNC_WARN_THRESHOLD -eq 0 ]; then
-	echo "Forced sync is enabled. [`date`]"
+	echo "Forced sync is enabled."
   mklog "INFO: Forced sync is enabled."
 	else 
 	echo "Sync after threshold warning(s) is enabled."
@@ -374,7 +372,7 @@ function chk_sync_warn(){
 	  DO_SYNC=1
 	  else
       # if there is at least one warn count, output a message and force a sync job. Do not need to remove warning marker here as it is automatically removed when the sync job is run by this script
-      echo "Number of threshold warning(s) ($SYNC_WARN_COUNT) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run. [`date`]"
+      echo "Number of threshold warning(s) ($SYNC_WARN_COUNT) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run."
     mklog "INFO: Number of threshold warning(s) ($SYNC_WARN_COUNT) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run." 
       DO_SYNC=1
 	  fi
@@ -424,14 +422,6 @@ function service_array_setup() {
     echo "Setting up service array"
     read -a service_array <<<$SERVICES
   fi
-}
-
-function clean_desc(){
-  # Cleanup file descriptors
-  exec >&{out} 2>&{err}
- 
-  # If interactive shell restore output
-  [[ $- == *i* ]] && exec &>/dev/tty
 }
 
 function prepare_mail() {
