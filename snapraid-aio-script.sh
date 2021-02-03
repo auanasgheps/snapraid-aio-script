@@ -3,12 +3,12 @@
 #
 #   Project page: https://github.com/auanasgheps/snapraid-aio-script
 #
-SNAPSCRIPTVERSION="2.7.0.1-DEV3"
 ########################################################################
 
 ######################
-#   USER VARIABLES   #
+#   CONFIG VARIABLES #
 ######################
+SNAPSCRIPTVERSION="2.7.0.1-DEV4"
 
 # find the current path
 CURRENT_DIR="$(dirname "${0}")"
@@ -144,7 +144,7 @@ function main(){
   mklog "INFO: SnapRAID SYNC Job finished"
     JOBS_DONE="$JOBS_DONE + SYNC"
     # insert SYNC marker to 'Everything OK' or 'Nothing to do' string to differentiate it from SCRUB job later
-    sed_me "s/^Everything OK/SYNC_JOB--Everything OK/g;s/^Nothing to do/SYNC_JOB--Nothing to do/g" "$TMP_OUTPUT"
+    sed_me "s/^Everything OK/**SYNC JOB - Everything OK**/g;s/^Nothing to do/**SYNC JOB - Nothing to do**/g" "$TMP_OUTPUT"
     # Remove any warning flags if set previously. This is done in this step to take care of scenarios when user
     # has manually synced or restored deleted files and we will have missed it in the checks above.
     if [ -e $SYNC_WARN_FILE ]; then
@@ -163,8 +163,8 @@ function main(){
     mklog "INFO: Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached)."
     else
       # NO, delete threshold has not been breached OR we forced a sync, but we have one last test -
-      # let's make sure if sync ran, it completed successfully (by checking for our marker text "SYNC_JOB--" in the output).
-      if [ $DO_SYNC -eq 1 -a -z "$(grep -w "SYNC_JOB-" $TMP_OUTPUT)" ]; then
+      # let's make sure if sync ran, it completed successfully (by checking for our marker text "SYNC JOB -" in the output).
+      if [ $DO_SYNC -eq 1 -a -z "$(grep -w "SYNC JOB -" $TMP_OUTPUT)" ]; then
         # Sync ran but did not complete successfully so lets not run scrub to be safe
         echo "**WARNING** - check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job. [`date`]"
     mklog "WARN: Check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job."
@@ -181,7 +181,7 @@ function main(){
         echo
         JOBS_DONE="$JOBS_DONE + SCRUB"
         # insert SCRUB marker to 'Everything OK' or 'Nothing to do' string to differentiate it from SYNC job above
-        sed_me "s/^Everything OK/SCRUB_JOB--Everything OK/g;s/^Nothing to do/SCRUB_JOB--Nothing to do/g" "$TMP_OUTPUT"
+        sed_me "s/^Everything OK/**SCRUB JOB - Everything OK**/g;s/^Nothing to do/**SCRUB JOB - Nothing to do**/g" "$TMP_OUTPUT"
       fi
     fi
   else
@@ -329,7 +329,7 @@ function chk_del(){
 	echo "There are no deleted files, that's fine."
 	DO_SYNC=1
 	else 
-    echo "There are deleted files. The number of deleted files, ($DEL_COUNT), is below the threshold of ($DEL_THRESHOLD)."
+    echo "There are deleted files. The number of deleted files ($DEL_COUNT) is below the threshold of ($DEL_THRESHOLD)."
     DO_SYNC=1
 	fi
   else
@@ -345,7 +345,7 @@ function chk_updated(){
 	echo "There are no updated files, that's fine."
 	DO_SYNC=1
 	else 
-    echo "There are updated files. The number of updated files, ($UPDATE_COUNT), is below the threshold of ($UP_THRESHOLD)."
+    echo "There are updated files. The number of updated files ($UPDATE_COUNT) is below the threshold of ($UP_THRESHOLD)."
     DO_SYNC=1
 	fi
   else
@@ -361,17 +361,19 @@ function chk_sync_warn(){
 	echo "Forced sync is enabled. [`date`]"
   mklog "INFO: Forced sync is enabled."
 	else 
-	echo "Sync with threshold warning(s) is enabled."
+	echo "Sync after threshold warning(s) is enabled."
+  mklog "INFO: Sync after threshold warning(s) is enabled."
+  	fi
     SYNC_WARN_COUNT=$(sed 'q;/^[0-9][0-9]*$/!d' $SYNC_WARN_FILE 2>/dev/null)
     SYNC_WARN_COUNT=${SYNC_WARN_COUNT:-0} #value is zero if file does not exist or does not contain what we are expecting
-    fi
 	if [ $SYNC_WARN_COUNT -ge $SYNC_WARN_THRESHOLD ]; then
-      # if there are 0 warn counts do not output a message and force a sync job.
+	  # force a sync 
+	  # if the warn count is zero it means the sync was already forced, do not output a dumb message and continue with the sync job.
       if [ $SYNC_WARN_COUNT -eq 0 ]; then
 	  echo
 	  DO_SYNC=1
 	  else
-      # if there are more than one warn count, output a message and force a sync job. Do not need to remove warning marker here as it is automatically removed when the sync job is run by this script
+      # if there is at least one warn count, output a message and force a sync job. Do not need to remove warning marker here as it is automatically removed when the sync job is run by this script
       echo "Number of threshold warning(s) ($SYNC_WARN_COUNT) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run. [`date`]"
     mklog "INFO: Number of threshold warning(s) ($SYNC_WARN_COUNT) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run." 
       DO_SYNC=1
@@ -381,19 +383,19 @@ function chk_sync_warn(){
       ((SYNC_WARN_COUNT += 1))
       echo $SYNC_WARN_COUNT > $SYNC_WARN_FILE
 	  if [ $SYNC_WARN_COUNT == $SYNC_WARN_THRESHOLD ]; then
-		echo  "This is the **last** warning left. NOT proceeding with SYNC job. [`date`]"
-		mklog "This is the **last** warning left. NOT proceeding with SYNC job. [`date`]"
+		echo  "This is the **last** warning left. **NOT** proceeding with SYNC job. [`date`]"
+		mklog "This is the **last** warning left. **NOT** proceeding with SYNC job. [`date`]"
 		DO_SYNC=0
 	  else 
-		echo "$((SYNC_WARN_THRESHOLD - SYNC_WARN_COUNT)) threshold warning(s) until the next forced sync. NOT proceeding with SYNC job. [`date`]"
-		mklog "INFO: $((SYNC_WARN_THRESHOLD - SYNC_WARN_COUNT)) threshold warning(s) until the next forced sync. NOT proceeding with SYNC job."
+		echo "$((SYNC_WARN_THRESHOLD - SYNC_WARN_COUNT)) threshold warning(s) until the next forced sync. **NOT** proceeding with SYNC job. [`date`]"
+		mklog "INFO: $((SYNC_WARN_THRESHOLD - SYNC_WARN_COUNT)) threshold warning(s) until the next forced sync. **NOT** proceeding with SYNC job."
 		DO_SYNC=0
     fi
 	fi
   else
     # NO, so let's skip SYNC
-    echo "Forced sync is not enabled. Check $TMP_OUTPUT for details. NOT proceeding with SYNC job. [`date`]"
-  mklog "INFO: Forced sync is not enabled. Check $TMP_OUTPUT for details. NOT proceeding with SYNC job."
+    echo "Forced sync is not enabled. Check $TMP_OUTPUT for details. **NOT** proceeding with SYNC job. [`date`]"
+  mklog "INFO: Forced sync is not enabled. Check $TMP_OUTPUT for details. **NOT** proceeding with SYNC job."
     DO_SYNC=0
   fi
 }
@@ -458,10 +460,10 @@ function prepare_mail() {
      MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
     fi  
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
-  elif [ -z "${JOBS_DONE##*"SYNC"*}" -a -z "$(grep -w "SYNC_JOB-" $TMP_OUTPUT)" ]; then
+  elif [ -z "${JOBS_DONE##*"SYNC"*}" -a -z "$(grep -w "SYNC JOB -" $TMP_OUTPUT)" ]; then
     # Sync ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-  elif [ -z "${JOBS_DONE##*"SCRUB"*}" -a -z "$(grep -w "SCRUB_JOB-" $TMP_OUTPUT)" ]; then
+  elif [ -z "${JOBS_DONE##*"SCRUB"*}" -a -z "$(grep -w "SCRUB JOB -" $TMP_OUTPUT)" ]; then
     # Scrub ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
   else
