@@ -180,6 +180,8 @@ Email address is set. Sending email report to example@example.com [Sat Jan 9 02:
 
 It is tested on OMV5, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
 
+If you want to use this script on OMV, don't worry about the section _Diff Script Settings_ in the main page of the SnapRAID plugin, since it only applies to the built-in plugin script. Also don't forget to remove from scheduling the built-in script.
+
 # Known Issues
 - Hard disk spin down does not work: they are immediately woken up. The script probably does not handle this correctly while running.
 - The report is not perfect, we can't be solve this because SnapRAID does not natively support Markdown. 
