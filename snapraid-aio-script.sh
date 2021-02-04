@@ -415,15 +415,6 @@ function chk_zero(){
   fi
 }
 
-function service_array_setup() {
-  if [ -z "$SERVICES" ]; then
-    echo "Please configure services"
-  else
-    echo "Setting up service array"
-    read -a service_array <<<$SERVICES
-  fi
-}
-
 function prepare_mail() {
   if [ $CHK_FAIL -eq 1 ]; then
     if [ $DEL_COUNT -ge $DEL_THRESHOLD -a $DO_SYNC -eq 0 ]; then
