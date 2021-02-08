@@ -234,7 +234,7 @@ function main(){
   #   do
   #     if [[ `smartctl -a /dev/$DRIVE | grep 'Rotation Rate' | grep rpm` ]]; then
   #       echo "spinning down /dev/$DRIVE"
-  #       hd-idle -t $DRIVE
+  #       hd-idle -t /dev/$DRIVE
   #     fi
   #   done
   # fi
