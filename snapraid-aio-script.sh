@@ -5,10 +5,10 @@
 #
 ########################################################################
 
-######################
-#   CONFIG VARIABLES #
-######################
-SNAPSCRIPTVERSION="2.8"
+########################
+#   CONFIG VARIABLES   #
+########################
+SNAPSCRIPTVERSION="2.9"
 
 # find the current path
 CURRENT_DIR="$(dirname "${0}")"
@@ -19,9 +19,9 @@ source $CONFIG_FILE
 
 ########################################################################
 
-######################
+###################
 #   MAIN SCRIPT   #
-######################
+###################
 
 function main(){
   # create tmp file for output
@@ -41,10 +41,9 @@ function main(){
   mklog "INFO: Running SnapRAID version $SNAPRAIDVERSION"
   mklog "INFO: SnapRAID Script version $SNAPSCRIPTVERSION"
 
-
   echo "##Preprocessing"
-
- # Check if script configuration file has been found
+  
+  # Check if script configuration file has been found
   if [ ! -f $CONFIG_FILE ]; 
   then
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
@@ -69,6 +68,14 @@ function main(){
   # sanity check first to make sure we can access the content and parity files
   mklog "INFO: Checking SnapRAID disks"
   sanity_check
+
+  # Pause any services that may inhibit optimum execution
+  if [ $MANAGE_SERVICES -eq 1 ]; then
+    service_array_setup
+    echo
+    echo "###Pause Services [`date`]"
+    pause_services
+  fi
 
   echo
   echo "----------------------------------------"
@@ -211,7 +218,6 @@ function main(){
     output_to_file_screen
 	echo
   fi  
-  
 
   # Spinning down disks (Method 1: snapraid - preferred)
   if [ $SPINDOWN -eq 1 ]; then
@@ -239,6 +245,11 @@ function main(){
   #   done
   # fi
 
+  # Resume paused services
+  if [ $MANAGE_SERVICES -eq 1 ]; then
+    resume_services
+  fi
+  
   echo "All jobs ended. [`date`]"
   mklog "INFO: Snapraid: all jobs ended."
 
@@ -415,6 +426,37 @@ function chk_zero(){
   fi
 }
 
+function service_array_setup() {
+  if [ -z "$SERVICES" ]; then
+    echo "Please configure services"
+  else
+    echo "Setting up service array"
+    read -a service_array <<<$SERVICES
+  fi
+}
+
+function pause_services(){
+  for i in ${service_array[@]}; do
+    echo "Pausing Service - ""${i^}";
+    if [ $DOCKER_REMOTE -eq 1 ]; then
+      ssh $DOCKER_USER@$DOCKER_IP docker pause $i
+    else
+      docker pause $i
+    fi
+  done
+}
+
+function resume_services(){
+  for i in ${service_array[@]}; do
+    echo "Unpausing Service - ""${i^}";
+    if [ $DOCKER_REMOTE -eq 1 ]; then
+      ssh $DOCKER_USER@$DOCKER_IP docker unpause $i
+    else
+      docker unpause $i
+    fi
+  done
+}
+  
 function prepare_mail() {
   if [ $CHK_FAIL -eq 1 ]; then
     if [ $DEL_COUNT -ge $DEL_THRESHOLD -a $DO_SYNC -eq 0 ]; then
