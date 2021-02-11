@@ -247,6 +247,8 @@ function main(){
 
   # Resume paused services
   if [ $MANAGE_SERVICES -eq 1 ]; then
+    echo
+    echo "###Resume Services [`date`]"
     resume_services
   fi
   
@@ -448,7 +450,7 @@ function pause_services(){
 
 function resume_services(){
   for i in ${service_array[@]}; do
-    echo "Unpausing Service - ""${i^}";
+    echo "Resuming Service - ""${i^}";
     if [ $DOCKER_REMOTE -eq 1 ]; then
       ssh $DOCKER_USER@$DOCKER_IP docker unpause $i
     else
