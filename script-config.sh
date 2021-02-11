@@ -54,6 +54,18 @@ SNAPRAID_BIN="/usr/bin/snapraid"
 # location of the mail program binary
 MAIL_BIN="/usr/bin/mailx"
 
+# Set to 1 to manage docker containers.
+MANAGE_SERVICES=0
+  
+# Containers to manage (separated with spaces).
+SERVICES='container1 container2 container3'  
+
+# Set to 1 if docker is running on remote machine, and enter Docker host machine IP.
+# Passwordless ssh access between snapRAID host and Docker host must be set up before running the script.
+DOCKER_REMOTE=0
+DOCKER_USER="sshusernamegoeshere"
+DOCKER_IP="127.0.0.1"
+
 ####################### USER CONFIGURATION END #######################
 
 ####################### SYSTEM CONFIGURATION #######################
