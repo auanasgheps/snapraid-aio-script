@@ -69,12 +69,12 @@ function main(){
   mklog "INFO: Checking SnapRAID disks"
   sanity_check
 
-  # Pause any services that may inhibit optimum execution
+  # Stop any services that may inhibit optimum execution
   if [ $MANAGE_SERVICES -eq 1 ]; then
     service_array_setup
     echo
-    echo "###Pause Services [`date`]"
-    pause_services
+    echo "###Stop Services [`date`]"
+    stop_services
   fi
 
   echo
@@ -245,11 +245,11 @@ function main(){
   #   done
   # fi
 
-  # Resume paused services
+  # Restart stopped services
   if [ $MANAGE_SERVICES -eq 1 ]; then
     echo
-    echo "###Resume Services [`date`]"
-    resume_services
+    echo "###Restart Services [`date`]"
+    start_services
   fi
   
   echo "All jobs ended. [`date`]"
@@ -437,7 +437,7 @@ function service_array_setup() {
   fi
 }
 
-function pause_services(){
+function stop_services(){
   for i in ${service_array[@]}; do
     echo "Stopping Service - ""${i^}";
     if [ $DOCKER_REMOTE -eq 1 ]; then
@@ -445,11 +445,11 @@ function pause_services(){
     else
       docker stop $i
     fi
-	close_output_and_wait
+    close_output_and_wait
   done
 }
 
-function resume_services(){
+function start_services(){
   for i in ${service_array[@]}; do
     echo "Starting Service - ""${i^}";
     if [ $DOCKER_REMOTE -eq 1 ]; then
@@ -457,7 +457,7 @@ function resume_services(){
     else
       docker start $i
     fi
-	close_output_and_wait
+    close_output_and_wait
   done
 }
   
