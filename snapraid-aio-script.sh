@@ -439,23 +439,25 @@ function service_array_setup() {
 
 function pause_services(){
   for i in ${service_array[@]}; do
-    echo "Pausing Service - ""${i^}";
+    echo "Stopping Service - ""${i^}";
     if [ $DOCKER_REMOTE -eq 1 ]; then
-      ssh $DOCKER_USER@$DOCKER_IP docker pause $i
+      ssh $DOCKER_USER@$DOCKER_IP docker stop $i
     else
-      docker pause $i
+      docker stop $i
     fi
+	close_output_and_wait
   done
 }
 
 function resume_services(){
   for i in ${service_array[@]}; do
-    echo "Resuming Service - ""${i^}";
+    echo "Starting Service - ""${i^}";
     if [ $DOCKER_REMOTE -eq 1 ]; then
-      ssh $DOCKER_USER@$DOCKER_IP docker unpause $i
+      ssh $DOCKER_USER@$DOCKER_IP docker start $i
     else
-      docker unpause $i
+      docker start $i
     fi
+	close_output_and_wait
   done
 }
   
