@@ -448,14 +448,15 @@ function start_services(){
   if [ -z "$SERVICES" ]; then
     echo "Please configure services"
   else 
-  for i in ${service_array[@]}; do
-    echo "Starting Service - ""${i^}";
-    if [ $DOCKER_REMOTE -eq 1 ]; then
-      ssh $DOCKER_USER@$DOCKER_IP docker start $i
-    else
-      docker start $i
-    fi
-  done
+    for i in ${service_array[@]}; do
+      echo "Starting Service - ""${i^}";
+      if [ $DOCKER_REMOTE -eq 1 ]; then
+        ssh $DOCKER_USER@$DOCKER_IP docker start $i
+      else
+        docker start $i
+      fi
+    done
+  fi
 }
   
 function prepare_mail() {
