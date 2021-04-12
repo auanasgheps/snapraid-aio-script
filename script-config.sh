@@ -57,13 +57,13 @@ MAIL_BIN="/usr/bin/mailx"
 ####################### USER CONFIGURATION END #######################
 
 ####################### SYSTEM CONFIGURATION #######################
-# Make changes only if you know what you're doing 
+# Make changes only if you know what you're doing
 ######################
 
 # Init variables
 CHK_FAIL=0
 DO_SYNC=0
-EMAIL_SUBJECT_PREFIX="(SnapRAID on `hostname`)"
+EMAIL_SUBJECT_PREFIX="(SnapRAID on $(hostname))"
 GRACEFUL=0
 SYNC_WARN_FILE="$CURRENT_DIR/snapRAID.warnCount"
 SYNC_WARN_COUNT=""
@@ -75,8 +75,8 @@ SECONDS=0 #Capture time
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 # Determine names of first content file...
-CONTENT_FILE=`grep -v '^$\|^\s*\#' /etc/snapraid.conf | grep snapraid.content | head -n 1 | cut -d " " -f2`
+CONTENT_FILE=$(grep -v '^$\|^\s*\#' /etc/snapraid.conf | grep snapraid.content | head -n 1 | cut -d " " -f2)
 
 # Build an array of parity all files...
-PARITY_FILES[0]=`grep -v '^$\|^\s*\#' /etc/snapraid.conf | grep snapraid.parity | head -n 1 | cut -d " " -f2`
-IFS=$'\n' PARITY_FILES=(`cat /etc/snapraid.conf | grep "^[^#;]" | grep "^\([2-6z]-\)*parity" | cut -d " " -f 2 | tr ',' '\n'`)
+PARITY_FILES[0]=$(grep -v '^$\|^\s*\#' /etc/snapraid.conf | grep snapraid.parity | head -n 1 | cut -d " " -f2)
+IFS=$'\n' PARITY_FILES=("$(grep "^[^#;]" /etc/snapraid.conf | grep "^\([2-6z]-\)*parity" | cut -d " " -f 2 | tr ',' '\n')")
