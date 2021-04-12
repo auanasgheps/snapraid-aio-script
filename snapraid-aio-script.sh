@@ -21,7 +21,7 @@ source "$CONFIG_FILE"
 ########################################################################
 
 ######################
-#   MAIN SCRIPT   #
+#   MAIN SCRIPT      #
 ######################
 
 function main(){
@@ -91,9 +91,11 @@ function main(){
   # Get number of deleted, updated, and modified files...
   get_counts
 
-  # sanity check to make sure that we were able to get our counts from the output of the DIFF job
+  # sanity check to make sure that we were able to get our counts from the
+  # output of the DIFF job
   if [ -z "$DEL_COUNT" ] || [ -z "$ADD_COUNT" ] || [ -z "$MOVE_COUNT" ] || [ -z "$COPY_COUNT" ] || [ -z "$UPDATE_COUNT" ]; then
-    # failed to get one or more of the count values, lets report to user and exit with error code
+    # failed to get one or more of the count values, lets report to user and
+    # exit with error code
     echo "**ERROR** - failed to get one or more count values. Unable to proceed."
     echo "Exiting script. [$(date)]"
     if [ $EMAIL_ADDRESS ]; then
@@ -142,10 +144,12 @@ function main(){
     echo "SYNC finished [$(date)]"
     mklog "INFO: SnapRAID SYNC Job finished"
     JOBS_DONE="$JOBS_DONE + SYNC"
-    # insert SYNC marker to 'Everything OK' or 'Nothing to do' string to differentiate it from SCRUB job later
+    # insert SYNC marker to 'Everything OK' or 'Nothing to do' string to
+    # differentiate it from SCRUB job later
     sed_me "s/^Everything OK/**SYNC JOB - Everything OK**/g;s/^Nothing to do/**SYNC JOB - Nothing to do**/g" "$TMP_OUTPUT"
-    # Remove any warning flags if set previously. This is done in this step to take care of scenarios when user
-    # has manually synced or restored deleted files and we will have missed it in the checks above.
+    # Remove any warning flags if set previously. This is done in this step to
+    # take care of scenarios when user has manually synced or restored deleted
+    # files and we will have missed it in the checks above.
     if [ -e "$SYNC_WARN_FILE" ]; then
       rm "$SYNC_WARN_FILE"
     fi
@@ -154,17 +158,21 @@ function main(){
 
   # Moving onto scrub now. Check if user has enabled scrub
   if [ "$SCRUB_PERCENT" -gt 0 ]; then
-    # YES, first let's check if delete threshold has been breached and we have not forced a sync.
+    # YES, first let's check if delete threshold has been breached and we have
+    # not forced a sync.
     if [ "$CHK_FAIL" -eq 1 ] && [ "$DO_SYNC" -eq 0 ]; then
       # YES, parity is out of sync so let's not run scrub job
       echo
       echo "Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached). [$(date)]"
       mklog "INFO: Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached)."
     else
-      # NO, delete threshold has not been breached OR we forced a sync, but we have one last test -
-      # let's make sure if sync ran, it completed successfully (by checking for our marker text "SYNC JOB -" in the output).
+      # NO, delete threshold has not been breached OR we forced a sync, but we
+      # have one last test - let's make sure if sync ran, it completed
+      # successfully (by checking for our marker text "SYNC JOB -" in the
+      # output).
       if [ "$DO_SYNC" -eq 1 ] && ! grep -qw "SYNC JOB -" "$TMP_OUTPUT"; then
-        # Sync ran but did not complete successfully so lets not run scrub to be safe
+        # Sync ran but did not complete successfully so lets not run scrub to
+        # be safe
         echo "**WARNING** - check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job. [$(date)]"
         mklog "WARN: Check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job."
       else
@@ -179,7 +187,8 @@ function main(){
         mklog "INFO: SnapRAID SCRUB Job finished"
         echo
         JOBS_DONE="$JOBS_DONE + SCRUB"
-        # insert SCRUB marker to 'Everything OK' or 'Nothing to do' string to differentiate it from SYNC job above
+        # insert SCRUB marker to 'Everything OK' or 'Nothing to do' string to
+        # differentiate it from SYNC job above
         sed_me "s/^Everything OK/**SCRUB JOB - Everything OK**/g;s/^Nothing to do/**SCRUB JOB - Nothing to do**/g" "$TMP_OUTPUT"
       fi
     fi
@@ -310,9 +319,10 @@ function get_counts() {
 }
 
 function sed_me(){
-  # Close the open output stream first, then perform sed and open a new tee process and redirect output.
-  # We close stream because of the calls to new wait function in between sed_me calls.
-  # If we do not do this we try to close Processes which are not parents of the shell.
+  # Close the open output stream first, then perform sed and open a new tee
+  # process and redirect output. We close stream because of the calls to new
+  # wait function in between sed_me calls. If we do not do this we try to close
+  # Processes which are not parents of the shell.
   exec >&"$out" 2>&"$err"
   sed -i "$1" "$2"
 
@@ -362,16 +372,20 @@ function chk_sync_warn(){
     fi
 
     SYNC_WARN_COUNT=$(sed 'q;/^[0-9][0-9]*$/!d' "$SYNC_WARN_FILE" 2>/dev/null)
-    SYNC_WARN_COUNT=${SYNC_WARN_COUNT:-0} #value is zero if file does not exist or does not contain what we are expecting
+    # value is zero if file does not exist or does not contain what we are
+    # expecting
+    SYNC_WARN_COUNT=${SYNC_WARN_COUNT:-0}
 
     if [ "$SYNC_WARN_COUNT" -ge "$SYNC_WARN_THRESHOLD" ]; then
-      # force a sync
-      # if the warn count is zero it means the sync was already forced, do not output a dumb message and continue with the sync job.
+      # Force a sync. If the warn count is zero it means the sync was already
+      # forced, do not output a dumb message and continue with the sync job.
       if [ "$SYNC_WARN_COUNT" -eq 0 ]; then
         echo
         DO_SYNC=1
       else
-        # if there is at least one warn count, output a message and force a sync job. Do not need to remove warning marker here as it is automatically removed when the sync job is run by this script
+        # If there is at least one warn count, output a message and force a
+        # sync job. Do not need to remove warning marker here as it is
+        # automatically removed when the sync job is run by this script
         echo "Number of threshold warning(s) ($SYNC_WARN_COUNT) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run."
         mklog "INFO: Number of threshold warning(s) ($SYNC_WARN_COUNT) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run."
         DO_SYNC=1
@@ -464,9 +478,12 @@ function send_mail_verbose(){
   $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" "$EMAIL_ADDRESS" < "$TMP_OUTPUT" < <(python -m markdown)
 }
 
-#Due to how process substitution and newer bash versions work, this function stops the output stream which allows wait stops wait from hanging on the tee process.
-#If we do not do this and use normal 'wait' the processes will wait forever as newer bash version will wait for the process substitution to finish.
-#Probably not the best way of 'fixing' this issue. Someone with more knowledge can provide better insight.
+# Due to how process substitution and newer bash versions work, this function
+# stops the output stream which allows wait stops wait from hanging on the tee
+# process. If we do not do this and use normal 'wait' the processes will wait
+# forever as newer bash version will wait for the process substitution to
+# finish. Probably not the best way of 'fixing' this issue. Someone with more
+# knowledge can provide better insight.
 function close_output_and_wait(){
   exec >&"$out" 2>&"$err"
   wait "$(pgrep -P $$)"

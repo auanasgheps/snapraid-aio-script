@@ -8,45 +8,48 @@
 # address where the output of the jobs will be emailed to.
 EMAIL_ADDRESS="youremailgoeshere"
 
-# Set the threshold of deleted files to stop the sync job from running.
-# NOTE that depending on how active your filesystem is being used, a low
-# number here may result in your parity info being out of sync often and/or
-# you having to do lots of manual syncing.
+# Set the threshold of deleted files to stop the sync job from running. NOTE
+# that depending on how active your filesystem is being used, a low number here
+# may result in your parity info being out of sync often and/or you having to
+# do lots of manual syncing.
 DEL_THRESHOLD=500
 UP_THRESHOLD=500
 
-# Set number of warnings before we force a sync job.
-# This option comes in handy when you cannot be bothered to manually
-# start a sync job when DEL_THRESHOLD is breached due to false alarm.
-# Set to 0 to ALWAYS force a sync (i.e. ignore the delete threshold above)
-# Set to -1 to NEVER force a sync (i.e. need to manual sync if delete threshold is breached)
+# Set number of warnings before we force a sync job. This option comes in handy
+# when you cannot be bothered to manually start a sync job when DEL_THRESHOLD
+# is breached due to false alarm. Set to 0 to ALWAYS force a sync (i.e. ignore
+# the delete threshold above) Set to -1 to NEVER force a sync (i.e. need to
+# manual sync if delete threshold is breached).
 SYNC_WARN_THRESHOLD=-1
 
-# Set percentage of array to scrub if it is in sync.
-# i.e. 0 to disable and 100 to scrub the full array in one go
-# WARNING - depending on size of your array, setting to 100 will take a very long time!
+# Set percentage of array to scrub if it is in sync. i.e. 0 to disable and 100
+# to scrub the full array in one go WARNING - depending on size of your array,
+# setting to 100 will take a very long time!
 SCRUB_PERCENT=5
 SCRUB_AGE=10
 
-# Prehash Data To avoid the risk of a latent hardware issue, you can enable the "pre-hash" mode and have all the
-# data read two times to ensure its integrity. This option also verifies the files moved inside the array, to ensure
-# that the move operation went successfully, and in case to block the sync and to allow to run a fix operation.
-# 1 to enable, any other values to disable
+# Prehash Data To avoid the risk of a latent hardware issue, you can enable the
+# "pre-hash" mode and have all the data read two times to ensure its integrity.
+# This option also verifies the files moved inside the array, to ensure that
+# the move operation went successfully, and in case to block the sync and to
+# allow to run a fix operation. 1 to enable, any other values to disable.
 PREHASH=1
 
-# Set the option to log SMART info. 1 to enable, any other value to disable
+# Set the option to log SMART info. 1 to enable, any other value to disable.
 SMART_LOG=1
 
-# Set verbosity of the email output. TOUCH and DIFF outputs will be kept in the email, producing a potentially huge email. Keep this disabled for optimal reading
-# You can always check TOUCH and DIFF outputs using the TMP file.
-# 1 to enable, any other values to disable
+# Set verbosity of the email output. TOUCH and DIFF outputs will be kept in the
+# email, producing a potentially huge email. Keep this disabled for optimal
+# reading You can always check TOUCH and DIFF outputs using the TMP file. 1 to
+# enable, any other values to disable.
 VERBOSITY=0
 
-# Set if disk spindown should be performed. Depending on your system, this may not work. 1 to enable, any other values to disable
+# Set if disk spindown should be performed. Depending on your system, this may
+# not work. 1 to enable, any other values to disable.
 SPINDOWN=0
 
-# Run snapraid status command to show array general information.
-# Be aware the HTML output is pretty broken.
+# Run snapraid status command to show array general information. Be aware the
+# HTML output is pretty broken.
 SNAP_STATUS=0
 
 # location of the snapraid binary
@@ -58,7 +61,6 @@ MAIL_BIN="/usr/bin/mailx"
 
 ####################### SYSTEM CONFIGURATION #######################
 # Make changes only if you know what you're doing
-######################
 
 # Init variables
 CHK_FAIL=0
