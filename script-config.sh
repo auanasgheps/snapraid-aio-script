@@ -72,13 +72,16 @@ SYNC_WARN_COUNT=""
 TMP_OUTPUT="/tmp/snapRAID.out"
 SNAPRAID_LOG="/var/log/snapraid.log"
 SECONDS=0 #Capture time
+SNAPRAID_CONF="/etc/snapraid.conf"
 
 # Expand PATH for smartctl
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 # Determine names of first content file...
-CONTENT_FILE=$(grep -v '^$\|^\s*\#' /etc/snapraid.conf | grep snapraid.content | head -n 1 | cut -d " " -f2)
+SNAPRAID_CONF_LINES=$(grep -E '^[^#;]' $SNAPRAID_CONF)
+CONTENT_FILE=$(echo "$SNAPRAID_CONF_LINES" | grep snapraid.content | head -n 1 | cut -d ' ' -f2)
 
 # Build an array of parity all files...
-PARITY_FILES[0]=$(grep -v '^$\|^\s*\#' /etc/snapraid.conf | grep snapraid.parity | head -n 1 | cut -d " " -f2)
-IFS=$'\n' PARITY_FILES=("$(grep "^[^#;]" /etc/snapraid.conf | grep "^\([2-6z]-\)*parity" | cut -d " " -f 2 | tr ',' '\n')")
+IFS=$'\n' PARITY_FILES=(
+  $(echo "$SNAPRAID_CONF_LINES" | grep -E '^([2-6z]-)*parity' | cut -d ' ' -f2- | tr ',' '\n')
+)
