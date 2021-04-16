@@ -323,7 +323,7 @@ function sed_me(){
   # process and redirect output. We close stream because of the calls to new
   # wait function in between sed_me calls. If we do not do this we try to close
   # Processes which are not parents of the shell.
-  exec >&"$out" 2>&"$err"
+  exec >& "$OUT" 2>& "$ERROR"
   sed -i "$1" "$2"
 
   output_to_file_screen
@@ -485,14 +485,17 @@ function send_mail_verbose(){
 # finish. Probably not the best way of 'fixing' this issue. Someone with more
 # knowledge can provide better insight.
 function close_output_and_wait(){
-  exec >&"$out" 2>&"$err"
-  wait "$(pgrep -P $$)"
+  exec >& "$OUT" 2>& "$ERROR"
+  CHILD_PID=$(pgrep -P $$)
+  if [ -n "$CHILD_PID" ]; then
+    wait "$CHILD_PID"
+  fi
 }
 
 # Redirects output to file and screen. Open a new tee process.
 function output_to_file_screen(){
   # redirect all output to screen and file
-  exec {out}>&1 {err}>&2
+  exec {OUT}>&1 {ERROR}>&2
   # NOTE: Not preferred format but valid: exec &> >(tee -ia "${TMP_OUTPUT}" )
   exec > >(tee -a "${TMP_OUTPUT}") 2>&1
 }
