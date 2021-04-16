@@ -449,7 +449,7 @@ function chk_scrub_settings(){
 	  fi
 	else
       # NO, so let's increment the warning count and skip the scrub job
-      ((SCRUB_COUNT += 1))
+      ((scrub_count += 1))
       echo "$scrub_count" > "$SCRUB_COUNT_FILE"
 	  if [ "$scrub_count" == "$SCRUB_DELAYED_RUN" ]; then
 		 echo  "This is the **last** run left before running scrub job next time. [$(date)]"
