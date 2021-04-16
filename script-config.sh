@@ -68,7 +68,6 @@ DO_SYNC=0
 EMAIL_SUBJECT_PREFIX="(SnapRAID on $(hostname))"
 GRACEFUL=0
 SYNC_WARN_FILE="$CURRENT_DIR/snapRAID.warnCount"
-SYNC_WARN_COUNT=""
 TMP_OUTPUT="/tmp/snapRAID.out"
 SNAPRAID_LOG="/var/log/snapraid.log"
 SECONDS=0 #Capture time
