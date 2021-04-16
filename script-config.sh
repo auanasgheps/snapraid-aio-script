@@ -22,16 +22,16 @@ UP_THRESHOLD=500
 # manual sync if delete threshold is breached).
 SYNC_WARN_THRESHOLD=-1
 
-# Set number of runs before running a scrub. Use this option if you don't want
-# to scrub the array every time, executing the script ins less time.
-# Set to 0 to disable this option and run scrub every time.
-SCRUB_DELAYED_RUN=0
-
 # Set percentage of array to scrub if it is in sync. i.e. 0 to disable and 100
 # to scrub the full array in one go WARNING - depending on size of your array,
 # setting to 100 will take a very long time!
 SCRUB_PERCENT=5
 SCRUB_AGE=10
+
+# Set number of script runs before running a scrub. Use this option if you 
+# don't want to scrub the array every time.
+# Set to 0 to disable this option and run scrub every time.
+SCRUB_DELAYED_RUN=0
 
 # Prehash Data To avoid the risk of a latent hardware issue, you can enable the
 # "pre-hash" mode and have all the data read two times to ensure its integrity.
