@@ -442,8 +442,8 @@ function chk_scrub_settings(){
       # if there is at least one warn count, output a message and force a scrub
 	  # job. Do not need to remove warning marker here as it is automatically 
 	  # removed when the scrub job is run by this script
-      echo "Number of delayed runs has reached/exceeded threshold ($SCRUB_DELAYED_RUN). Forcing a SCRUB job to run."
-      mklog "INFO: Number of delayed runs has reached/exceeded threshold ($SCRUB_DELAYED_RUN). Forcing a SCRUB job to run." 
+      echo "Number of delayed runs has reached/exceeded threshold ($SCRUB_DELAYED_RUN). A SCRUB job will run."
+      mklog "INFO: Number of delayed runs has reached/exceeded threshold ($SCRUB_DELAYED_RUN). A SCRUB job will run." 
 	  echo
 		run_scrub
 	  fi
@@ -455,8 +455,8 @@ function chk_scrub_settings(){
 		 echo  "This is the **last** run left before running scrub job next time. [$(date)]"
 		 mklog "INFO: This is the **last** run left before running scrub job next time. [$(date)]"
 	  else 
-		 echo "$((SCRUB_DELAYED_RUN - scrub_count)) runs until the next forced scrub. **NOT** proceeding with SCRUB job. [$(date)]"
-		 mklog "INFO: $((SCRUB_DELAYED_RUN - scrub_count)) runs until the next forced scrub. **NOT** proceeding with SCRUB job. [$(date)]"
+		 echo "$((SCRUB_DELAYED_RUN - scrub_count)) runs until the next scrub. **NOT** proceeding with SCRUB job. [$(date)]"
+		 mklog "INFO: $((SCRUB_DELAYED_RUN - scrub_count)) runs until the next scrub. **NOT** proceeding with SCRUB job. [$(date)]"
     fi
 	fi
 }
