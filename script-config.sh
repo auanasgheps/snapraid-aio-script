@@ -22,6 +22,11 @@ UP_THRESHOLD=500
 # manual sync if delete threshold is breached).
 SYNC_WARN_THRESHOLD=-1
 
+# Set number of runs before running a scrub. Use this option if you don't want
+# to scrub the array every time, executing the script ins less time.
+# Set to 0 to disable this option and run scrub every time.
+SCRUB_DELAYED_RUN=0
+
 # Set percentage of array to scrub if it is in sync. i.e. 0 to disable and 100
 # to scrub the full array in one go WARNING - depending on size of your array,
 # setting to 100 will take a very long time!
@@ -68,6 +73,7 @@ DO_SYNC=0
 EMAIL_SUBJECT_PREFIX="(SnapRAID on $(hostname))"
 GRACEFUL=0
 SYNC_WARN_FILE="$CURRENT_DIR/snapRAID.warnCount"
+SCRUB_COUNT_FILE="$CURRENT_DIR/snapRAID.scrubCount"
 TMP_OUTPUT="/tmp/snapRAID.out"
 SNAPRAID_LOG="/var/log/snapraid.log"
 SECONDS=0 #Capture time

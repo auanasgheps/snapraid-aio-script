@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="2.8.1"
+SNAPSCRIPTVERSION="2.9.0.DEV2"
 
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
@@ -157,6 +157,8 @@ function main(){
   fi
 
   # Moving onto scrub now. Check if user has enabled scrub
+  echo "###SnapRAID SCRUB [$(date)]"
+	mklog "INFO: SnapRAID SCRUB Job started"
   if [ "$SCRUB_PERCENT" -gt 0 ]; then
     # YES, first let's check if delete threshold has been breached and we have
     # not forced a sync.
@@ -176,20 +178,10 @@ function main(){
         echo "**WARNING** - check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job. [$(date)]"
         mklog "WARN: Check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job."
       else
-        # Everything ok - let's run the scrub job!
-        echo "###SnapRAID SCRUB [$(date)]"
-        mklog "INFO: SnapRAID SCRUB Job started"
-        $SNAPRAID_BIN scrub -p $SCRUB_PERCENT -o $SCRUB_AGE -q
-        #wait for the job to finish
-        close_output_and_wait
-        output_to_file_screen
-        echo "SCRUB finished [$(date)]"
-        mklog "INFO: SnapRAID SCRUB Job finished"
-        echo
-        JOBS_DONE="$JOBS_DONE + SCRUB"
-        # insert SCRUB marker to 'Everything OK' or 'Nothing to do' string to
-        # differentiate it from SYNC job above
-        sed_me "s/^Everything OK/**SCRUB JOB - Everything OK**/g;s/^Nothing to do/**SCRUB JOB - Nothing to do**/g" "$TMP_OUTPUT"
+        # Everything ok - ready to run the scrub job!
+        # The fuction will check if scrub delayed run is enabled and run scrub
+        # based on configured conditions
+		    chk_scrub_settings
       fi
     fi
   else
@@ -396,7 +388,7 @@ function chk_sync_warn(){
       echo "$sync_warn_count" > "$SYNC_WARN_FILE"
       if [ "$sync_warn_count" == "$SYNC_WARN_THRESHOLD" ]; then
         echo  "This is the **last** warning left. **NOT** proceeding with SYNC job. [$(date)]"
-        mklog "This is the **last** warning left. **NOT** proceeding with SYNC job. [$(date)]"
+        mklog "INFO: This is the **last** warning left. **NOT** proceeding with SYNC job. [$(date)]"
         DO_SYNC=0
       else
         echo "$((SYNC_WARN_THRESHOLD - sync_warn_count)) threshold warning(s) until the next forced sync. **NOT** proceeding with SYNC job. [$(date)]"
@@ -427,6 +419,66 @@ function chk_zero(){
     echo "No zero sub-second timestamp files found."
     echo "TOUCH finished [$(date)]"
   fi
+}
+
+function chk_scrub_settings(){
+	if [ "$SCRUB_DELAYED_RUN" -gt 0 ]; then
+	  echo "Delayed scrub is enabled."
+      mklog "INFO: Delayed scrub is enabled.."
+  	fi
+	
+	local scrub_count
+    scrub_count=$(sed '/^[0-9]*$/!d' "$SCRUB_COUNT_FILE" 2>/dev/null)
+    # zero if file does not exist or did not contain a number
+    : "${scrub_count:=0}"
+	
+	if [ "$scrub_count" -ge "$SCRUB_DELAYED_RUN" ]; then
+	  # Run a scrub job. if the warn count is zero it means the scrub was already 
+	  # forced, do not output a dumb message and continue with the scrub job.
+      if [ "$scrub_count" -eq 0 ]; then
+	  echo
+        run_scrub
+	  else
+      # if there is at least one warn count, output a message and force a scrub
+	  # job. Do not need to remove warning marker here as it is automatically 
+	  # removed when the scrub job is run by this script
+      echo "Number of delayed runs has reached/exceeded threshold ($SCRUB_DELAYED_RUN). Forcing a SCRUB job to run."
+      mklog "INFO: Number of delayed runs has reached/exceeded threshold ($SCRUB_DELAYED_RUN). Forcing a SCRUB job to run." 
+	  echo
+		run_scrub
+	  fi
+	else
+      # NO, so let's increment the warning count and skip the scrub job
+      ((scrub_count += 1))
+      echo "$scrub_count" > "$SCRUB_COUNT_FILE"
+	  if [ "$scrub_count" == "$SCRUB_DELAYED_RUN" ]; then
+		 echo  "This is the **last** run left before running scrub job next time. [$(date)]"
+		 mklog "INFO: This is the **last** run left before running scrub job next time. [$(date)]"
+	  else 
+		 echo "$((SCRUB_DELAYED_RUN - scrub_count)) runs until the next forced scrub. **NOT** proceeding with SCRUB job. [$(date)]"
+		 mklog "INFO: $((SCRUB_DELAYED_RUN - scrub_count)) runs until the next forced scrub. **NOT** proceeding with SCRUB job. [$(date)]"
+    fi
+	fi
+}
+
+function run_scrub(){
+	$SNAPRAID_BIN scrub -p "$SCRUB_PERCENT" -o "$SCRUB_AGE" -q
+    #wait for the job to finish
+    close_output_and_wait
+    output_to_file_screen
+    echo "SCRUB finished [$(date)]"
+    mklog "INFO: SnapRAID SCRUB Job finished"
+    echo
+    JOBS_DONE="$JOBS_DONE + SCRUB"
+    # insert SCRUB marker to 'Everything OK' or 'Nothing to do' string to 
+    # differentiate it from SCRUB job above
+    sed_me "s/^Everything OK/**SCRUB JOB - Everything OK**/g;s/^Nothing to do/**SCRUB JOB - Nothing to do**/g" "$TMP_OUTPUT"
+	  # Remove the warning flag if set previously. This is done now to 
+	  # take care of scenarios when user has manually synced or restored
+    # deleted files and we will have missed it in the checks above.
+	  if [ -e "$SCRUB_COUNT_FILE" ]; then
+	   rm "$SCRUB_COUNT_FILE"
+	  fi
 }
 
 function prepare_mail() {
