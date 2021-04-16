@@ -28,7 +28,7 @@ SYNC_WARN_THRESHOLD=-1
 SCRUB_PERCENT=5
 SCRUB_AGE=10
 
-# Set number of script runs before running a scrub. Use this option if you 
+# Set number of script runs before running a scrub. Use this option if you
 # don't want to scrub the array every time.
 # Set to 0 to disable this option and run scrub every time.
 SCRUB_DELAYED_RUN=0
