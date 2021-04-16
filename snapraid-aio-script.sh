@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="2.8.1"
+SNAPSCRIPTVERSION="2.9.0.DEV1"
 
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
