@@ -371,36 +371,36 @@ function chk_sync_warn(){
       mklog "INFO: Sync after threshold warning(s) is enabled."
     fi
 
-    SYNC_WARN_COUNT=$(sed 'q;/^[0-9][0-9]*$/!d' "$SYNC_WARN_FILE" 2>/dev/null)
-    # value is zero if file does not exist or does not contain what we are
-    # expecting
-    SYNC_WARN_COUNT=${SYNC_WARN_COUNT:-0}
+    local sync_warn_count
+    sync_warn_count=$(sed '/^[0-9]*$/!d' "$SYNC_WARN_FILE" 2>/dev/null)
+    # zero if file does not exist or did not contain a number
+    : "${sync_warn_count:=0}"
 
-    if [ "$SYNC_WARN_COUNT" -ge "$SYNC_WARN_THRESHOLD" ]; then
+    if [ "$sync_warn_count" -ge "$SYNC_WARN_THRESHOLD" ]; then
       # Force a sync. If the warn count is zero it means the sync was already
       # forced, do not output a dumb message and continue with the sync job.
-      if [ "$SYNC_WARN_COUNT" -eq 0 ]; then
+      if [ "$sync_warn_count" -eq 0 ]; then
         echo
         DO_SYNC=1
       else
         # If there is at least one warn count, output a message and force a
         # sync job. Do not need to remove warning marker here as it is
         # automatically removed when the sync job is run by this script
-        echo "Number of threshold warning(s) ($SYNC_WARN_COUNT) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run."
-        mklog "INFO: Number of threshold warning(s) ($SYNC_WARN_COUNT) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run."
+        echo "Number of threshold warning(s) ($sync_warn_count) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run."
+        mklog "INFO: Number of threshold warning(s) ($sync_warn_count) has reached/exceeded threshold ($SYNC_WARN_THRESHOLD). Forcing a SYNC job to run."
         DO_SYNC=1
       fi
     else
       # NO, so let's increment the warning count and skip the sync job
-      ((SYNC_WARN_COUNT += 1))
-      echo "$SYNC_WARN_COUNT" > "$SYNC_WARN_FILE"
-      if [ "$SYNC_WARN_COUNT" == "$SYNC_WARN_THRESHOLD" ]; then
+      ((sync_warn_count += 1))
+      echo "$sync_warn_count" > "$SYNC_WARN_FILE"
+      if [ "$sync_warn_count" == "$SYNC_WARN_THRESHOLD" ]; then
         echo  "This is the **last** warning left. **NOT** proceeding with SYNC job. [$(date)]"
         mklog "This is the **last** warning left. **NOT** proceeding with SYNC job. [$(date)]"
         DO_SYNC=0
       else
-        echo "$((SYNC_WARN_THRESHOLD - SYNC_WARN_COUNT)) threshold warning(s) until the next forced sync. **NOT** proceeding with SYNC job. [$(date)]"
-        mklog "INFO: $((SYNC_WARN_THRESHOLD - SYNC_WARN_COUNT)) threshold warning(s) until the next forced sync. **NOT** proceeding with SYNC job."
+        echo "$((SYNC_WARN_THRESHOLD - sync_warn_count)) threshold warning(s) until the next forced sync. **NOT** proceeding with SYNC job. [$(date)]"
+        mklog "INFO: $((SYNC_WARN_THRESHOLD - sync_warn_count)) threshold warning(s) until the next forced sync. **NOT** proceeding with SYNC job."
         DO_SYNC=0
       fi
     fi
