@@ -12,13 +12,15 @@ SNAPSCRIPTVERSION="2.9.0.DEV2"
 
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
-
 # import the config file for this script which contain user configuration
 CONFIG_FILE=$CURRENT_DIR/script-config.sh
 # shellcheck source=script-config.sh
 source "$CONFIG_FILE"
 
 ########################################################################
+
+SYNC_MARKER="SYNC -"
+SCRUB_MARKER="SCRUB -"
 
 ######################
 #   MAIN SCRIPT      #
@@ -35,7 +37,6 @@ function main(){
   echo "SnapRAID Script Job started [$(date)]"
   echo "Running SnapRAID version $SNAPRAIDVERSION"
   echo "SnapRAID AIO Script version $SNAPSCRIPTVERSION"
-  echo
   echo "----------------------------------------"
   mklog "INFO: ----------------------------------------"
   mklog "INFO: SnapRAID Script Job started"
@@ -43,7 +44,7 @@ function main(){
   mklog "INFO: SnapRAID Script version $SNAPSCRIPTVERSION"
 
 
-  echo "##Preprocessing"
+  echo "## Preprocessing"
 
   # Check if script configuration file has been found
   if [ ! -f "$CONFIG_FILE" ]; then
@@ -62,28 +63,26 @@ function main(){
     # super silent and secret install command
     export DEBIAN_FRONTEND=noninteractive
     apt-get install -qq -o=Dpkg::Use-Pty=0 python-markdown;
-    echo
   fi
 
   # sanity check first to make sure we can access the content and parity files
   mklog "INFO: Checking SnapRAID disks"
   sanity_check
 
-  echo
   echo "----------------------------------------"
-  echo "##Processing"
+  echo "## Processing"
 
   # Fix timestamps
   chk_zero
 
   # run the snapraid DIFF command
-  echo "###SnapRAID DIFF [$(date)]"
+  echo "### SnapRAID DIFF [$(date)]"
   mklog "INFO: SnapRAID DIFF started"
+  echo "\`\`\`"
   $SNAPRAID_BIN diff
-  # wait for the above cmd to finish, save output and open new redirect
   close_output_and_wait
   output_to_file_screen
-  echo
+  echo "\`\`\`"
   echo "DIFF finished [$(date)]"
   mklog "INFO: SnapRAID DIFF finished"
   JOBS_DONE="DIFF"
@@ -100,14 +99,12 @@ function main(){
     echo "Exiting script. [$(date)]"
     if [ $EMAIL_ADDRESS ]; then
       SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Unable to proceed with SYNC/SCRUB job(s). Check DIFF job output."
-      send_mail
+      trim_log < "$TMP_OUTPUT" | send_mail
     fi
     exit 1;
   fi
-  echo
   echo "**SUMMARY of changes - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]**"
   mklog "INFO: SUMMARY of changes - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
-  echo
 
   # check if the conditions to run SYNC are met
   # CHK 1 - if files have changed
@@ -131,48 +128,48 @@ function main(){
   # Now run sync if conditions are met
   if [ "$DO_SYNC" -eq 1 ]; then
     echo "SYNC is authorized. [$(date)]"
-    echo "###SnapRAID SYNC [$(date)]"
+    echo "### SnapRAID SYNC [$(date)]"
     mklog "INFO: SnapRAID SYNC Job started"
+    echo "\`\`\`"
     if [ "$PREHASH" -eq 1 ]; then
       $SNAPRAID_BIN sync -h -q
     else
       $SNAPRAID_BIN sync -q
     fi
-    #wait for the job to finish
     close_output_and_wait
     output_to_file_screen
+    echo "\`\`\`"
     echo "SYNC finished [$(date)]"
     mklog "INFO: SnapRAID SYNC Job finished"
     JOBS_DONE="$JOBS_DONE + SYNC"
     # insert SYNC marker to 'Everything OK' or 'Nothing to do' string to
     # differentiate it from SCRUB job later
-    sed_me "s/^Everything OK/**SYNC JOB - Everything OK**/g;s/^Nothing to do/**SYNC JOB - Nothing to do**/g" "$TMP_OUTPUT"
+    sed_me "
+      s/^Everything OK/${SYNC_MARKER} Everything OK/g;
+      s/^Nothing to do/${SYNC_MARKER} Nothing to do/g" "$TMP_OUTPUT"
     # Remove any warning flags if set previously. This is done in this step to
     # take care of scenarios when user has manually synced or restored deleted
     # files and we will have missed it in the checks above.
     if [ -e "$SYNC_WARN_FILE" ]; then
       rm "$SYNC_WARN_FILE"
     fi
-    echo
   fi
 
   # Moving onto scrub now. Check if user has enabled scrub
-  echo "###SnapRAID SCRUB [$(date)]"
+  echo "### SnapRAID SCRUB [$(date)]"
 	mklog "INFO: SnapRAID SCRUB Job started"
   if [ "$SCRUB_PERCENT" -gt 0 ]; then
     # YES, first let's check if delete threshold has been breached and we have
     # not forced a sync.
     if [ "$CHK_FAIL" -eq 1 ] && [ "$DO_SYNC" -eq 0 ]; then
       # YES, parity is out of sync so let's not run scrub job
-      echo
       echo "Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached). [$(date)]"
       mklog "INFO: Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached)."
     else
       # NO, delete threshold has not been breached OR we forced a sync, but we
       # have one last test - let's make sure if sync ran, it completed
-      # successfully (by checking for our marker text "SYNC JOB -" in the
-      # output).
-      if [ "$DO_SYNC" -eq 1 ] && ! grep -qw "SYNC JOB -" "$TMP_OUTPUT"; then
+      # successfully (by checking for the marker text in the output).
+      if [ "$DO_SYNC" -eq 1 ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
         # Sync ran but did not complete successfully so lets not run scrub to
         # be safe
         echo "**WARNING** - check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job. [$(date)]"
@@ -189,33 +186,38 @@ function main(){
     mklog "INFO: Scrub job is not enabled. Not running SCRUB job."
   fi
 
-  echo
   echo "----------------------------------------"
-  echo "##Postprocessing"
+  echo "## Postprocessing"
 
   # Show SnapRAID SMART info if enabled
   if [ "$SMART_LOG" -eq 1 ]; then
-    echo
+    echo "### SnapRAID Smart"
+    echo "\`\`\`"
     $SNAPRAID_BIN smart
     close_output_and_wait
     output_to_file_screen
-    echo
+    echo "\`\`\`"
   fi
 
   # Show SnapRAID Status information if enabled
   if [ "$SNAP_STATUS" -eq 1 ]; then
-    echo
-    echo "###SnapRAID Status"
+    echo "### SnapRAID Status"
+    echo "\`\`\`"
     $SNAPRAID_BIN status
     close_output_and_wait
     output_to_file_screen
-    echo
+    echo "\`\`\`"
   fi
 
 
   # Spinning down disks (Method 1: snapraid - preferred)
   if [ "$SPINDOWN" -eq 1 ]; then
+    echo "### SnapRAID Spindown"
+    echo "\`\`\`"
     $SNAPRAID_BIN down
+    close_output_and_wait
+    output_to_file_screen
+    echo "\`\`\`"
   fi
 
   # Spinning down disks (Method 2: hdparm - spins down all rotational devices)
@@ -249,17 +251,16 @@ function main(){
     prepare_mail
 
     ELAPSED="$((SECONDS / 3600))hrs $(((SECONDS / 60) % 60))min $((SECONDS % 60))sec"
-    echo
     echo "----------------------------------------"
-    echo "##Total time elapsed for SnapRAID: $ELAPSED"
+    echo "## Total time elapsed for SnapRAID: $ELAPSED"
     mklog "INFO: Total time elapsed for SnapRAID: $ELAPSED"
 
     # Add a topline to email body
     sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
     if [ $VERBOSITY -eq 1 ]; then
-      send_mail_verbose
+      send_mail < "$TMP_OUTPUT"
     else
-      send_mail
+      trim_log < "$TMP_OUTPUT" | send_mail
     fi
   fi
 
@@ -279,7 +280,7 @@ function sanity_check() {
     prepare_mail
     # Add a topline to email body
     sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
-    send_mail
+    trim_log < "$TMP_OUTPUT" | send_mail
     exit;
   fi
 
@@ -295,7 +296,7 @@ function sanity_check() {
       prepare_mail
       # Add a topline to email body
       sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
-      send_mail
+      trim_log < "$TMP_OUTPUT" | send_mail
       exit;
     fi
   done
@@ -374,7 +375,6 @@ function chk_sync_warn(){
       # Force a sync. If the warn count is zero it means the sync was already
       # forced, do not output a dumb message and continue with the sync job.
       if [ "$sync_warn_count" -eq 0 ]; then
-        echo
         DO_SYNC=1
       else
         # If there is at least one warn count, output a message and force a
@@ -407,32 +407,33 @@ function chk_sync_warn(){
 }
 
 function chk_zero(){
-  echo "###SnapRAID TOUCH [$(date)]"
+  echo "### SnapRAID TOUCH [$(date)]"
   echo "Checking for zero sub-second files."
   TIMESTATUS=$($SNAPRAID_BIN status | grep 'You have [1-9][0-9]* files with zero sub-second timestamp\.' | sed 's/^You have/Found/g')
   if [ -n "$TIMESTATUS" ]; then
     echo "$TIMESTATUS"
     echo "Running TOUCH job to timestamp. [$(date)]"
+    echo "\`\`\`"
     $SNAPRAID_BIN touch
     close_output_and_wait
     output_to_file_screen
-    echo "TOUCH finished [$(date)]"
+    echo "\`\`\`"
   else
     echo "No zero sub-second timestamp files found."
-    echo "TOUCH finished [$(date)]"
   fi
+  echo "TOUCH finished [$(date)]"
 }
 
 function chk_scrub_settings(){
 	if [ "$SCRUB_DELAYED_RUN" -gt 0 ]; then
     echo "Delayed scrub is enabled."
-      mklog "INFO: Delayed scrub is enabled.."
-    fi
+    mklog "INFO: Delayed scrub is enabled.."
+  fi
 
 	local scrub_count
-    scrub_count=$(sed '/^[0-9]*$/!d' "$SCRUB_COUNT_FILE" 2>/dev/null)
-    # zero if file does not exist or did not contain a number
-    : "${scrub_count:=0}"
+  scrub_count=$(sed '/^[0-9]*$/!d' "$SCRUB_COUNT_FILE" 2>/dev/null)
+  # zero if file does not exist or did not contain a number
+  : "${scrub_count:=0}"
 
 	if [ "$scrub_count" -ge "$SCRUB_DELAYED_RUN" ]; then
     # Run a scrub job. if the warn count is zero it means the scrub was already
@@ -464,23 +465,25 @@ function chk_scrub_settings(){
 }
 
 function run_scrub(){
-	$SNAPRAID_BIN scrub -p "$SCRUB_PERCENT" -o "$SCRUB_AGE" -q
-    #wait for the job to finish
-    close_output_and_wait
-    output_to_file_screen
-    echo "SCRUB finished [$(date)]"
-    mklog "INFO: SnapRAID SCRUB Job finished"
-    echo
-    JOBS_DONE="$JOBS_DONE + SCRUB"
-    # insert SCRUB marker to 'Everything OK' or 'Nothing to do' string to
-    # differentiate it from SCRUB job above
-    sed_me "s/^Everything OK/**SCRUB JOB - Everything OK**/g;s/^Nothing to do/**SCRUB JOB - Nothing to do**/g" "$TMP_OUTPUT"
-    # Remove the warning flag if set previously. This is done now to
-    # take care of scenarios when user has manually synced or restored
-    # deleted files and we will have missed it in the checks above.
-    if [ -e "$SCRUB_COUNT_FILE" ]; then
-      rm "$SCRUB_COUNT_FILE"
-    fi
+  echo "\`\`\`"
+  $SNAPRAID_BIN scrub -p $SCRUB_PERCENT -o $SCRUB_AGE -q
+  close_output_and_wait
+  output_to_file_screen
+  echo "\`\`\`"
+  echo "SCRUB finished [$(date)]"
+  mklog "INFO: SnapRAID SCRUB Job finished"
+  JOBS_DONE="$JOBS_DONE + SCRUB"
+  # insert SCRUB marker to 'Everything OK' or 'Nothing to do' string to
+  # differentiate it from SYNC job above
+  sed_me "
+    s/^Everything OK/${SCRUB_MARKER} Everything OK/g;
+    s/^Nothing to do/${SCRUB_MARKER} Nothing to do/g" "$TMP_OUTPUT"
+  # Remove the warning flag if set previously. This is done now to
+  # take care of scenarios when user has manually synced or restored
+  # deleted files and we will have missed it in the checks above.
+  if [ -e "$SCRUB_COUNT_FILE" ]; then
+    rm "$SCRUB_COUNT_FILE"
+  fi
 }
 
 function prepare_mail() {
@@ -509,10 +512,10 @@ function prepare_mail() {
       MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
     fi
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
-  elif [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "SYNC JOB -" "$TMP_OUTPUT"; then
+  elif [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
     # Sync ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-  elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "SCRUB JOB -" "$TMP_OUTPUT"; then
+  elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
     # Scrub ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
   else
@@ -520,16 +523,33 @@ function prepare_mail() {
   fi
 }
 
-function send_mail(){
-  # Format for markdown
-  sed_me "s:$:  :" "$TMP_OUTPUT"
-  sed  "/^Running TOUCH job to timestamp/,/^\TOUCH finished/{/^Running TOUCH job to timestamp/!{/^TOUCH finished/!d}}; /^###SnapRAID DIFF/,/^\DIFF finished/{/^###SnapRAID DIFF/!{/^DIFF finished/!d}}" "$TMP_OUTPUT" | $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" "$EMAIL_ADDRESS" < <(python -m markdown)
-}
+# Trim the log file read from stdin.
+function trim_log(){
+  sed '
+    /^Running TOUCH job to timestamp/,/^\TOUCH finished/{
+      /^Running TOUCH job to timestamp/!{/^TOUCH finished/!d}
+    };
+    /^### SnapRAID DIFF/,/^\DIFF finished/{
+      /^### SnapRAID DIFF/!{/^DIFF finished/!d}
+    }'
+  }
 
-function send_mail_verbose(){
-  # Format for markdown
-  sed_me "s:$:  :" "$TMP_OUTPUT"
-  $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" "$EMAIL_ADDRESS" < "$TMP_OUTPUT" < <(python -m markdown)
+# Process and mail the email body read from stdin.
+function send_mail(){
+  local body; body=$(cat)
+  # Send the raw $body and append the HTML.
+  # Try to workaround py markdown 2.6.8 issues:
+  # 1. Will not format code blocks with empty lines, so just remove
+  #    them.
+  # 2. A dash line inside of code block brekas it, so remove it.
+  # 3. Add trailing double-spaces ensures the line endings are
+  #    maintained.
+  # 4. The HTML code blocks need to be modified to use <pre></pre> to display
+  #    correctly.
+  $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" "$EMAIL_ADDRESS" \
+    < <(echo "$body" | sed '/^[[:space:]]*$/d; /^ -*$/d; s/$/  /' |
+      python -m markdown |
+      sed 's/<code>/<pre>/;s%</code>%</pre>%')
 }
 
 # Due to how process substitution and newer bash versions work, this function
