@@ -48,9 +48,8 @@ If you don't know what to do, I recommend using the default values and see how i
    	- Docker remote - if docker is running on a remote machine
 - Verbosity - disabled by default. When enabled, includes the TOUCH and DIFF commands output, email will be huge and unreadable.
 - Spindown - spindown drives after the script, disabled because is currently not working. 
-- Snapraid Status - show the status of the array, disabled because the report output is not rendered correctly. 
+- Snapraid Status - shows the status of the array, disabled by default.
  
-
 You can also change more advanced options such as mail binary (by default uses `mailx`), SnapRAID binary location, log file location.
 
 ## A nice email report
@@ -203,7 +202,6 @@ If you want to use this script on OMV, don't worry about the section _Diff Scrip
 
 # Known Issues
 - Hard disk spin down does not work: they are immediately woken up. The script probably does not handle this correctly while running.
-- The report is not perfect, we can't be solve this because SnapRAID does not natively support Markdown. 
 
 # Credits
 All rights belong to the respective creators. 
