@@ -77,7 +77,7 @@ function main(){
 	 if [ "$DOCKER_MODE" = 1 ]; then 
       echo "###Pausing Containers [$(date)]";
 	 else
-	  echo "###Stopping Containers [[$(date)]";
+	  echo "###Stopping Containers [$(date)]";
      fi
      pause_services
     fi
