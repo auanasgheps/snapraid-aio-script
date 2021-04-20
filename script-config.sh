@@ -57,21 +57,40 @@ SPINDOWN=0
 # HTML output is pretty broken.
 SNAP_STATUS=0
 
+# Set to 1 to manage docker containers. They will be paused/stopped or 
+# resumed/restarted accordingly.
+MANAGE_SERVICES=1
+
+# Choose how to manage your containers: 1 to pause/unpause, 2 to stop/restart
+DOCKER_MODE=1
+  
+# Containers to manage (separated with spaces). Please ensure containers are 
+# always running before executing the script, otherwise the execution of this 
+# command will throw errors.
+SERVICES='container1 container2 container3'
+
+# Manage docker containers running on a remote machine. Set to 1 to enable, 
+# then enter Docker host machine IP and SSH user. Passwordless ssh access 
+# between snapRAID host and Docker host must be set up.
+DOCKER_REMOTE=0
+DOCKER_USER="sshusernamegoeshere"
+DOCKER_IP="127.0.0.1"
+
+####################### USER CONFIGURATION END #######################
+
+####################### SYSTEM CONFIGURATION #######################
+# Please make changes only if you know what you're doing
+
 # location of the snapraid binary
 SNAPRAID_BIN="/usr/bin/snapraid"
 # location of the mail program binary
 MAIL_BIN="/usr/bin/mailx"
 
-####################### USER CONFIGURATION END #######################
-
-####################### SYSTEM CONFIGURATION #######################
-# Make changes only if you know what you're doing
-
 # Init variables
 CHK_FAIL=0
 DO_SYNC=0
 EMAIL_SUBJECT_PREFIX="(SnapRAID on $(hostname))"
-GRACEFUL=0
+SERVICES_STOPPED=0
 SYNC_WARN_FILE="$CURRENT_DIR/snapRAID.warnCount"
 SCRUB_COUNT_FILE="$CURRENT_DIR/snapRAID.scrubCount"
 TMP_OUTPUT="/tmp/snapRAID.out"

@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="2.9.0.DEV2"
+SNAPSCRIPTVERSION="2.9.DEV3"
 
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
@@ -68,6 +68,20 @@ function main(){
   # sanity check first to make sure we can access the content and parity files
   mklog "INFO: Checking SnapRAID disks"
   sanity_check
+  
+  # pause configured containers
+  if [ "$MANAGE_SERVICES" -eq 1 ]; then
+   service_array_setup
+    if [ "$DOCKERALLOK" = YES ]; then
+	 echo
+	 if [ "$DOCKER_MODE" = 1 ]; then 
+      echo "###Pausing Containers [$(date)]";
+	 else
+	  echo "###Stopping Containers [$(date)]";
+     fi
+     pause_services
+    fi
+  fi
 
   echo "----------------------------------------"
   echo "## Processing"
@@ -97,7 +111,7 @@ function main(){
     # exit with error code
     echo "**ERROR** - failed to get one or more count values. Unable to proceed."
     echo "Exiting script. [$(date)]"
-    if [ $EMAIL_ADDRESS ]; then
+    if [ "$EMAIL_ADDRESS" ]; then
       SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Unable to proceed with SYNC/SCRUB job(s). Check DIFF job output."
       trim_log < "$TMP_OUTPUT" | send_mail
     fi
@@ -209,7 +223,6 @@ function main(){
     echo "\`\`\`"
   fi
 
-
   # Spinning down disks (Method 1: snapraid - preferred)
   if [ "$SPINDOWN" -eq 1 ]; then
     echo "### SnapRAID Spindown"
@@ -241,6 +254,17 @@ function main(){
   #   done
   # fi
 
+  # Resume paused containers
+  if [ "$SERVICES_STOPPED" -eq 1 ]; then
+    echo
+	 if [ "$DOCKER_MODE" = 1 ]; then 
+      echo "### Resuming Containers [$(date)]";
+	  else
+	  echo "### Restarting Containers [$(date)]";
+	 fi
+     resume_services
+  fi
+  
   echo "All jobs ended. [$(date)]"
   mklog "INFO: Snapraid: all jobs ended."
 
@@ -257,13 +281,14 @@ function main(){
 
     # Add a topline to email body
     sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
-    if [ $VERBOSITY -eq 1 ]; then
+    if [ "$VERBOSITY" -eq 1 ]; then
       send_mail < "$TMP_OUTPUT"
     else
       trim_log < "$TMP_OUTPUT" | send_mail
     fi
   fi
 
+  # exit with success, letting the trap handle cleanup of file descriptors
   exit 0;
 }
 
@@ -486,6 +511,85 @@ function run_scrub(){
   fi
 }
 
+function service_array_setup() {
+  # check if container names are set correctly
+  if [ -z "$SERVICES" ]; then
+   echo "Please configure Containers. Unable to manage containers."
+   ARRAY_VALIDATED=NO
+  else
+   echo "Setting up Containers array"
+   ARRAY_VALIDATED=YES
+  fi
+  
+  # check what docker mode is set
+  if [ "$DOCKER_MODE" = 1 ]; then
+   DOCKER_CMD1=pause
+   DOCKER_CMD2=unpause
+   DOCKERCMD_VALIDATED=YES
+  elif [ "$DOCKER_MODE" = 2 ]; then
+   DOCKER_CMD1=stop
+   DOCKER_CMD2=start
+   DOCKERCMD_VALIDATED=YES
+  else	
+   echo "Please check your command configuration. Unable to manage containers."
+   DOCKERCMD_VALIDATED=NO
+  fi
+  
+  # validate docker configuration 
+  if [ "$ARRAY_VALIDATED" = YES ] && [ "$DOCKERCMD_VALIDATED" = YES ]; then
+   IFS=' ' read -r -a service_array <<<"$SERVICES"
+   DOCKERALLOK=YES
+  else 
+   DOCKERALLOK=NO
+  fi
+}
+
+function pause_services(){
+  for i in "${service_array[@]}"; do
+   if [ "$DOCKER_MODE" = 1 ]; then 
+    echo "Pausing Container - ""${i^}";
+   else
+    echo "Stopping Container - ""${i^}";
+   fi
+   if [ "$DOCKER_REMOTE" -eq 1 ]; then
+    ssh "$DOCKER_USER"@"$DOCKER_IP" docker "$DOCKER_CMD1" "\$i"
+	  SERVICES_STOPPED=1
+    else
+      docker "$DOCKER_CMD1" "$i"
+	  SERVICES_STOPPED=1
+    fi
+  done
+}
+
+function resume_services(){
+  if [ "$SERVICES_STOPPED" -eq 1 ]; then
+   for i in "${service_array[@]}"; do
+    if [ "$DOCKER_MODE" = 1 ]; then 
+     echo "Resuming Container - ""${i^}";
+    else
+     echo "Restarting Container - ""${i^}";
+    fi
+    if [ "$DOCKER_REMOTE" -eq 1 ]; then
+     ssh "$DOCKER_USER"@"$DOCKER_IP" docker "$DOCKER_CMD2" "\$i"
+     SERVICES_STOPPED=0
+    else
+     docker "$DOCKER_CMD2" "$i"
+     SERVICES_STOPPED=0
+    fi
+   done
+  fi
+}
+
+function clean_desc(){
+  [[ $- == *i* ]] && exec &>/dev/tty
+ }
+  
+function final_cleanup(){
+  resume_services
+  clean_desc
+  exit
+}  
+
 function prepare_mail() {
   if [ $CHK_FAIL -eq 1 ]; then
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
@@ -586,5 +690,8 @@ function mklog() {
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
+
+# Set TRAP
+trap final_cleanup INT EXIT
 
 main "$@"
