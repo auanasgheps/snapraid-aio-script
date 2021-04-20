@@ -46,6 +46,12 @@ function main(){
 
   echo "## Preprocessing"
 
+  # Healthchecks.io start 
+  if [ "$HEALTHCHECKS" -eq 1 ]; then  
+   echo "Healthchecks.io integration is enabled, script status will be reported to the configured URL."
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID/start"
+  fi
+  
   # Check if script configuration file has been found
   if [ ! -f "$CONFIG_FILE" ]; then
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
@@ -616,17 +622,33 @@ function prepare_mail() {
       MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
     fi
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
+	healthchecks_warning
   elif [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
     # Sync ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
+	healthchecks_warning
   elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
     # Scrub ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
+	healthchecks_warning
   else
     SUBJECT="[COMPLETED] $JOBS_DONE Jobs $EMAIL_SUBJECT_PREFIX"
+	healthchecks_success
   fi
 }
 
+function healthchecks_success(){
+  if [ "$HEALTHCHECKS" -eq 1 ]; then
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/0 --data-raw "$MSG"
+  fi
+  }
+  
+function healthchecks_warning(){
+  if [ "$HEALTHCHECKS" -eq 1 ]; then
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "$SUBJECT"
+  fi
+  }
+   
 # Trim the log file read from stdin.
 function trim_log(){
   sed '
