@@ -24,6 +24,8 @@ Contributions are welcome!
 ### Additional Information
 - Docker container management, if enabled, will manage containers before SnapRAID activity and restore them when finished. It avoids nasty errors aboud data being written during SnapRAID sync.
 	- You can either choose to pause or stop your containers and manage a remote docker host.
+- Healthchecks.io can be used to track script execution time and to promptly alert about errors.
+
 - Important messages are sent to the system log.
 
 ## Customization
@@ -42,6 +44,10 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Data to be scrubbed - by default 5% older than 10 days.
 - Pre-hashing - enabled by default. Mitigate the lack of ECC memory, reading data twice to avoid silent read errors. 
 - SMART Log - enabled by default. A SnapRAID report for disks health status.
+- Healthchecks.io integration
+  	- Script execution result can be reported to Healthchecks.io. 
+  	- If the script ends with a **_WARNING_** message, it will be reported **_DOWN_** to Healthchecks.io, instead if the message is **_COMPLETED_** it will be **_UP_**. If you don't read your emails every day, this is a great one for you, since the service can report you in other ways. 
+  	- The reason of the failure, which is the email subject, is included as well.
 - Container management - disabled by default. 
 	- A list of containers you want to be interrupted before running actions and restored when completed.
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
