@@ -65,45 +65,44 @@ You can re-enable full output in the email by switching the option `VERBOSITY` b
 
 Here's a sneak peek of the email report. 
 
-**TO BE UPDATED **
 
 ```markdown
 ## [COMPLETED] DIFF + SYNC + SCRUB Jobs (SnapRAID on omv-test.local)
-
-SnapRAID Script Job started [Sat Jan 9 02:07:46 CET 2021]  
-Running SnapRAID version 11.5  
-SnapRAID Script version 2.7.0
+SnapRAID Script Job started [Tue 20 Apr 11:43:37 CEST 2021]
+Running SnapRAID version 11.5
+SnapRAID AIO Script version X.YZ
 
 ----------
 
 ## Preprocessing
-
-Configuration file found! Proceeding.  
-Testing that all parity files are present.  
+Healthchecks.io integration is enabled, script status will be reported to the configured URL.
+OKConfiguration file found! Proceeding.
+Testing that all parity files are present.
 All parity files found. Continuing...
+Setting up Containers array
+
+### Stopping Containers [Tue 20 Apr 11:43:37 CEST 2021]
+Stopping Container - Code-server
+code-server
+Stopping Container - Portainer
+portainer
 
 ----------
 
 ## Processing
+### SnapRAID TOUCH [Tue 20 Apr 11:43:37 CEST 2021]
+Checking for zero sub-second files.
+No zero sub-second timestamp files found.
+TOUCH finished [Tue 20 Apr 11:43:38 CEST 2021]
 
-### SnapRAID TOUCH [Sat Jan 9 02:07:46 CET 2021]
-
-Checking for zero sub-second files.  
-No zero sub-second timestamp files found.  
-TOUCH finished [Sat Jan 9 02:07:46 CET 2021]
-
-### SnapRAID DIFF [Sat Jan 9 02:07:46 CET 2021]
-
-DIFF finished [Sat Jan 9 02:07:46 CET 2021]
-
-**SUMMARY of changes - Added [2] - Deleted [0] - Moved [0] - Copied [0] - Updated [0]**
-
+### SnapRAID DIFF [Tue 20 Apr 11:43:38 CEST 2021]
+DIFF finished [Tue 20 Apr 11:43:38 CEST 2021]
+**SUMMARY of changes - Added [0] - Deleted [0] - Moved [0] - Copied [0] - Updated [1]**
 There are no deleted files, that's fine.
-There are no updated files, that's fine.
-SYNC is authorized.
+There are updated files. The number of updated files (1) is below the threshold of (500).
+SYNC is authorized. [Tue 20 Apr 11:43:38 CEST 2021]
 
-### SnapRAID SYNC [Sat Jan 9 02:07:46 CET 2021]
-
+### SnapRAID SYNC [Tue 20 Apr 11:43:38 CEST 2021]
 Self test...  
 Loading state from /srv/dev-disk-by-label-DISK1/snapraid.content...  
 Scanning disk DATA1...  
@@ -111,7 +110,7 @@ Scanning disk DATA2...
 Using 0 MiB of memory for the file-system.  
 Initializing...  
 Hashing...  
-SYNC_JOB--Everything OK  
+SYNC - Everything OK  
 Resizing...  
 Saving state to /srv/dev-disk-by-label-DISK1/snapraid.content...  
 Saving state to /srv/dev-disk-by-label-DISK2/snapraid.content...  
@@ -126,20 +125,18 @@ Verified /srv/dev-disk-by-label-DISK3/snapraid.content in 0 seconds
 Verified /srv/dev-disk-by-label-DISK2/snapraid.content in 0 seconds  
 Verified /srv/dev-disk-by-label-DISK1/snapraid.content in 0 seconds  
 Syncing...  
-Using 32 MiB of memory for 32 cached blocks.
-
-DATA1 59% | ***********************************  
-DATA2 55% | ********************************
-parity 0% |  
-2-parity 0% |  
-raid 6% |
-hash 5% |  
-sched 7% |   
-misc 17% | 
-|______________
-wait time (total, less is better)
-
-SYNC_JOB--Everything OK  
+Using 32 MiB of memory for 32 cached blocks.  
+    DATA1 12% | *******  
+    DATA2 82% | ************************************************  
+   parity  0% |   
+ 2-parity  0% |   
+     raid  1% | *  
+     hash  1% |   
+    sched 11% | ******  
+     misc  0% |   
+              |____________________________________________________________  
+                            wait time (total, less is better)  
+SYNC - Everything OK  
 Saving state to /srv/dev-disk-by-label-DISK1/snapraid.content...  
 Saving state to /srv/dev-disk-by-label-DISK2/snapraid.content...  
 Saving state to /srv/dev-disk-by-label-DISK3/snapraid.content...  
@@ -151,43 +148,68 @@ Verifying /srv/dev-disk-by-label-DISK4/snapraid.content...
 Verified /srv/dev-disk-by-label-DISK4/snapraid.content in 0 seconds  
 Verified /srv/dev-disk-by-label-DISK3/snapraid.content in 0 seconds  
 Verified /srv/dev-disk-by-label-DISK2/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK1/snapraid.content in 0 seconds  
-SYNC finished [Sat Jan 9 02:07:49 CET 2021]
+Verified /srv/dev-disk-by-label-DISK1/snapraid.content in 0 seconds
 
-### SnapRAID SCRUB [Sat Jan 9 02:07:49 CET 2021]
+SYNC finished [Tue 20 Apr 11:43:40 CEST 2021]
 
+### SnapRAID SCRUB [Tue 20 Apr 11:43:40 CEST 2021]
 Self test...  
 Loading state from /srv/dev-disk-by-label-DISK1/snapraid.content...  
 Using 0 MiB of memory for the file-system.  
 Initializing...  
 Scrubbing...  
 Using 48 MiB of memory for 32 cached blocks.  
-SCRUB_JOB--Nothing to do  
-SCRUB finished [Sat Jan 9 02:07:49 CET 2021]
+    DATA1  2% | *  
+    DATA2 18% | **********  
+   parity  0% |   
+ 2-parity  0% |   
+     raid 21% | ************  
+     hash  7% | ****  
+    sched 51% | ******************************  
+     misc  0% |   
+              |____________________________________________________________  
+                            wait time (total, less is better)  
+SCRUB - Everything OK  
+Saving state to /srv/dev-disk-by-label-DISK1/snapraid.content...  
+Saving state to /srv/dev-disk-by-label-DISK2/snapraid.content...  
+Saving state to /srv/dev-disk-by-label-DISK3/snapraid.content...  
+Saving state to /srv/dev-disk-by-label-DISK4/snapraid.content...  
+Verifying /srv/dev-disk-by-label-DISK1/snapraid.content...  
+Verifying /srv/dev-disk-by-label-DISK2/snapraid.content...  
+Verifying /srv/dev-disk-by-label-DISK3/snapraid.content...  
+Verifying /srv/dev-disk-by-label-DISK4/snapraid.content...  
+Verified /srv/dev-disk-by-label-DISK4/snapraid.content in 0 seconds  
+Verified /srv/dev-disk-by-label-DISK3/snapraid.content in 0 seconds  
+Verified /srv/dev-disk-by-label-DISK2/snapraid.content in 0 seconds  
+Verified /srv/dev-disk-by-label-DISK1/snapraid.content in 0 seconds
+
+SCRUB finished [Tue 20 Apr 11:43:41 CEST 2021]
 
 ----------
 
 ## Postprocessing
-
-SnapRAID SMART report:
-
-Temp Power Error FP Size  
-C OnDays Count TB Serial Device Disk
-
-----------
-
-  -      -       -  SSD  0.0  00000000000000000001  /dev/sdb  DATA1  
-  -      -       -    -  0.0  01000000000000000001  /dev/sdc  DATA2  
-  -      -       -  SSD  0.0  02000000000000000001  /dev/sdd  parity  
-  -      -       -  SSD  0.0  03000000000000000001  /dev/sde  2-parity  
-  0      -       -    -  0.0  -                     /dev/sda  -
-
+SnapRAID Smart
+SnapRAID SMART report:  
+   Temp  Power   Error   FP Size  
+      C OnDays   Count        TB  Serial                Device    Disk  
+      -      -       -  SSD  0.0  00000000000000000001  /dev/sdb  DATA1  
+      -      -       -  SSD  0.0  01000000000000000001  /dev/sdc  DATA2  
+      -      -       -    -  0.0  02000000000000000001  /dev/sdd  parity  
+      -      -       -  SSD  0.0  03000000000000000001  /dev/sde  2-parity  
+      -      -       -  n/a    -  -                     /dev/sr0  -  
+      0      -       -    -  0.0  -                     /dev/sda  -  
 The FP column is the estimated probability (in percentage) that the disk  
-is going to fail in the next year.
+is going to fail in the next year.  
+Probability that at least one disk is going to fail in the next year is 0%.
 
-Probability that at least one disk is going to fail in the next year is 0%.  
-All jobs ended. [Sat Jan 9 02:07:49 CET 2021]  
-Email address is set. Sending email report to example@example.com [Sat Jan 9 02:07:49 CET 2021]
+## Restarting Containers [Tue 20 Apr 11:43:41 CEST 2021]
+
+Restarting Container - Code-server
+code-server
+Restarting Container - Portainer
+portainer
+All jobs ended. [Tue 20 Apr 11:43:41 CEST 2021]
+Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 11:43:41 CEST 2021]
 ```
 
 # Requirements
