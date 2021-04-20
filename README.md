@@ -22,12 +22,12 @@ Contributions are welcome!
 - When the script is done sends an email with the results, both in case of error or success.
 
 ### Additional Information
-- Docker container management, if enabled, will manage containers before SnapRAID activity and restore them when finished. This avoids nasty errors aboud data being written during SnapRAID sync.
-	- You can either choose to pause or stop your containers.
-- Important messages are sent to the system log, at least on OMV.
+- Docker container management, if enabled, will manage containers before SnapRAID activity and restore them when finished. It avoids nasty errors aboud data being written during SnapRAID sync.
+	- You can either choose to pause or stop your containers and manage a remote docker host.
+- Important messages are sent to the system log.
 
 ## Customization
-Many options can be changed to your taste, their behavior is documented in the script config file.
+Many options can be changed to your taste, their behavior is documented in the config file.
 If you don't know what to do, I recommend using the default values and see how it performs.
 
 ### Customizable features
@@ -46,7 +46,7 @@ If you don't know what to do, I recommend using the default values and see how i
 	- A list of containers you want to be interrupted before running actions and restored when completed.
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
    	- Docker remote - if docker is running on a remote machine
-- Verbosity - disabled by default. When enabled, includes the TOUCH and DIFF commands output, email will be huge and unreadable.
+- Verbosity option - disabled by default. When enabled, includes the TOUCH and DIFF commands output. Please note email will be huge and mostly unreadable.
 - Spindown - spindown drives after the script, disabled because is currently not working. 
 - Snapraid Status - shows the status of the array, disabled by default.
  
@@ -58,6 +58,8 @@ This report produces emails that don't contain a list of changed files to improv
 You can re-enable full output in the email by switching the option `VERBOSITY` but the full report will always be available in `/tmp/snapRAID.out` but will be replaced after each run, or deleted when the system is shut down. You can change the location of the file if you need to keep it.
 
 Here's a sneak peek of the email report. 
+
+**TO BE UPDATED **
 
 ```markdown
 ## [COMPLETED] DIFF + SYNC + SCRUB Jobs (SnapRAID on omv-test.local)
@@ -190,7 +192,7 @@ Email address is set. Sending email report to example@example.com [Sat Jan 9 02:
 If you want to use this script on OMV, don't worry about the section _Diff Script Settings_ in the main page of the SnapRAID plugin. These settings only apply to the plugin built-in script. Also don't forget to remove from scheduling the built-in script.  
 
 1. Install markdown `apt install python-markdown`. You can skip this step since the script will check and install it for you.
-2. Download config file and script, to be placed wherever you prefer e.g. `/usr/sbin/snapraid`
+2. Download the zip and extract wherever you prefer e.g. `/usr/sbin/snapraid`
 3. Give executable rights to the main script - `chmod +x snapraid-aio-script.sh`
 4. Edit the config file and add your email address at line 9
 5. Make other changes to the config file as required
