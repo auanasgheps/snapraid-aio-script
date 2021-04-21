@@ -1,11 +1,11 @@
 # snapraid-aio-script
-The definitive all-in-one [SnapRAID](https://github.com/amadvance/snapraid) script.
+The definitive all-in-one [SnapRAID](https://github.com/amadvance/snapraid) script. I hope you'll agree.
 
-There are many SnapRAID scripts out there, but none could fit my needs. So I took the best of them to start a new one.
+There are many SnapRAID scripts out there, but none has the features I want. So I made my own, inspired by existing solutions.
 
-It is meant to be run periodically (e.g. daily), do the heavy lifting and send an email you will actually read.
+It is meant to be run periodically (daily), do the heavy lifting and send an email you will actually read.
 
-Supports single and dual parity configurations. It is customizable and has been tested with Debian 10 and [OpenMediaVault 5](https://github.com/openmediavault/openmediavault).
+Supports single and dual parity configurations. It is highly customizable and has been tested with Debian 10 and [OpenMediaVault 5](https://github.com/openmediavault/openmediavault).
 
 Contributions are welcome!
 
@@ -18,7 +18,7 @@ Contributions are welcome!
     - If parity info is out of sync **and** the number of deleted or changed files exceed the threshold, you can still **force a sync** after a number of warnings. It's useful If  you often get a false alarm but you're confident enough. This is called "Sync with threshold warnings"
     - If parity info is out of sync **but** the number of deleted or changed files did not exceed the threshold, it **executes a sync** to update the parity info.
 - When the parity info is in sync, either because nothing has changed or after a successfully sync, it runs the `snapraid scrub` command to validate the integrity of the data, both the files and the parity info. If sync was cancelled or other issues were found, scrub will not be run. _Note that each run of the scrub command will validate only a configurable portion of parity info to avoid having a long running job and affecting the performance of the server._ Scrub frequency can also be customized in case you don't want to do it every time the script runs. It is still recommended to run scrub frequently. 
-- Extra information is be added, like SnapRAID's disk health report.  
+- Extra information can be added, like SnapRAID's disk health report o SnapRAID array status.  
 - When the script is done sends an email with the results, both in case of error or success.
 
 ### Additional Information
@@ -214,10 +214,9 @@ Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 1
 
 # Requirements
 - Markdown to have nice emails - will be installed if not found
-- ~~Hd-idle to spin down disks - [Link TBD] - currently not required since spin down does not work properly.~~
+- Hd-idle to spin down disks - [Link TBD] - currently not required since spin down does not work properly.
 
 # Installation
-If you want to use this script on OMV, don't worry about the section _Diff Script Settings_ in the main page of the SnapRAID plugin. These settings only apply to the plugin built-in script. Also don't forget to remove from scheduling the built-in script.  
 
 1. Install markdown `apt install python-markdown`. You can skip this step since the script will check and install it for you.
 2. Download the zip and extract wherever you prefer e.g. `/usr/sbin/snapraid`
@@ -228,18 +227,19 @@ If you want to use this script on OMV, don't worry about the section _Diff Scrip
 
 It is tested on OMV5, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
 
-If you want to use this script on OMV, don't worry about the section _Diff Script Settings_ in the main page of the SnapRAID plugin, since it only applies to the built-in plugin script. Also don't forget to remove from scheduling the built-in script.
+**OMV5 and SnapRAID plugin**
+Ignore the page at OMV GUI > Services > SnapRAID > Diff Script Settings, since it only applies to the plugin's built-in script. Also don't forget to remove from scheduling such built-in script.  
 
 # Known Issues
 - Hard disk spin down does not work: they are immediately woken up. The script probably does not handle this correctly while running.
 
 # Credits
 All rights belong to the respective creators. 
-Thanks to:
+This script would not exist without:
 - [Zack Reed](https://zackreed.me/snapraid-split-parity-sync-script/) for most of the original script
 - [mtompkins](https://gist.github.com/mtompkins/91cf0b8be36064c237da3f39ff5cc49d) for most of the original script
 - [sburke](https://zackreed.me/snapraid-split-parity-sync-script/#comment-300) for the Debian 10 fix
-- metagliatore (a friend, not on Github) for removing the DIFF output from the email
+- metagliatore (a friend not on Github) for helping out on several BASH issues
 - [ozboss](https://forum.openmediavault.org/wsc/index.php?user/27331-ozboss/)
 - [tehniemer](https://github.com/tehniemer)
 - [cmcginty](https://github.com/cmcginty)
