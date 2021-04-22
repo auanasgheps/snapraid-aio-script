@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="2.9.DEV4"
+SNAPSCRIPTVERSION="2.9.DEV5"
 
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
@@ -115,16 +115,17 @@ function main(){
   if [ -z "$DEL_COUNT" ] || [ -z "$ADD_COUNT" ] || [ -z "$MOVE_COUNT" ] || [ -z "$COPY_COUNT" ] || [ -z "$UPDATE_COUNT" ]; then
     # failed to get one or more of the count values, lets report to user and
     # exit with error code
-    echo "**ERROR** - failed to get one or more count values. Unable to proceed."
+    echo "**ERROR** - Failed to get one or more count values. Unable to continue."
+	mklog "WARN: Failed to get one or more count values. Unable to continue."
     echo "Exiting script. [$(date)]"
     if [ "$EMAIL_ADDRESS" ]; then
-      SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Unable to proceed with SYNC/SCRUB job(s). Check DIFF job output."
+      SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output."
       trim_log < "$TMP_OUTPUT" | send_mail
     fi
     exit 1;
   fi
-  echo "**SUMMARY of changes - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]**"
-  mklog "INFO: SUMMARY of changes - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+  echo "**SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]**"
+  mklog "INFO: SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
 
   # check if the conditions to run SYNC are met
   # CHK 1 - if files have changed
@@ -341,7 +342,7 @@ function sanity_check() {
 }
 
 function get_counts() {
-  # EQ_COUNT=$(grep -w '^ \{1,\}[0-9]* equal' $TMP_OUTPUT | sed 's/^ *//g' | cut -d ' ' -f1)
+  EQ_COUNT=$(grep -w '^ \{1,\}[0-9]* equal' $TMP_OUTPUT | sed 's/^ *//g' | cut -d ' ' -f1)
   ADD_COUNT=$(grep -w '^ \{1,\}[0-9]* added' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
   DEL_COUNT=$(grep -w '^ \{1,\}[0-9]* removed' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
   UPDATE_COUNT=$(grep -w '^ \{1,\}[0-9]* updated' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
