@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="2.9.DEV3"
+SNAPSCRIPTVERSION="2.9.DEV4"
 
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
@@ -639,7 +639,7 @@ function prepare_mail() {
 
 function healthchecks_success(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/0 --data-raw "$MSG"
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/0 --data-raw "$SUBJECT"
   fi
   }
   
