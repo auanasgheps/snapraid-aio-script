@@ -303,8 +303,8 @@ function main(){
 #######################
 
 function sanity_check() {
-  echo "Testing that all parity files are present."
-  mklog "INFO: Testing that all parity files are present."
+  echo "Checking if all parity and content files are present."
+  mklog "INFO: Checking if all parity and content files are present."
   for i in "${PARITY_FILES[@]}"; do
     if [ ! -e "$i" ]; then
 	echo "[$(date)] ERROR - Parity file ($i) not found!"
@@ -322,8 +322,6 @@ function sanity_check() {
   echo "All parity files found."
   mklog "INFO: All parity files found."
 
-  echo "Testing that all content files are present."
-  mklog "INFO: Testing that all content files are present."
   for i in "${CONTENT_FILES[@]}"; do
     if [ ! -e "$i" ]; then
       echo "[$(date)] ERROR - Content file ($i) not found!"
