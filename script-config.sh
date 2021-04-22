@@ -57,6 +57,12 @@ SPINDOWN=0
 # HTML output is pretty broken.
 SNAP_STATUS=0
 
+# Use Healthchecks.io to report script errors. Set to 1 to enable.
+# Please note that every "WARNING" will be reported as failure. 
+# When enabled, enter your Healthchecks UUID (not the full URL).
+HEALTHCHECKS=0
+HEALTHCHECKS_ID='your-uuid-here'
+
 # Set to 1 to manage docker containers. They will be paused/stopped or 
 # resumed/restarted accordingly.
 MANAGE_SERVICES=1
