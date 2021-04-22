@@ -58,8 +58,8 @@ function main(){
     mklog "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
     exit 1;
   else
-    echo "Configuration file found! Proceeding."
-    mklog "INFO: Script configuration file found! Proceeding."
+    echo "Configuration file found!"
+    mklog "INFO: Script configuration file found!"
   fi
 
   # install markdown if not present
@@ -303,35 +303,41 @@ function main(){
 #######################
 
 function sanity_check() {
-  if [ ! -e "$CONTENT_FILE" ]; then
-    echo "**ERROR** Content file ($CONTENT_FILE) not found!"
-    echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk..."
-    mklog "WARN: Content file ($CONTENT_FILE) not found!"
-    mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk..."
+  echo "Checking if all parity and content files are present."
+  mklog "INFO: Checking if all parity and content files are present."
+  for i in "${PARITY_FILES[@]}"; do
+    if [ ! -e "$i" ]; then
+	echo "[$(date)] ERROR - Parity file ($i) not found!"
+	echo "ERROR - Parity file ($i) not found!" >> "$TMP_OUTPUT"
+    echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
+    mklog "WARN: Parity file ($i) not found!"
+    mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
     prepare_mail
     # Add a topline to email body
     sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
     trim_log < "$TMP_OUTPUT" | send_mail
     exit;
   fi
+  done
+  echo "All parity files found."
+  mklog "INFO: All parity files found."
 
-  echo "Testing that all parity files are present."
-  mklog "INFO: Testing that all parity files are present."
-  for i in "${PARITY_FILES[@]}"; do
+  for i in "${CONTENT_FILES[@]}"; do
     if [ ! -e "$i" ]; then
-      echo "[$(date)] ERROR - Parity file ($i) not found!"
-      echo "ERROR - Parity file ($i) not found!" >> "$TMP_OUTPUT"
-      echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk..."
-      mklog "WARN: Parity file ($i) not found!"
-      mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk..."
+      echo "[$(date)] ERROR - Content file ($i) not found!"
+      echo "ERROR - Content file ($i) not found!" >> "$TMP_OUTPUT"
+      echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
+      mklog "WARN: Content file ($i) not found!"
+      mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
       prepare_mail
       # Add a topline to email body
       sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
       trim_log < "$TMP_OUTPUT" | send_mail
-      exit;
-    fi
+    exit;
+   fi
   done
-  echo "All parity files found. Continuing..."
+  echo "All content files found."
+  mklog "INFO: All content files found."
 }
 
 function get_counts() {
@@ -523,7 +529,7 @@ function service_array_setup() {
    echo "Please configure Containers. Unable to manage containers."
    ARRAY_VALIDATED=NO
   else
-   echo "Setting up Containers array"
+   echo "Docker containers management is enabled."
    ARRAY_VALIDATED=YES
   fi
   

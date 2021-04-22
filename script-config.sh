@@ -107,9 +107,13 @@ SNAPRAID_CONF="/etc/snapraid.conf"
 # Expand PATH for smartctl
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
-# Determine names of first content file...
+# Extract info from SnapRAID config
 SNAPRAID_CONF_LINES=$(grep -E '^[^#;]' $SNAPRAID_CONF)
-CONTENT_FILE=$(echo "$SNAPRAID_CONF_LINES" | grep snapraid.content | head -n 1 | cut -d ' ' -f2)
+
+# Build an array of content files
+IFS=$'\n' CONTENT_FILES=(
+$(echo "$SNAPRAID_CONF_LINES" | grep snapraid.content | cut -d ' ' -f2)
+)
 
 # Build an array of parity all files...
 IFS=$'\n' PARITY_FILES=(
