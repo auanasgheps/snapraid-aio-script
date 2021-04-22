@@ -48,7 +48,7 @@ function main(){
 
   # Healthchecks.io start 
   if [ "$HEALTHCHECKS" -eq 1 ]; then  
-   echo "Healthchecks.io integration is enabled, script status will be reported to the configured URL."
+   echo "Healthchecks.io integration is enabled."
    curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID/start"
   fi
   
