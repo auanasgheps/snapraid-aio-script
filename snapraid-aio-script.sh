@@ -10,6 +10,9 @@
 ######################
 SNAPSCRIPTVERSION="2.9.DEV5"
 
+# Read SnapRAID version
+SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
+
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
 # import the config file for this script which contain user configuration
@@ -716,9 +719,6 @@ function mklog() {
   }
   echo "$(date '+[%Y-%m-%d %H:%M:%S]') $(basename "$0"): $PRIORITY: '$LOGMESSAGE'" >> "$SNAPRAID_LOG"
 }
-
-# Read SnapRAID version
-SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
 
 # Set TRAP
 trap final_cleanup INT EXIT
