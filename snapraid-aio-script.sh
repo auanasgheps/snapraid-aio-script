@@ -529,7 +529,7 @@ function service_array_setup() {
    echo "Please configure Containers. Unable to manage containers."
    ARRAY_VALIDATED=NO
   else
-   echo "Docker container management is enabled."
+   echo "Docker containers management is enabled."
    ARRAY_VALIDATED=YES
   fi
   
