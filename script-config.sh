@@ -58,8 +58,8 @@ SPINDOWN=0
 SNAP_STATUS=0
 
 # Use Healthchecks.io to report script errors. Set to 1 to enable.
-# Please note that every "WARNING" message will be reported as failure. 
-# When enabled, enter your Healthchecks UUID (not the full URL)
+# Please note that every "WARNING" will be reported as failure. 
+# When enabled, enter your Healthchecks UUID (not the full URL).
 HEALTHCHECKS=0
 HEALTHCHECKS_ID='your-uuid-here'
 
