@@ -50,7 +50,15 @@ function main(){
   echo "## Preprocessing"
 
   # Healthchecks.io start 
-  if [ "$HEALTHCHECKS" -eq 1 ]; then  
+  if [ "$HEALTHCHECKS" -eq 1 ]; then
+   # install curl if not found
+   if [ "$(dpkg-query -W -f='${Status}' curl 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
+    echo "**Curl has not been found and will be installed.**"
+    mklog "WARN: Curl has not been found and will be installed."
+    # super silent and secret install command
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get install -qq -o=Dpkg::Use-Pty=0 curl;
+   fi  
    echo "Healthchecks.io integration is enabled."
    curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID/start"
   fi
@@ -65,7 +73,7 @@ function main(){
     mklog "INFO: Script configuration file found!"
   fi
 
-  # install markdown if not present
+  # install markdown if not found
   if [ "$(dpkg-query -W -f='${Status}' python-markdown 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
     echo "**Markdown has not been found and will be installed.**"
     mklog "WARN: Markdown has not been found and will be installed."
