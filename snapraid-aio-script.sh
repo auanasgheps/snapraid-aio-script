@@ -568,7 +568,7 @@ function pause_services(){
     echo "Stopping Container - ""${i^}";
    fi
    if [ "$DOCKER_REMOTE" -eq 1 ]; then
-    ssh "$DOCKER_USER"@"$DOCKER_IP" docker "$DOCKER_CMD1" "\$i"
+    ssh "$DOCKER_USER"@"$DOCKER_IP" docker "$DOCKER_CMD1" "$i"
 	  SERVICES_STOPPED=1
     else
       docker "$DOCKER_CMD1" "$i"
@@ -586,7 +586,7 @@ function resume_services(){
      echo "Restarting Container - ""${i^}";
     fi
     if [ "$DOCKER_REMOTE" -eq 1 ]; then
-     ssh "$DOCKER_USER"@"$DOCKER_IP" docker "$DOCKER_CMD2" "\$i"
+     ssh "$DOCKER_USER"@"$DOCKER_IP" docker "$DOCKER_CMD2" "$i"
      SERVICES_STOPPED=0
     else
      docker "$DOCKER_CMD2" "$i"
