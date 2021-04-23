@@ -65,7 +65,7 @@ HEALTHCHECKS_ID='your-uuid-here'
 
 # Set to 1 to manage docker containers. They will be paused/stopped or 
 # resumed/restarted accordingly.
-MANAGE_SERVICES=1
+MANAGE_SERVICES=0
 
 # Choose how to manage your containers: 1 to pause/unpause, 2 to stop/restart
 DOCKER_MODE=1
