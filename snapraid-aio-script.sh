@@ -69,8 +69,8 @@ function main(){
     mklog "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
     exit 1;
   else
-    echo "Configuration file found!"
-    mklog "INFO: Script configuration file found!"
+    echo "Configuration file found."
+    mklog "INFO: Script configuration file found."
   fi
 
   # install markdown if not found
