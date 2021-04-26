@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="2.9.DEV6"
+SNAPSCRIPTVERSION="2.9.DEV7"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -60,7 +60,7 @@ function main(){
     apt-get install -qq -o=Dpkg::Use-Pty=0 curl;
    fi  
    echo "Healthchecks.io integration is enabled."
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID/start"
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/start
   fi
   
   # Check if script configuration file has been found
@@ -648,22 +648,26 @@ function prepare_mail() {
   elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
     # Scrub ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
+	HC_OUTPUT="$SUBJECT
+SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
 	healthchecks_warning
   else
     SUBJECT="[COMPLETED] $JOBS_DONE Jobs $EMAIL_SUBJECT_PREFIX"
+	HC_OUTPUT="$SUBJECT
+SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
 	healthchecks_success
   fi
 }
 
 function healthchecks_success(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/0 --data-raw "$SUBJECT"
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/0 --data-raw "$HC_OUTPUT"
   fi
   }
   
 function healthchecks_warning(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "$SUBJECT"
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "HC_OUTPUT"
   fi
   }
    
