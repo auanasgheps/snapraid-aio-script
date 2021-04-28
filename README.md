@@ -25,7 +25,6 @@ Contributions are welcome!
 - Docker container management, if enabled, will manage containers before SnapRAID activity and restore them when finished. It avoids nasty errors aboud data being written during SnapRAID sync.
 	- You can either choose to pause or stop your containers and manage a remote docker host.
 - Healthchecks.io can be used to track script execution time and to promptly alert about errors.
-
 - Important messages are sent to the system log.
 
 ## Customization
