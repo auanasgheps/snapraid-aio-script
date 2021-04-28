@@ -74,11 +74,12 @@ SnapRAID AIO Script version X.YZ
 ----------
 
 ## Preprocessing
-Healthchecks.io integration is enabled, script status will be reported to the configured URL.
-OKConfiguration file found! Proceeding.
-Testing that all parity files are present.
-All parity files found. Continuing...
-Setting up Containers array
+Healthchecks.io integration is enabled.
+Configuration file found.
+Checking if all parity and content files are present.
+All parity files found.
+All content files found.
+Docker containers management is enabled.
 
 ### Stopping Containers [Tue 20 Apr 11:43:37 CEST 2021]
 Stopping Container - Code-server
