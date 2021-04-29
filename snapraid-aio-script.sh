@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.0"
+SNAPSCRIPTVERSION="3.1.DEV"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -67,6 +67,11 @@ function main(){
   if [ ! -f "$CONFIG_FILE" ]; then
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
     mklog "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
+    exit 1;
+  # check if the config file has the correct version
+  elif [ "$CONFIG_VERSION" != 3.0 ]; then
+    echo "Please update your config file to the latest version. The current file is not compatible with this script!"
+    mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
     exit 1;
   else
     echo "Configuration file found."
