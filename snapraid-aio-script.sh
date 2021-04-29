@@ -67,12 +67,22 @@ function main(){
   if [ ! -f "$CONFIG_FILE" ]; then
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
     mklog "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
-    exit 1;
+    if [ "$EMAIL_ADDRESS" ]; then
+	SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Configuration Error"
+	trim_log < "$TMP_OUTPUT" | send_mail
+	fi
+	healthchecks_warning
+	exit 1;
   # check if the config file has the correct version
   elif [ "$CONFIG_VERSION" != 3.1 ]; then
     echo "Please update your config file to the latest version. The current file is not compatible with this script!"
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
-    exit 1;
+    if [ "$EMAIL_ADDRESS" ]; then
+	SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Configuration Error"
+	trim_log < "$TMP_OUTPUT" | send_mail
+	fi
+	healthchecks_warning
+	exit 1;
   else
     echo "Configuration file found."
     mklog "INFO: Script configuration file found."
@@ -138,6 +148,7 @@ function main(){
       SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output."
       trim_log < "$TMP_OUTPUT" | send_mail
     fi
+	healthchecks_warning
     exit 1;
   fi
   echo "**SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]**"
