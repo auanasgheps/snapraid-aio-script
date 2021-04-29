@@ -69,7 +69,7 @@ function main(){
     mklog "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
     exit 1;
   # check if the config file has the correct version
-  elif [ "$CONFIG_VERSION" != 3.0 ]; then
+  elif [ "$CONFIG_VERSION" != 3.1 ]; then
     echo "Please update your config file to the latest version. The current file is not compatible with this script!"
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
     exit 1;
