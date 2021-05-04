@@ -1,8 +1,8 @@
 #!/bin/bash
 ########################################################################
-#
-#   Project page: https://github.com/auanasgheps/snapraid-aio-script
-#
+#								       #
+#   Project page: https://github.com/auanasgheps/snapraid-aio-script   #
+#								       #
 ########################################################################
 
 ######################
