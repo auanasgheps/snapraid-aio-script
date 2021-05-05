@@ -69,23 +69,23 @@ function main(){
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
     mklog "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
     if [ "$EMAIL_ADDRESS" ]; then
-	SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Configuration Error"
-	HC_OUTPUT="$SUBJECT"
-	trim_log < "$TMP_OUTPUT" | send_mail
-	healthchecks_warning
-	fi
-	exit 1;
+      SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Configuration Error"
+      HC_OUTPUT="$SUBJECT"
+      trim_log < "$TMP_OUTPUT" | send_mail
+      healthchecks_warning
+    fi
+    exit 1;
   # check if the config file has the correct version
   elif [ "$CONFIG_VERSION" != 3.1 ]; then
     echo "Please update your config file to the latest version. The current file is not compatible with this script!"
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
     if [ "$EMAIL_ADDRESS" ]; then
-	SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Configuration Error"
-	HC_OUTPUT="$SUBJECT"
-	trim_log < "$TMP_OUTPUT" | send_mail
-	healthchecks_warning
-	fi
-	exit 1;
+      SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Configuration Error"
+      HC_OUTPUT="$SUBJECT"
+      trim_log < "$TMP_OUTPUT" | send_mail
+      healthchecks_warning
+    fi
+    exit 1;
   else
     echo "Configuration file found."
     mklog "INFO: Script configuration file found."
@@ -108,12 +108,12 @@ function main(){
   if [ "$MANAGE_SERVICES" -eq 1 ]; then
    service_array_setup
     if [ "$DOCKERALLOK" = YES ]; then
-	 echo
-	 if [ "$DOCKER_MODE" = 1 ]; then 
-      echo "###Pausing Containers [$(date)]";
-	 else
-	  echo "###Stopping Containers [$(date)]";
-     fi
+     echo
+      if [ "$DOCKER_MODE" = 1 ]; then 
+       echo "###Pausing Containers [$(date)]";
+       else
+       echo "###Stopping Containers [$(date)]";
+      fi
      pause_services
     fi
   fi
