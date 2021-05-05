@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.1.DEV"
+SNAPSCRIPTVERSION="3.1.DEV2"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -69,7 +69,10 @@ function main(){
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
     mklog "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
     if [ "$EMAIL_ADDRESS" ]; then
+	SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Configuration Error"
+	HC_OUTPUT="$SUBJECT"
 	trim_log < "$TMP_OUTPUT" | send_mail
+	healthchecks_warning
 	fi
 	exit 1;
   # check if the config file has the correct version
@@ -77,7 +80,10 @@ function main(){
     echo "Please update your config file to the latest version. The current file is not compatible with this script!"
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
     if [ "$EMAIL_ADDRESS" ]; then
+	SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Configuration Error"
+	HC_OUTPUT="$SUBJECT"
 	trim_log < "$TMP_OUTPUT" | send_mail
+	healthchecks_warning
 	fi
 	exit 1;
   else
@@ -143,7 +149,9 @@ function main(){
     echo "Exiting script. [$(date)]"
     if [ "$EMAIL_ADDRESS" ]; then
       SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output."
+	  HC_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
+	  healthchecks_warning
     fi
     exit 1;
   fi
@@ -336,10 +344,11 @@ function sanity_check() {
     echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
     mklog "WARN: Parity file ($i) not found!"
     mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
-    prepare_mail
     # Add a topline to email body
-    sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
+    SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Parity file ($i) not found!"
+    HC_OUTPUT="$SUBJECT"
     trim_log < "$TMP_OUTPUT" | send_mail
+	healthchecks_warning
     exit 1;
   fi
   done
@@ -353,10 +362,11 @@ function sanity_check() {
       echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
       mklog "WARN: Content file ($i) not found!"
       mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
-      prepare_mail
       # Add a topline to email body
-      sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
+      SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Content file ($i) not found!"
+      HC_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
+	  healthchecks_warning
     exit 1;
    fi
   done
