@@ -59,6 +59,7 @@ function main(){
     export DEBIAN_FRONTEND=noninteractive
     apt-get install -qq -o=Dpkg::Use-Pty=0 curl;
    fi  
+   # invoke Healthchecks.io
    echo "Healthchecks.io integration is enabled."
    curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/start
   fi
@@ -68,20 +69,16 @@ function main(){
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
     mklog "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
     if [ "$EMAIL_ADDRESS" ]; then
-	SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Configuration Error"
 	trim_log < "$TMP_OUTPUT" | send_mail
 	fi
-	healthchecks_warning
 	exit 1;
   # check if the config file has the correct version
   elif [ "$CONFIG_VERSION" != 3.1 ]; then
     echo "Please update your config file to the latest version. The current file is not compatible with this script!"
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
     if [ "$EMAIL_ADDRESS" ]; then
-	SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Configuration Error"
 	trim_log < "$TMP_OUTPUT" | send_mail
 	fi
-	healthchecks_warning
 	exit 1;
   else
     echo "Configuration file found."
@@ -148,7 +145,6 @@ function main(){
       SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output."
       trim_log < "$TMP_OUTPUT" | send_mail
     fi
-	healthchecks_warning
     exit 1;
   fi
   echo "**SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]**"
@@ -344,7 +340,7 @@ function sanity_check() {
     # Add a topline to email body
     sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
     trim_log < "$TMP_OUTPUT" | send_mail
-    exit;
+    exit 1;
   fi
   done
   echo "All parity files found."
@@ -361,7 +357,7 @@ function sanity_check() {
       # Add a topline to email body
       sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
       trim_log < "$TMP_OUTPUT" | send_mail
-    exit;
+    exit 1;
    fi
   done
   echo "All content files found."
@@ -656,10 +652,12 @@ function prepare_mail() {
       MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
     fi
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
+	HC_OUTPUT="$SUBJECT"
 	healthchecks_warning
   elif [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
     # Sync ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
+	HC_OUTPUT="$SUBJECT"
 	healthchecks_warning
   elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
     # Scrub ran but did not complete successfully so lets warn the user
@@ -683,7 +681,7 @@ function healthchecks_success(){
   
 function healthchecks_warning(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "HC_OUTPUT"
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "$HC_OUTPUT"
   fi
   }
    
