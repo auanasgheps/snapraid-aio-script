@@ -295,12 +295,12 @@ function main(){
   # Resume paused containers
   if [ "$SERVICES_STOPPED" -eq 1 ]; then
     echo
-	 if [ "$DOCKER_MODE" = 1 ]; then 
-      echo "### Resuming Containers [$(date)]";
-	  else
-	  echo "### Restarting Containers [$(date)]";
-	 fi
-     resume_services
+      if [ "$DOCKER_MODE" = 1 ]; then 
+        echo "### Resuming Containers [$(date)]";
+	else
+	echo "### Restarting Containers [$(date)]";
+      fi
+    resume_services
   fi
   
   echo "All jobs ended. [$(date)]"
