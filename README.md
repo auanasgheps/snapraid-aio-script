@@ -219,18 +219,19 @@ Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 1
 
 # Installation
 
-1. Install markdown `apt install python-markdown`. You can skip this step since the script will check and install it for you.
-2. Download the zip and extract wherever you prefer e.g. `/usr/sbin/snapraid`
-3. Give executable rights to the main script - `chmod +x snapraid-aio-script.sh`
-4. Edit the config file and add your email address at line 9
-5. Make other changes to the config file as required
-6. Schedule the script execution time 
+_Optional: install markdown `apt install python-markdown` and curl `apt install curl` . You can skip this step since the script will check and install missing packages for you._
+
+1. Download the zip and extract wherever you prefer e.g. `/usr/sbin/snapraid`
+2. Give executable rights to the main script - `chmod +x snapraid-aio-script.sh`
+3. Open the config file and add your email address
+4. Make other changes to the config file as required
+5. Schedule the script execution time 
 
 It is tested on OMV5, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
 
 **OMV5 and SnapRAID plugin**
 
-Ignore the page at OMV GUI > Services > SnapRAID > Diff Script Settings, since it only applies to the plugin's built-in script. Also don't forget to remove from scheduling such built-in script.  
+Ignore what you see at OMV GUI > Services > SnapRAID > Diff Script Settings, since it only applies to the plugin's built-in script. Also don't forget to remove from scheduling such built-in script.  
 
 # Upgrade 
 If you are using a previous version of the script, please move your preferences to the new `script-config.sh`. Version 3.0 requires the updated config file and it's likely to happen in the future. 
