@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.1.DEV2"
+SNAPSCRIPTVERSION="3.1.DEV3"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -64,17 +64,12 @@ function main(){
    curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/start
   fi
   
-  # Check if script configuration file has been found
+  # Check if script configuration file has been found, if not send a message 
+  # to syslog and exit
   if [ ! -f "$CONFIG_FILE" ]; then
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
-    mklog "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
-    if [ "$EMAIL_ADDRESS" ]; then
-      SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Configuration Error"
-      HC_OUTPUT="$SUBJECT"
-      trim_log < "$TMP_OUTPUT" | send_mail
-      healthchecks_warning
-    fi
-    exit 1;
+	mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"	
+	exit 1;
   # check if the config file has the correct version
   elif [ "$CONFIG_VERSION" != 3.1 ]; then
     echo "Please update your config file to the latest version. The current file is not compatible with this script!"
@@ -85,7 +80,7 @@ function main(){
       trim_log < "$TMP_OUTPUT" | send_mail
       healthchecks_warning
     fi
-    exit 1;
+	exit 1;
   else
     echo "Configuration file found."
     mklog "INFO: Script configuration file found."
@@ -110,9 +105,9 @@ function main(){
     if [ "$DOCKERALLOK" = YES ]; then
      echo
       if [ "$DOCKER_MODE" = 1 ]; then 
-       echo "###Pausing Containers [$(date)]";
+       echo "### Pausing Containers [$(date)]";
        else
-       echo "###Stopping Containers [$(date)]";
+       echo "### Stopping Containers [$(date)]";
       fi
      pause_services
     fi
@@ -215,8 +210,9 @@ function main(){
     # not forced a sync.
     if [ "$CHK_FAIL" -eq 1 ] && [ "$DO_SYNC" -eq 0 ]; then
       # YES, parity is out of sync so let's not run scrub job
-      echo "Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached). [$(date)]"
-      mklog "INFO: Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached)."
+      echo "Parity info is out of sync (deleted or changed files threshold has been breached)."
+	  echo "Not running SCRUB job. [$(date)]"
+      mklog "INFO: Parity info is out of sync (deleted or changed files threshold has been breached). Not running SCRUB job."
     else
       # NO, delete threshold has not been breached OR we forced a sync, but we
       # have one last test - let's make sure if sync ran, it completed
@@ -224,8 +220,9 @@ function main(){
       if [ "$DO_SYNC" -eq 1 ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
         # Sync ran but did not complete successfully so lets not run scrub to
         # be safe
-        echo "**WARNING** - check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job. [$(date)]"
-        mklog "WARN: Check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job."
+        echo "**WARNING** - check output of SYNC job. Could not detect marker."
+		echo "Not running SCRUB job. [$(date)]"
+        mklog "WARN: Check output of SYNC job. Could not detect marker. Not running SCRUB job."
       else
         # Everything ok - ready to run the scrub job!
         # The fuction will check if scrub delayed run is enabled and run scrub
@@ -234,7 +231,8 @@ function main(){
       fi
     fi
   else
-    echo "Scrub job is not enabled. Not running SCRUB job. [$(date)]"
+    echo "Scrub job is not enabled. "
+	echo "Not running SCRUB job. [$(date)]"
     mklog "INFO: Scrub job is not enabled. Not running SCRUB job."
   fi
 
@@ -754,6 +752,16 @@ function mklog() {
     LOGMESSAGE=${BASH_REMATCH[2]} # the Log-Message
   }
   echo "$(date '+[%Y-%m-%d %H:%M:%S]') $(basename "$0"): $PRIORITY: '$LOGMESSAGE'" >> "$SNAPRAID_LOG"
+}
+
+# Emergency syslog function when no config is found, using default log location
+function mklog_noconfig() {
+  [[ "$*" =~ ^([A-Za-z]*):\ (.*) ]] &&
+  {
+    PRIORITY=${BASH_REMATCH[1]} # INFO, DEBUG, WARN
+    LOGMESSAGE=${BASH_REMATCH[2]} # the Log-Message
+  }
+  echo "$(date '+[%Y-%m-%d %H:%M:%S]') $(basename "$0"): $PRIORITY: '$LOGMESSAGE'" >> "/var/log/snapraid.log"
 }
 
 # Set TRAP
