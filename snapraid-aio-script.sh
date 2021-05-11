@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.0"
+SNAPSCRIPTVERSION="3.1.DEV3"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -59,15 +59,28 @@ function main(){
     export DEBIAN_FRONTEND=noninteractive
     apt-get install -qq -o=Dpkg::Use-Pty=0 curl;
    fi  
+   # invoke Healthchecks.io
    echo "Healthchecks.io integration is enabled."
    curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/start
   fi
   
-  # Check if script configuration file has been found
+  # Check if script configuration file has been found, if not send a message 
+  # to syslog and exit
   if [ ! -f "$CONFIG_FILE" ]; then
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
-    mklog "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
-    exit 1;
+	mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"	
+	exit 1;
+  # check if the config file has the correct version
+  elif [ "$CONFIG_VERSION" != 3.1 ]; then
+    echo "Please update your config file to the latest version. The current file is not compatible with this script!"
+    mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
+    if [ "$EMAIL_ADDRESS" ]; then
+      SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Configuration Error"
+      HC_OUTPUT="$SUBJECT"
+      trim_log < "$TMP_OUTPUT" | send_mail
+      healthchecks_warning
+    fi
+	exit 1;
   else
     echo "Configuration file found."
     mklog "INFO: Script configuration file found."
@@ -90,12 +103,12 @@ function main(){
   if [ "$MANAGE_SERVICES" -eq 1 ]; then
    service_array_setup
     if [ "$DOCKERALLOK" = YES ]; then
-	 echo
-	 if [ "$DOCKER_MODE" = 1 ]; then 
-      echo "###Pausing Containers [$(date)]";
-	 else
-	  echo "###Stopping Containers [$(date)]";
-     fi
+     echo
+      if [ "$DOCKER_MODE" = 1 ]; then 
+       echo "### Pausing Containers [$(date)]";
+       else
+       echo "### Stopping Containers [$(date)]";
+      fi
      pause_services
     fi
   fi
@@ -131,7 +144,9 @@ function main(){
     echo "Exiting script. [$(date)]"
     if [ "$EMAIL_ADDRESS" ]; then
       SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output."
+	  HC_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
+	  healthchecks_warning
     fi
     exit 1;
   fi
@@ -195,8 +210,9 @@ function main(){
     # not forced a sync.
     if [ "$CHK_FAIL" -eq 1 ] && [ "$DO_SYNC" -eq 0 ]; then
       # YES, parity is out of sync so let's not run scrub job
-      echo "Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached). [$(date)]"
-      mklog "INFO: Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached)."
+      echo "Parity info is out of sync (deleted or changed files threshold has been breached)."
+	  echo "Not running SCRUB job. [$(date)]"
+      mklog "INFO: Parity info is out of sync (deleted or changed files threshold has been breached). Not running SCRUB job."
     else
       # NO, delete threshold has not been breached OR we forced a sync, but we
       # have one last test - let's make sure if sync ran, it completed
@@ -204,8 +220,9 @@ function main(){
       if [ "$DO_SYNC" -eq 1 ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
         # Sync ran but did not complete successfully so lets not run scrub to
         # be safe
-        echo "**WARNING** - check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job. [$(date)]"
-        mklog "WARN: Check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job."
+        echo "**WARNING** - check output of SYNC job. Could not detect marker."
+		echo "Not running SCRUB job. [$(date)]"
+        mklog "WARN: Check output of SYNC job. Could not detect marker. Not running SCRUB job."
       else
         # Everything ok - ready to run the scrub job!
         # The fuction will check if scrub delayed run is enabled and run scrub
@@ -214,7 +231,8 @@ function main(){
       fi
     fi
   else
-    echo "Scrub job is not enabled. Not running SCRUB job. [$(date)]"
+    echo "Scrub job is not enabled. "
+	echo "Not running SCRUB job. [$(date)]"
     mklog "INFO: Scrub job is not enabled. Not running SCRUB job."
   fi
 
@@ -275,12 +293,12 @@ function main(){
   # Resume paused containers
   if [ "$SERVICES_STOPPED" -eq 1 ]; then
     echo
-	 if [ "$DOCKER_MODE" = 1 ]; then 
-      echo "### Resuming Containers [$(date)]";
-	  else
-	  echo "### Restarting Containers [$(date)]";
-	 fi
-     resume_services
+      if [ "$DOCKER_MODE" = 1 ]; then 
+        echo "### Resuming Containers [$(date)]";
+	else
+	echo "### Restarting Containers [$(date)]";
+      fi
+    resume_services
   fi
   
   echo "All jobs ended. [$(date)]"
@@ -324,11 +342,12 @@ function sanity_check() {
     echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
     mklog "WARN: Parity file ($i) not found!"
     mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
-    prepare_mail
     # Add a topline to email body
-    sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
+    SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Parity file ($i) not found!"
+    HC_OUTPUT="$SUBJECT"
     trim_log < "$TMP_OUTPUT" | send_mail
-    exit;
+	healthchecks_warning
+    exit 1;
   fi
   done
   echo "All parity files found."
@@ -341,11 +360,12 @@ function sanity_check() {
       echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
       mklog "WARN: Content file ($i) not found!"
       mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
-      prepare_mail
       # Add a topline to email body
-      sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
+      SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Content file ($i) not found!"
+      HC_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
-    exit;
+	  healthchecks_warning
+    exit 1;
    fi
   done
   echo "All content files found."
@@ -640,10 +660,12 @@ function prepare_mail() {
       MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
     fi
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
+	HC_OUTPUT="$SUBJECT"
 	healthchecks_warning
   elif [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
     # Sync ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
+	HC_OUTPUT="$SUBJECT"
 	healthchecks_warning
   elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
     # Scrub ran but did not complete successfully so lets warn the user
@@ -667,7 +689,7 @@ function healthchecks_success(){
   
 function healthchecks_warning(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "HC_OUTPUT"
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "$HC_OUTPUT"
   fi
   }
    
@@ -730,6 +752,16 @@ function mklog() {
     LOGMESSAGE=${BASH_REMATCH[2]} # the Log-Message
   }
   echo "$(date '+[%Y-%m-%d %H:%M:%S]') $(basename "$0"): $PRIORITY: '$LOGMESSAGE'" >> "$SNAPRAID_LOG"
+}
+
+# Emergency syslog function when no config is found, using default log location
+function mklog_noconfig() {
+  [[ "$*" =~ ^([A-Za-z]*):\ (.*) ]] &&
+  {
+    PRIORITY=${BASH_REMATCH[1]} # INFO, DEBUG, WARN
+    LOGMESSAGE=${BASH_REMATCH[2]} # the Log-Message
+  }
+  echo "$(date '+[%Y-%m-%d %H:%M:%S]') $(basename "$0"): $PRIORITY: '$LOGMESSAGE'" >> "/var/log/snapraid.log"
 }
 
 # Set TRAP

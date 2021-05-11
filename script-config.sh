@@ -1,4 +1,5 @@
 #!/bin/bash
+CONFIG_VERSION=3.1
 ######################
 #   USER VARIABLES   #
 ######################
