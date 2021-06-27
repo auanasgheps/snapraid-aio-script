@@ -234,7 +234,7 @@ It is tested on OMV5, but will work on other distros. In such case you may have 
 Ignore what you see at OMV GUI > Services > SnapRAID > Diff Script Settings, since it only applies to the plugin's built-in script. Also don't forget to remove from scheduling such built-in script.  
 
 # Upgrade 
-If you are using a previous version of the script, please move your preferences to the new `script-config.sh`. Version 3.0 requires the updated config file and it's likely to happen in the future. 
+If you are using a previous version of the script, do not use current config file. Please move your preferences to the new `script-config.sh` found in the archive. 
 
 # Known Issues
 - Hard disk spin down does not work: they are immediately woken up. The script probably does not handle this correctly while running.
