@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.1.DEV4"
+SNAPSCRIPTVERSION="3.1.DEV5"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -17,7 +17,7 @@ SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
 CURRENT_DIR=$(dirname "${0}")
 # import the config file for this script which contain user configuration
 CONFIG_FILE=$CURRENT_DIR/script-config.sh
-# shellcheck source=script-config.sh
+#shellcheck source=script-config.sh
 source "$CONFIG_FILE"
 
 ########################################################################
@@ -49,8 +49,8 @@ function main(){
 
   echo "## Preprocessing"
 
-  # Healthchecks.io start 
-  if [ "$HEALTHCHECKS" -eq 1 ]; then
+  # Initialize notification 
+  if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ]; then
    # install curl if not found
    if [ "$(dpkg-query -W -f='${Status}' curl 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
     echo "**Curl has not been found and will be installed.**"
@@ -59,9 +59,18 @@ function main(){
     export DEBIAN_FRONTEND=noninteractive
     apt-get install -qq -o=Dpkg::Use-Pty=0 curl;
    fi  
-   # invoke Healthchecks.io
-   echo "Healthchecks.io integration is enabled."
+   # invoke notification services if configured
+    if [ "$HEALTHCHECKS" -eq 1 ]; then
+   echo "Healthchecks.io notification is enabled."
    curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/start
+   fi
+    if [ "$TELEGRAM" -eq 1 ]; then 
+   echo "Telegram notification is enabled."
+   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+     -H "Content-Type: application/json" \
+     -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "SnapRAID Script Job started"}' \
+     https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
+	 fi
   fi
   
   # Check if script configuration file has been found, if not send a message 
@@ -76,9 +85,9 @@ function main(){
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
     if [ "$EMAIL_ADDRESS" ]; then
       SUBJECT="WARNING - Configuration Error $EMAIL_SUBJECT_PREFIX"
-      HC_OUTPUT="$SUBJECT"
+      NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
-      healthchecks_warning
+      notify_warning
     fi
 	exit 1;
   else
@@ -144,9 +153,9 @@ function main(){
     echo "Exiting script. [$(date)]"
     if [ "$EMAIL_ADDRESS" ]; then
       SUBJECT="WARNING - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
-	    HC_OUTPUT="$SUBJECT"
+	    NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
-	  healthchecks_warning
+	  notify_warning
     fi
     exit 1;
   fi
@@ -344,9 +353,9 @@ function sanity_check() {
     mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
     # Add a topline to email body
     SUBJECT="WARNING - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
-    HC_OUTPUT="$SUBJECT"
+    NOTIFY_OUTPUT="$SUBJECT"
     trim_log < "$TMP_OUTPUT" | send_mail
-	healthchecks_warning
+	notify_warning
     exit 1;
   fi
   done
@@ -362,9 +371,9 @@ function sanity_check() {
       mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
       # Add a topline to email body
       SUBJECT="WARNING - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
-      HC_OUTPUT="$SUBJECT"
+      NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
-	  healthchecks_warning
+	  notify_warning
     exit 1;
    fi
   done
@@ -373,7 +382,7 @@ function sanity_check() {
 }
 
 function get_counts() {
-  EQ_COUNT=$(grep -w '^ \{1,\}[0-9]* equal' $TMP_OUTPUT | sed 's/^ *//g' | cut -d ' ' -f1)
+  EQ_COUNT=$(grep -w '^ \{1,\}[0-9]* equal' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
   ADD_COUNT=$(grep -w '^ \{1,\}[0-9]* added' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
   DEL_COUNT=$(grep -w '^ \{1,\}[0-9]* removed' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
   UPDATE_COUNT=$(grep -w '^ \{1,\}[0-9]* updated' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
@@ -660,36 +669,48 @@ function prepare_mail() {
       MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
     fi
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
-	HC_OUTPUT="$SUBJECT"
-	healthchecks_warning
+	NOTIFY_OUTPUT="$SUBJECT"
+	notify_warning
   elif [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
     # Sync ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-	HC_OUTPUT="$SUBJECT"
-	healthchecks_warning
+	NOTIFY_OUTPUT="$SUBJECT"
+	notify_warning
   elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
     # Scrub ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-	HC_OUTPUT="$SUBJECT
+	NOTIFY_OUTPUT="$SUBJECT
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
-	healthchecks_warning
+	notify_warning
   else
     SUBJECT="[COMPLETED] $JOBS_DONE Jobs $EMAIL_SUBJECT_PREFIX"
-	HC_OUTPUT="$SUBJECT
+	NOTIFY_OUTPUT="$SUBJECT
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
-	healthchecks_success
+	notify_success
   fi
 }
 
-function healthchecks_success(){
+function notify_success(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/0 --data-raw "$HC_OUTPUT"
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/0 --data-raw "$NOTIFY_OUTPUT"
+  fi
+  if [ "$TELEGRAM" -eq 1 ]; then
+   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+   -H "Content-Type: application/json" \
+   -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "'"$NOTIFY_OUTPUT"'"}' \
+   https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   }
   
-function healthchecks_warning(){
+function notify_warning(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "$HC_OUTPUT"
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
+  fi
+  if [ "$TELEGRAM" -eq 1 ]; then
+   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+   -H "Content-Type: application/json" \
+   -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "'"$NOTIFY_OUTPUT"'"}' \
+   https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   }
    
