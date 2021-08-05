@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.1.DEV5"
+SNAPSCRIPTVERSION="3.1.DEV4"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -84,7 +84,7 @@ function main(){
     echo "Please update your config file to the latest version. The current file is not compatible with this script!"
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
     if [ "$EMAIL_ADDRESS" ]; then
-      SUBJECT="WARNING - Configuration Error $EMAIL_SUBJECT_PREFIX"
+      SUBJECT="[WARNING] - Configuration Error $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
       notify_warning
@@ -152,7 +152,7 @@ function main(){
 	mklog "WARN: Failed to get one or more count values. Unable to continue."
     echo "Exiting script. [$(date)]"
     if [ "$EMAIL_ADDRESS" ]; then
-      SUBJECT="WARNING - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
+      SUBJECT="[WARNING] - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
 	    NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
 	  notify_warning
@@ -352,7 +352,7 @@ function sanity_check() {
     mklog "WARN: Parity file ($i) not found!"
     mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
     # Add a topline to email body
-    SUBJECT="WARNING - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
+    SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     trim_log < "$TMP_OUTPUT" | send_mail
 	notify_warning
@@ -370,7 +370,7 @@ function sanity_check() {
       mklog "WARN: Content file ($i) not found!"
       mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
       # Add a topline to email body
-      SUBJECT="WARNING - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
+      SUBJECT="[WARNING] - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
 	  notify_warning
