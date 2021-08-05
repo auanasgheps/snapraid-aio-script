@@ -6,8 +6,38 @@ CONFIG_VERSION=3.1
 
 ####################### USER CONFIGURATION START #######################
 
+### NOTIFICATION SETTINGS ### 
+
 # address where the output of the jobs will be emailed to.
 EMAIL_ADDRESS="youremailgoeshere"
+
+# Use Healthchecks.io to report script errors. Set to 1 to enable.
+# Please note that every "WARNING" will be reported as failure. 
+# When enabled, enter your Healthchecks UUID (not the full URL).
+HEALTHCHECKS=0
+HEALTHCHECKS_ID='your-uuid-here'
+
+# Use Telegram to report script execution summary (not the whole report) 
+# Set 1 to enable. Create a bot using @botfather, then copy the API token. 
+# To get your chat ID, use @getidsbot
+TELEGRAM=0
+TELEGRAM_TOKEN=''
+TELEGRAM_CHAT_ID=''
+
+# Set the option to log SMART info collected by SnapRAID. 1 to enable and any
+# other value to disable.
+SMART_LOG=1
+
+# Increase verbosity of the email output. If set to 1, TOUCH and DIFF outputs 
+# will be kept in the email, producing a mostly unreadable email. Keep this 
+# disabled for optimal results. You can always check TOUCH and DIFF outputs 
+# using the TMP file. 1 to enable, any other values to disable.
+VERBOSITY=0
+
+# Run snapraid status command to show array general information.
+SNAP_STATUS=0
+
+### SCRIPT AND SNAPRAID SETTINGS ###
 
 # Set the threshold of deleted files to stop the sync job from running. NOTE
 # that depending on how active your filesystem is being used, a low number here
@@ -41,34 +71,18 @@ SCRUB_DELAYED_RUN=0
 # allow to run a fix operation. 1 to enable, any other values to disable.
 PREHASH=1
 
-# Set the option to log SMART info. 1 to enable, any other value to disable.
-SMART_LOG=1
-
-# Set verbosity of the email output. TOUCH and DIFF outputs will be kept in the
-# email, producing a potentially huge email. Keep this disabled for optimal
-# reading You can always check TOUCH and DIFF outputs using the TMP file. 1 to
-# enable, any other values to disable.
-VERBOSITY=0
-
 # Set if disk spindown should be performed. Depending on your system, this may
 # not work. 1 to enable, any other values to disable.
 SPINDOWN=0
 
-# Run snapraid status command to show array general information. Be aware the
-# HTML output is pretty broken.
-SNAP_STATUS=0
-
-# Use Healthchecks.io to report script errors. Set to 1 to enable.
-# Please note that every "WARNING" will be reported as failure. 
-# When enabled, enter your Healthchecks UUID (not the full URL).
-HEALTHCHECKS=0
-HEALTHCHECKS_ID='your-uuid-here'
+### DOCKER CONTAINERS MANAGEMENT ###
 
 # Set to 1 to manage docker containers. They will be paused/stopped or 
 # resumed/restarted accordingly.
 MANAGE_SERVICES=0
 
 # Choose how to manage your containers: 1 to pause/unpause, 2 to stop/restart
+# This option does not have any effect if MANAGE_SERVICES is set to 0
 DOCKER_MODE=1
   
 # Containers to manage (separated with spaces). Please ensure containers are 
