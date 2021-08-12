@@ -31,7 +31,7 @@ SCRUB_AGE=10
 
 # Set number of script runs before running a scrub. Use this option if you
 # don't want to scrub the array every time.
-# Set to 0 to disable this option and run scrub Added a configurable delay between pause commands for remote docker hosts to eliminate errors when commands are sent in rapid succession. every time.
+# Set to 0 to disable this option and run scrub every time.
 SCRUB_DELAYED_RUN=0
 
 # Prehash Data To avoid the risk of a latent hardware issue, you can enable the
