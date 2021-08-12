@@ -31,7 +31,7 @@ SCRUB_AGE=10
 
 # Set number of script runs before running a scrub. Use this option if you
 # don't want to scrub the array every time.
-# Set to 0 to disable this option and run scrub every time.
+# Set to 0 to disable this option and run scrub Added a configurable delay between pause commands for remote docker hosts to eliminate errors when commands are sent in rapid succession. every time.
 SCRUB_DELAYED_RUN=0
 
 # Prehash Data To avoid the risk of a latent hardware issue, you can enable the
@@ -79,9 +79,12 @@ SERVICES='container1 container2 container3'
 # Manage docker containers running on a remote machine. Set to 1 to enable, 
 # then enter Docker host machine IP and SSH user. Passwordless ssh access 
 # between snapRAID host and Docker host must be set up.
+# Delay is the number of seconds to wait before sending the next docker 
+# command to avoid errors. Tune to your system.
 DOCKER_REMOTE=0
 DOCKER_USER="sshusernamegoeshere"
 DOCKER_IP="127.0.0.1"
+DOCKER_DELAY=5
 
 ####################### USER CONFIGURATION END #######################
 
