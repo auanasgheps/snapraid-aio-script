@@ -351,6 +351,7 @@ function sanity_check() {
     echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
     mklog "WARN: Parity file ($i) not found!"
     mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
+				
     # Add a topline to email body
     SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
@@ -369,6 +370,7 @@ function sanity_check() {
       echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
       mklog "WARN: Content file ($i) not found!"
       mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
+				  
       # Add a topline to email body
       SUBJECT="[WARNING] - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
@@ -606,11 +608,12 @@ function pause_services(){
    fi
    if [ "$DOCKER_REMOTE" -eq 1 ]; then
     ssh "$DOCKER_USER"@"$DOCKER_IP" docker "$DOCKER_CMD1" "$i"
-	  SERVICES_STOPPED=1
-    else
-      docker "$DOCKER_CMD1" "$i"
-	  SERVICES_STOPPED=1
-    fi
+	SERVICES_STOPPED=1
+	sleep "$DOCKER_DELAY"
+   else
+    docker "$DOCKER_CMD1" "$i"
+	SERVICES_STOPPED=1
+   fi
   done
 }
 
@@ -625,6 +628,7 @@ function resume_services(){
     if [ "$DOCKER_REMOTE" -eq 1 ]; then
      ssh "$DOCKER_USER"@"$DOCKER_IP" docker "$DOCKER_CMD2" "$i"
      SERVICES_STOPPED=0
+	 sleep "$DOCKER_DELAY"
     else
      docker "$DOCKER_CMD2" "$i"
      SERVICES_STOPPED=0

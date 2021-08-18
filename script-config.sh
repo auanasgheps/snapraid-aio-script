@@ -93,9 +93,12 @@ SERVICES='container1 container2 container3'
 # Manage docker containers running on a remote machine. Set to 1 to enable, 
 # then enter Docker host machine IP and SSH user. Passwordless ssh access 
 # between snapRAID host and Docker host must be set up.
+# Delay is the number of seconds to wait before sending the next docker 
+# command to avoid errors. Tune to your system.
 DOCKER_REMOTE=0
 DOCKER_USER="sshusernamegoeshere"
 DOCKER_IP="127.0.0.1"
+DOCKER_DELAY=5
 
 ####################### USER CONFIGURATION END #######################
 
