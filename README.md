@@ -229,11 +229,16 @@ Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 1
 
 _Optional: install markdown `apt install python-markdown` and curl `apt install curl` . You can skip this step since the script will check and install missing packages for you._
 
-1. Download the zip and extract wherever you prefer e.g. `/usr/sbin/snapraid`
-2. Give executable rights to the main script - `chmod +x snapraid-aio-script.sh`
-3. Open the config file and add your email address
-4. Make other changes to the config file as required
-5. Schedule the script execution time 
+1. Download the latest version from [Releases](https://github.com/auanasgheps/snapraid-aio-script/releaseshttps://github.com/auanasgheps/snapraid-aio-script/releases) 
+2. Extract the archive wherever you prefer 
+   - e.g. `/usr/sbin/snapraid`
+3. Give executable rights to the main script 
+   - `chmod +x snapraid-aio-script.sh`
+4. Open the config file and add your email address
+5. Make other changes to the config file as required. 
+   - Every config is documented, but defaults are pretty resonable, so don't change what you don't know.
+6. Schedule the script execution. 
+   - I recommend running the script daily. 
 
 It is tested on OMV5, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
 
