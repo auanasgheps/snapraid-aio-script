@@ -253,6 +253,7 @@ _Optional: install markdown `apt install python-markdown` and curl `apt install 
 4. Open the config file and add your email address
 5. Make other changes to the config file as required. 
    - Every config is documented, but defaults are pretty resonable, so don't change what you don't know.
+   - When you see  `""` or `''` in some options, do not remove these characters but just fill in your data.
 6. Schedule the script execution. 
    - I recommend running the script daily. 
 
