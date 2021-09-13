@@ -242,7 +242,12 @@ _Optional: install markdown `apt install python-markdown` and curl `apt install 
 
 It is tested on OMV5, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
 
-**OMV5 and SnapRAID plugin**
+## First Run
+If you start with empty disks, you cannot use (yet) this script, since it expects SnapRAID files which would not exist.
+
+First run `snapraid sync`. Once completed, the array will be ready to be used with this script.
+
+## OMV5 and SnapRAID plugin
 
 Ignore what you see at OMV GUI > Services > SnapRAID > Diff Script Settings, since it only applies to the plugin's built-in script. Also don't forget to remove the built-in script from the scheduled jobs.  
 
