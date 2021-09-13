@@ -9,6 +9,22 @@ Supports single and dual parity configurations. It is highly customizable and ha
 
 Contributions are welcome!
 
+# Table of Contents
+
+- [Highlights](#highlights)
+  * [How it works](#how-it-works)
+    + [Additional Information](#additional-information)
+  * [Customization](#customization)
+    + [Customizable features](#customizable-features)
+  * [A nice email report](#a-nice-email-report)
+- [Requirements](#requirements)
+- [Installation](#installation)
+  * [First Run](#first-run)
+  * [OMV5 and SnapRAID plugin](#omv5-and-snapraid-plugin)
+- [Upgrade](#upgrade)
+- [Known Issues](#known-issues)
+- [Credits](#credits)
+
 # Highlights
 
 ## How it works
