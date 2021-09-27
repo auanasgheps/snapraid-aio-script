@@ -239,7 +239,7 @@ Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 1
 # Requirements
 - [`markdown`](https://packages.debian.org/buster/python-markdown) to format emails - will be installed if not found
 - `curl` to use Healhchecks - will be installed if not found
-- ~~`hd-idle` to spin down disks - [Link TBD] - currently not really required since spin down does not work properly.~~
+- ~~`hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle) - currently not really required since spin down does not work properly.~~
 
 # Installation
 
