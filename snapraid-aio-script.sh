@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.1.DEV4"
+SNAPSCRIPTVERSION="3.1.DEV5"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -269,14 +269,14 @@ function main(){
   fi
 
   # Spinning down disks (Method 1: snapraid - preferred)
-  if [ "$SPINDOWN" -eq 1 ]; then
-    echo "### SnapRAID Spindown"
-    echo "\`\`\`"
-    $SNAPRAID_BIN down
-    close_output_and_wait
-    output_to_file_screen
-    echo "\`\`\`"
-  fi
+  # if [ "$SPINDOWN" -eq 1 ]; then
+  #  echo "### SnapRAID Spindown"
+  #  echo "\`\`\`"
+  #  $SNAPRAID_BIN down
+  #  close_output_and_wait
+  #  output_to_file_screen
+  #  echo "\`\`\`"
+  #fi
 
   # Spinning down disks (Method 2: hdparm - spins down all rotational devices)
   # if [ $SPINDOWN -eq 1 ]; then
@@ -288,16 +288,16 @@ function main(){
   #   done
   # fi
 
-  # Spinning down disks (Method 3: hd-idle - spins down all rotational devices)
-  # if [ $SPINDOWN -eq 1 ]; then
-  # for DRIVE in `lsblk -d -o name | tail -n +2`
-  #   do
-  #     if [[ `smartctl -a /dev/$DRIVE | grep 'Rotation Rate' | grep rpm` ]]; then
-  #       echo "spinning down /dev/$DRIVE"
-  #       hd-idle -t /dev/$DRIVE
-  #     fi
-  #   done
-  # fi
+### Spinning down disks (Method 3: hd-idle - spins down all rotational devices)
+  if [ "$SPINDOWN" -eq 1 ]; then
+   for DRIVE in $(lsblk -d -o name | tail -n +2)
+     do
+       if [[ $(smartctl -a /dev/"$DRIVE" | grep 'Rotation Rate' | grep rpm) ]]; then
+         echo "spinning down /dev/$DRIVE"
+         hd-idle -t /dev/"$DRIVE"
+       fi
+     done
+   fi
 
   # Resume paused containers
   if [ "$SERVICES_STOPPED" -eq 1 ]; then
