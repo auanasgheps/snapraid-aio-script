@@ -1,14 +1,14 @@
 #!/bin/bash
-#########################################################################
-#                                                                       #
-#   Project page: https://github.com/auanasgheps/snapraid-aio-script    #
-#                                                                       #
-#########################################################################
+########################################################################
+#								       #
+#   Project page: https://github.com/auanasgheps/snapraid-aio-script   #
+#								       #
+########################################################################
 
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.0"
+SNAPSCRIPTVERSION="3.1.DEV5"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -17,7 +17,7 @@ SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
 CURRENT_DIR=$(dirname "${0}")
 # import the config file for this script which contain user configuration
 CONFIG_FILE=$CURRENT_DIR/script-config.sh
-# shellcheck source=script-config.sh
+#shellcheck source=script-config.sh
 source "$CONFIG_FILE"
 
 ########################################################################
@@ -49,8 +49,8 @@ function main(){
 
   echo "## Preprocessing"
 
-  # Healthchecks.io start 
-  if [ "$HEALTHCHECKS" -eq 1 ]; then
+  # Initialize notification 
+  if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ]; then
    # install curl if not found
    if [ "$(dpkg-query -W -f='${Status}' curl 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
     echo "**Curl has not been found and will be installed.**"
@@ -59,15 +59,37 @@ function main(){
     export DEBIAN_FRONTEND=noninteractive
     apt-get install -qq -o=Dpkg::Use-Pty=0 curl;
    fi  
-   echo "Healthchecks.io integration is enabled."
+   # invoke notification services if configured
+    if [ "$HEALTHCHECKS" -eq 1 ]; then
+   echo "Healthchecks.io notification is enabled."
    curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/start
+   fi
+    if [ "$TELEGRAM" -eq 1 ]; then 
+   echo "Telegram notification is enabled."
+   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+     -H "Content-Type: application/json" \
+     -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "SnapRAID Script Job started"}' \
+     https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
+	 fi
   fi
   
-  # Check if script configuration file has been found
+  # Check if script configuration file has been found, if not send a message 
+  # to syslog and exit
   if [ ! -f "$CONFIG_FILE" ]; then
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
-    mklog "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
-    exit 1;
+	mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"	
+	exit 1;
+  # check if the config file has the correct version
+  elif [ "$CONFIG_VERSION" != 3.1 ]; then
+    echo "Please update your config file to the latest version. The current file is not compatible with this script!"
+    mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
+    if [ "$EMAIL_ADDRESS" ]; then
+      SUBJECT="[WARNING] - Configuration Error $EMAIL_SUBJECT_PREFIX"
+      NOTIFY_OUTPUT="$SUBJECT"
+      trim_log < "$TMP_OUTPUT" | send_mail
+      notify_warning
+    fi
+	exit 1;
   else
     echo "Configuration file found."
     mklog "INFO: Script configuration file found."
@@ -90,12 +112,12 @@ function main(){
   if [ "$MANAGE_SERVICES" -eq 1 ]; then
    service_array_setup
     if [ "$DOCKERALLOK" = YES ]; then
-	 echo
-	 if [ "$DOCKER_MODE" = 1 ]; then 
-      echo "###Pausing Containers [$(date)]";
-	 else
-	  echo "###Stopping Containers [$(date)]";
-     fi
+     echo
+      if [ "$DOCKER_MODE" = 1 ]; then 
+       echo "### Pausing Containers [$(date)]";
+       else
+       echo "### Stopping Containers [$(date)]";
+      fi
      pause_services
     fi
   fi
@@ -130,8 +152,10 @@ function main(){
 	mklog "WARN: Failed to get one or more count values. Unable to continue."
     echo "Exiting script. [$(date)]"
     if [ "$EMAIL_ADDRESS" ]; then
-      SUBJECT="$EMAIL_SUBJECT_PREFIX WARNING - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output."
+      SUBJECT="[WARNING] - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
+	    NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
+	  notify_warning
     fi
     exit 1;
   fi
@@ -195,8 +219,9 @@ function main(){
     # not forced a sync.
     if [ "$CHK_FAIL" -eq 1 ] && [ "$DO_SYNC" -eq 0 ]; then
       # YES, parity is out of sync so let's not run scrub job
-      echo "Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached). [$(date)]"
-      mklog "INFO: Scrub job is cancelled as parity info is out of sync (deleted or changed files threshold has been breached)."
+      echo "Parity info is out of sync (deleted or changed files threshold has been breached)."
+	  echo "Not running SCRUB job. [$(date)]"
+      mklog "INFO: Parity info is out of sync (deleted or changed files threshold has been breached). Not running SCRUB job."
     else
       # NO, delete threshold has not been breached OR we forced a sync, but we
       # have one last test - let's make sure if sync ran, it completed
@@ -204,8 +229,9 @@ function main(){
       if [ "$DO_SYNC" -eq 1 ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
         # Sync ran but did not complete successfully so lets not run scrub to
         # be safe
-        echo "**WARNING** - check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job. [$(date)]"
-        mklog "WARN: Check output of SYNC job. Could not detect marker. Not proceeding with SCRUB job."
+        echo "**WARNING** - check output of SYNC job. Could not detect marker."
+		echo "Not running SCRUB job. [$(date)]"
+        mklog "WARN: Check output of SYNC job. Could not detect marker. Not running SCRUB job."
       else
         # Everything ok - ready to run the scrub job!
         # The fuction will check if scrub delayed run is enabled and run scrub
@@ -214,7 +240,8 @@ function main(){
       fi
     fi
   else
-    echo "Scrub job is not enabled. Not running SCRUB job. [$(date)]"
+    echo "Scrub job is not enabled. "
+	echo "Not running SCRUB job. [$(date)]"
     mklog "INFO: Scrub job is not enabled. Not running SCRUB job."
   fi
 
@@ -242,14 +269,14 @@ function main(){
   fi
 
   # Spinning down disks (Method 1: snapraid - preferred)
-  if [ "$SPINDOWN" -eq 1 ]; then
-    echo "### SnapRAID Spindown"
-    echo "\`\`\`"
-    $SNAPRAID_BIN down
-    close_output_and_wait
-    output_to_file_screen
-    echo "\`\`\`"
-  fi
+  # if [ "$SPINDOWN" -eq 1 ]; then
+  #  echo "### SnapRAID Spindown"
+  #  echo "\`\`\`"
+  #  $SNAPRAID_BIN down
+  #  close_output_and_wait
+  #  output_to_file_screen
+  #  echo "\`\`\`"
+  #fi
 
   # Spinning down disks (Method 2: hdparm - spins down all rotational devices)
   # if [ $SPINDOWN -eq 1 ]; then
@@ -261,26 +288,26 @@ function main(){
   #   done
   # fi
 
-  # Spinning down disks (Method 3: hd-idle - spins down all rotational devices)
-  # if [ $SPINDOWN -eq 1 ]; then
-  # for DRIVE in `lsblk -d -o name | tail -n +2`
-  #   do
-  #     if [[ `smartctl -a /dev/$DRIVE | grep 'Rotation Rate' | grep rpm` ]]; then
-  #       echo "spinning down /dev/$DRIVE"
-  #       hd-idle -t /dev/$DRIVE
-  #     fi
-  #   done
-  # fi
+### Spinning down disks (Method 3: hd-idle - spins down all rotational devices)
+  if [ "$SPINDOWN" -eq 1 ]; then
+   for DRIVE in $(lsblk -d -o name | tail -n +2)
+     do
+       if [[ $(smartctl -a /dev/"$DRIVE" | grep 'Rotation Rate' | grep rpm) ]]; then
+         echo "spinning down /dev/$DRIVE"
+         hd-idle -t /dev/"$DRIVE"
+       fi
+     done
+   fi
 
   # Resume paused containers
   if [ "$SERVICES_STOPPED" -eq 1 ]; then
     echo
-	 if [ "$DOCKER_MODE" = 1 ]; then 
-      echo "### Resuming Containers [$(date)]";
-	  else
-	  echo "### Restarting Containers [$(date)]";
-	 fi
-     resume_services
+      if [ "$DOCKER_MODE" = 1 ]; then 
+        echo "### Resuming Containers [$(date)]";
+	else
+	echo "### Restarting Containers [$(date)]";
+      fi
+    resume_services
   fi
   
   echo "All jobs ended. [$(date)]"
@@ -324,11 +351,13 @@ function sanity_check() {
     echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
     mklog "WARN: Parity file ($i) not found!"
     mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
-    prepare_mail
+				
     # Add a topline to email body
-    sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
+    SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT"
     trim_log < "$TMP_OUTPUT" | send_mail
-    exit;
+	notify_warning
+    exit 1;
   fi
   done
   echo "All parity files found."
@@ -341,11 +370,13 @@ function sanity_check() {
       echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
       mklog "WARN: Content file ($i) not found!"
       mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
-      prepare_mail
+				  
       # Add a topline to email body
-      sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
+      SUBJECT="[WARNING] - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
+      NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
-    exit;
+	  notify_warning
+    exit 1;
    fi
   done
   echo "All content files found."
@@ -353,7 +384,7 @@ function sanity_check() {
 }
 
 function get_counts() {
-  EQ_COUNT=$(grep -w '^ \{1,\}[0-9]* equal' $TMP_OUTPUT | sed 's/^ *//g' | cut -d ' ' -f1)
+  EQ_COUNT=$(grep -w '^ \{1,\}[0-9]* equal' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
   ADD_COUNT=$(grep -w '^ \{1,\}[0-9]* added' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
   DEL_COUNT=$(grep -w '^ \{1,\}[0-9]* removed' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
   UPDATE_COUNT=$(grep -w '^ \{1,\}[0-9]* updated' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
@@ -577,11 +608,12 @@ function pause_services(){
    fi
    if [ "$DOCKER_REMOTE" -eq 1 ]; then
     ssh "$DOCKER_USER"@"$DOCKER_IP" docker "$DOCKER_CMD1" "$i"
-	  SERVICES_STOPPED=1
-    else
-      docker "$DOCKER_CMD1" "$i"
-	  SERVICES_STOPPED=1
-    fi
+	SERVICES_STOPPED=1
+	sleep "$DOCKER_DELAY"
+   else
+    docker "$DOCKER_CMD1" "$i"
+	SERVICES_STOPPED=1
+   fi
   done
 }
 
@@ -596,6 +628,7 @@ function resume_services(){
     if [ "$DOCKER_REMOTE" -eq 1 ]; then
      ssh "$DOCKER_USER"@"$DOCKER_IP" docker "$DOCKER_CMD2" "$i"
      SERVICES_STOPPED=0
+	 sleep "$DOCKER_DELAY"
     else
      docker "$DOCKER_CMD2" "$i"
      SERVICES_STOPPED=0
@@ -640,34 +673,48 @@ function prepare_mail() {
       MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
     fi
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
-	healthchecks_warning
+	NOTIFY_OUTPUT="$SUBJECT"
+	notify_warning
   elif [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
     # Sync ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-	healthchecks_warning
+	NOTIFY_OUTPUT="$SUBJECT"
+	notify_warning
   elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
     # Scrub ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-	HC_OUTPUT="$SUBJECT
+	NOTIFY_OUTPUT="$SUBJECT
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
-	healthchecks_warning
+	notify_warning
   else
     SUBJECT="[COMPLETED] $JOBS_DONE Jobs $EMAIL_SUBJECT_PREFIX"
-	HC_OUTPUT="$SUBJECT
+	NOTIFY_OUTPUT="$SUBJECT
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
-	healthchecks_success
+	notify_success
   fi
 }
 
-function healthchecks_success(){
+function notify_success(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/0 --data-raw "$HC_OUTPUT"
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/0 --data-raw "$NOTIFY_OUTPUT"
+  fi
+  if [ "$TELEGRAM" -eq 1 ]; then
+   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+   -H "Content-Type: application/json" \
+   -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "'"$NOTIFY_OUTPUT"'"}' \
+   https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   }
   
-function healthchecks_warning(){
+function notify_warning(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "HC_OUTPUT"
+   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
+  fi
+  if [ "$TELEGRAM" -eq 1 ]; then
+   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+   -H "Content-Type: application/json" \
+   -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "'"$NOTIFY_OUTPUT"'"}' \
+   https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   }
    
@@ -730,6 +777,16 @@ function mklog() {
     LOGMESSAGE=${BASH_REMATCH[2]} # the Log-Message
   }
   echo "$(date '+[%Y-%m-%d %H:%M:%S]') $(basename "$0"): $PRIORITY: '$LOGMESSAGE'" >> "$SNAPRAID_LOG"
+}
+
+# Emergency syslog function when no config is found, using default log location
+function mklog_noconfig() {
+  [[ "$*" =~ ^([A-Za-z]*):\ (.*) ]] &&
+  {
+    PRIORITY=${BASH_REMATCH[1]} # INFO, DEBUG, WARN
+    LOGMESSAGE=${BASH_REMATCH[2]} # the Log-Message
+  }
+  echo "$(date '+[%Y-%m-%d %H:%M:%S]') $(basename "$0"): $PRIORITY: '$LOGMESSAGE'" >> "/var/log/snapraid.log"
 }
 
 # Set TRAP
