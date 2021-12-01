@@ -105,13 +105,13 @@ DOCKER_DELAY=5
 # Set to 1 to enable custom hook
 CUSTOM_HOOK=0
 
-# Custom stop cmd when start
+# Custom before commands when start
 # This option does not have any effect if CUSTOM_HOOK is set to 0
-STOPCMD=""
+BEFORE_HOOK=""
 
-# Custom restart cmd when end
+# Custom after commands when start
 # This option does not have any effect if CUSTOM_HOOK is set to 0
-RESTARTCMD=""
+AFTER_HOOK=""
 
 ####################### USER CONFIGURATION END #######################
 

@@ -124,8 +124,8 @@ function main(){
 
   # stop hook
   if [ "$CUSTOM_HOOK" -eq 1 ]; then
-    echo "### Stop Hook [$STOPCMD]";
-    $STOPCMD
+    echo "### Before Hook [$BEFORE_HOOK]";
+    bash -c $BEFORE_HOOK
   fi
 
   echo "----------------------------------------"
@@ -308,8 +308,8 @@ function main(){
 
   # Restart hook
   if [ "$CUSTOM_HOOK" -eq 1 ]; then
-    echo "### Restart Hook [$RESTARTCMD]";
-    $RESTARTCMD
+    echo "### After Hook [$AFTER_HOOK]";
+    bash -c $AFTER_HOOK
   fi
 
   # Resume paused containers
