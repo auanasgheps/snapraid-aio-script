@@ -122,6 +122,12 @@ function main(){
     fi
   fi
 
+  # stop hook
+  if [ "$CUSTOM_HOOK" -eq 1 ]; then
+    echo "### Stop Hook [$STOPCMD]";
+    $STOPCMD
+  fi
+
   echo "----------------------------------------"
   echo "## Processing"
 
@@ -298,6 +304,13 @@ function main(){
        fi
      done
    fi
+
+
+  # Restart hook
+  if [ "$CUSTOM_HOOK" -eq 1 ]; then
+    echo "### Restart Hook [$RESTARTCMD]";
+    $RESTARTCMD
+  fi
 
   # Resume paused containers
   if [ "$SERVICES_STOPPED" -eq 1 ]; then

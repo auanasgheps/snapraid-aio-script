@@ -100,6 +100,19 @@ DOCKER_USER="sshusernamegoeshere"
 DOCKER_IP="127.0.0.1"
 DOCKER_DELAY=5
 
+### Custom Hook ###
+
+# Set to 1 to enable custom hook
+CUSTOM_HOOK=0
+
+# Custom stop cmd when start
+# This option does not have any effect if CUSTOM_HOOK is set to 0
+STOPCMD=""
+
+# Custom restart cmd when end
+# This option does not have any effect if CUSTOM_HOOK is set to 0
+RESTARTCMD=""
+
 ####################### USER CONFIGURATION END #######################
 
 ####################### SYSTEM CONFIGURATION #######################
