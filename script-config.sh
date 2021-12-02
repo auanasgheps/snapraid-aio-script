@@ -21,8 +21,8 @@ HEALTHCHECKS_ID='your-uuid-here'
 # Set 1 to enable. Create a bot using @botfather, then copy the API token. 
 # To get your chat ID, use @getidsbot
 TELEGRAM=0
-TELEGRAM_TOKEN=''
-TELEGRAM_CHAT_ID=''
+TELEGRAM_TOKEN='your-token-here'
+TELEGRAM_CHAT_ID='your-chat-id-here'
 
 # Set the option to log SMART info collected by SnapRAID. 1 to enable and any
 # other value to disable.
@@ -78,25 +78,31 @@ SPINDOWN=0
 ### DOCKER CONTAINERS MANAGEMENT ###
 
 # Set to 1 to manage docker containers. They will be paused/stopped or 
-# resumed/restarted accordingly.
+# resumed/restarted accordingly. If set to 0, all other options related to Docker
+# will be ignored.
 MANAGE_SERVICES=0
 
 # Choose how to manage your containers: 1 to pause/unpause, 2 to stop/restart
 # This option does not have any effect if MANAGE_SERVICES is set to 0
 DOCKER_MODE=1
   
-# Containers to manage (separated with spaces). Please ensure containers are 
-# always running before executing the script, otherwise the execution of this 
-# command will throw errors.
+# Containers to manage (separated with spaces). Please ensure these containers 
+# are always running before executing the script, otherwise an error will be logged.
+
 SERVICES='container1 container2 container3'
 
-# Manage docker containers running on a remote machine. Set to 1 to enable, 
-# then enter Docker host machine IP and SSH user. Passwordless ssh access 
-# between snapRAID host and Docker host must be set up.
-# Host machine and services must be defined as the following example: 
+# Manage docker containers running on a remote machine. To use this feature,
+# you must setup passwordless ssh access between snapRAID host and Docker host.
+# Set to 1 to enable, then enter Docker host SSH user and machine IP or hostname.
+# You can manage multiple remote Docker hosts. 
+# Please note: for this configuration DO NOT separate containers with spaces.
+# Use a comma instead. 
+# Reference:
 # ('HOSTIP1:container1,container2,container3' 'HOSTIP2:container1,container2,container3,container4')
+# Example:
+# ('192.168.0.125:code-server,portainer,plex' '192.168.0.126:nextcloud,handbrake,transmission')
 # Delay is the number of seconds to wait before sending the next docker 
-# command to avoid errors. Tune to your system.
+# command to avoid errors. Change it if you're experiencing errors.
 DOCKER_REMOTE=0
 DOCKER_USER="sshusernamegoeshere"
 DOCKER_HOST_SERVICES=('HOSTIP1:container1,container2,container3' 'HOSTIP2:container1,container2,container3,container4')
