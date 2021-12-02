@@ -42,7 +42,8 @@ Contributions are welcome!
 
 ### Additional Information
 - Docker container management, if enabled, will manage containers before SnapRAID operations and restore them when finished. It avoids nasty errors aboud data being written during SnapRAID sync.
-	- The script supports  local or remote Docker instances.
+	- Support for local or remote Docker instances. Also manage multiple remote Docker instances at once. 
+		- **Note:** Remote Docker instances require SSH passwordless access.
 	- You can either choose to pause or stop your containers.
 - Healthchecks.io and Telegram can be used to track script execution time and promptly alert about errors.
 - Important messages are also sent to the system log.
@@ -75,8 +76,8 @@ If you don't know what to do, I recommend using the default values and see how i
 	- A list of containers you want to be interrupted before running actions and restored when completed.
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
    	- Docker remote - if docker is running on a remote machine
-   	   - Docker remote action delay - Set by default to 5 seconds, reduces errors when using remote docker
-- Spindown - spindown drives after the script, disabled because is currently not working. 
+   	   - Docker remote action delay - Set by default to 10 seconds, reduces errors when using remote docker
+- Spindown - spindown disks after the script has completed operations. Uses a rewritten version of [hd-idle](https://github.com/adelolmo/hd-idle).
 
  
 You can also change more advanced options such as mail binary (by default uses `mailx`), SnapRAID binary location, log file location.
@@ -86,7 +87,7 @@ This script produces emails that don't contain a list of changed files to improv
 
 You can re-enable full output in the email by switching the option `VERBOSITY`. The full report will always be available in `/tmp/snapRAID.out` but will be replaced after each run, or deleted when the system is shut down. You can change the location of the file if you need to keep it.
 
-Here's a sneak peek of the email report. 
+Here's an example email report. 
 
 
 ```markdown
@@ -239,40 +240,41 @@ Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 1
 # Requirements
 - [`markdown`](https://packages.debian.org/buster/python-markdown) to format emails - will be installed if not found
 - `curl` to use Healhchecks - will be installed if not found
-- ~~`hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle) - currently not really required since spin down does not work properly.~~
+- `hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle)
 
 # Installation
 
-_Optional: install markdown `apt install python-markdown` and curl `apt install curl` . You can skip this step since the script will check and install missing packages for you._
+_Optional: install markdown `apt install python-markdown` and curl `apt install curl` . You can skip this step since the script will try to install missing packages for you._
 
 1. Download the latest version from [Releases](https://github.com/auanasgheps/snapraid-aio-script/releaseshttps://github.com/auanasgheps/snapraid-aio-script/releases) 
-2. Extract the archive wherever you prefer 
+3. Extract the archive wherever you prefer 
    - e.g. `/usr/sbin/snapraid`
-3. Give executable rights to the main script 
+4. Give executable rights to the main script 
    - `chmod +x snapraid-aio-script.sh`
-4. Open the config file and add your email address
-5. Make other changes to the config file as required. 
+5. Open the config file and add your email address
+6. Make other changes to the config file as required. 
    - Every config is documented, but defaults are pretty resonable, so don't change what you don't know.
    - When you see  `""` or `''` in some options, do not remove these characters but just fill in your data.
-6. Schedule the script execution. 
+   - If you want to spindown your disks, you need to install [hd-idle](https://github.com/adelolmo/hd-idle)
+7. Schedule the script execution. 
    - I recommend running the script daily. 
 
 It is tested on OMV5, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
 
 ## First Run
-If you start with empty disks, you cannot use (yet) this script, since it expects SnapRAID files which would not exist.
+If you start with empty disks, you cannot use (yet) this script, since it expects SnapRAID files which would not be found.
 
 First run `snapraid sync`. Once completed, the array will be ready to be used with this script.
 
 ## OMV5 and SnapRAID plugin
 
-Ignore what you see at OMV GUI > Services > SnapRAID > Diff Script Settings, since it only applies to the plugin's built-in script. Also don't forget to remove the built-in script from the scheduled jobs.  
+Ignore what you see at _OMV GUI > Services > SnapRAID > Diff Script Settings_, since it only applies to the plugin's built-in script. Also don't forget to remove the built-in script from the scheduled jobs.  
 
 # Upgrade 
-If you are using a previous version of the script, do not use current config file. Please move your preferences to the new `script-config.sh` found in the archive. 
+If you are using a previous version of the script, do not use your config file. Please move your preferences to the new `script-config.sh` found in the archive. 
 
 # Known Issues
-- Hard disk spin down does not work: they are immediately woken up. The script probably does not handle this correctly while running.
+- You tell me!
 
 # Credits
 All rights belong to the respective creators. 
