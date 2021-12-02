@@ -93,12 +93,14 @@ SERVICES='container1 container2 container3'
 # Manage docker containers running on a remote machine. Set to 1 to enable, 
 # then enter Docker host machine IP and SSH user. Passwordless ssh access 
 # between snapRAID host and Docker host must be set up.
+# Host machine and services must be defined as the following example: 
+# ('HOSTIP1:container1,container2,container3' 'HOSTIP2:container1,container2,container3,container4')
 # Delay is the number of seconds to wait before sending the next docker 
 # command to avoid errors. Tune to your system.
 DOCKER_REMOTE=0
 DOCKER_USER="sshusernamegoeshere"
-DOCKER_IP="127.0.0.1"
-DOCKER_DELAY=5
+DOCKER_HOST_SERVICES=('HOSTIP1:container1,container2,container3' 'HOSTIP2:container1,container2,container3,container4')
+DOCKER_DELAY=10
 
 ####################### USER CONFIGURATION END #######################
 
@@ -128,12 +130,14 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 # Extract info from SnapRAID config
 SNAPRAID_CONF_LINES=$(grep -E '^[^#;]' $SNAPRAID_CONF)
 
+IFS=$'\n' 
 # Build an array of content files
-IFS=$'\n' CONTENT_FILES=(
+CONTENT_FILES=(
 $(echo "$SNAPRAID_CONF_LINES" | grep snapraid.content | cut -d ' ' -f2)
 )
 
 # Build an array of parity all files...
-IFS=$'\n' PARITY_FILES=(
+PARITY_FILES=(
   $(echo "$SNAPRAID_CONF_LINES" | grep -E '^([2-6z]-)*parity' | cut -d ' ' -f2- | tr ',' '\n')
 )
+unset IFS
