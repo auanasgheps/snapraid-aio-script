@@ -108,16 +108,23 @@ DOCKER_USER="sshusernamegoeshere"
 DOCKER_HOST_SERVICES=('HOSTIP1:container1,container2,container3' 'HOSTIP2:container1,container2,container3,container4')
 DOCKER_DELAY=10
 
-### Custom Hook ###
+### CUSTOM HOOKS ###
 
-# Set to 1 to enable custom hook
+# Hooks are shell commands that the scripts executes for you.
+# You can specify before_hook to perform preparation steps before SnapRAID
+# actions and specify after_hook to perform steps afterwards.
+# Set to 1 to enable custom hooks
 CUSTOM_HOOK=0
 
-# Custom before commands when start
+# Custom hook before SnapRAID activities
+# This custom hook executes when pre-processing is complete and before
+# SnapRAID operations.
 # This option does not have any effect if CUSTOM_HOOK is set to 0
 BEFORE_HOOK=""
 
-# Custom after commands when start
+# Custom hook after SnapRAID activities
+# This custom hook executes after SnapRAID operations an will be the
+# last command.
 # This option does not have any effect if CUSTOM_HOOK is set to 0
 AFTER_HOOK=""
 
