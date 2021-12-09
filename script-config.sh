@@ -88,7 +88,6 @@ DOCKER_MODE=1
   
 # Containers to manage (separated with spaces). Please ensure these containers 
 # are always running before executing the script, otherwise an error will be logged.
-
 SERVICES='container1 container2 container3'
 
 # Manage docker containers running on a remote machine. To use this feature,
