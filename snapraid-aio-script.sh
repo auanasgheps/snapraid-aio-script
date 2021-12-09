@@ -786,7 +786,7 @@ function send_mail(){
   #    maintained.
   # 4. The HTML code blocks need to be modified to use <pre></pre> to display
   #    correctly.
-  $MAIL_BIN -M "text/html" -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
+  $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
     < <(echo "$body" | sed '/^[[:space:]]*$/d; /^ -*$/d; s/$/  /' |
       python -m markdown |
       sed 's/<code>/<pre>/;s%</code>%</pre>%')
