@@ -314,8 +314,7 @@ function main(){
   mklog "INFO: Snapraid: all jobs ended."
 
   # all jobs done, let's send output to user if configured
-  if [ "$EMAIL_ADDRESS" ]; then
-    echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
+  if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ]; then
     # check if deleted count exceeded threshold
     prepare_mail
 
@@ -787,13 +786,17 @@ function send_mail(){
   # 4. The HTML code blocks need to be modified to use <pre></pre> to display
   #    correctly.
 
-  if [ -x "$HOOK_NOTIFICATION" ]; then
-    $HOOK_NOTIFICATION "$SUBJECT" "$body"
-  else
-  $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
-    < <(echo "$body" | sed '/^[[:space:]]*$/d; /^ -*$/d; s/$/  /' |
+  body=$(echo "$body" | sed '/^[[:space:]]*$/d; /^ -*$/d; s/$/  /' |
       python -m markdown |
       sed 's/<code>/<pre>/;s%</code>%</pre>%')
+
+  if [ -x "$HOOK_NOTIFICATION" ]; then
+    echo -e "Notification user script is set. Calling it now [$(date)]"
+    $HOOK_NOTIFICATION "$SUBJECT" "$body"
+  else
+    echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
+    $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
+      < <(echo "$body")
   fi
 }
 
