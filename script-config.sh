@@ -123,7 +123,7 @@ CUSTOM_HOOK=0
 BEFORE_HOOK=""
 
 # Custom hook after SnapRAID activities
-# This custom hook executes after SnapRAID operations an will be the
+# This custom hook executes after SnapRAID operations and will be the
 # last command.
 # This option does not have any effect if CUSTOM_HOOK is set to 0
 AFTER_HOOK=""
