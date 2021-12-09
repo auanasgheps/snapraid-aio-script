@@ -786,10 +786,15 @@ function send_mail(){
   #    maintained.
   # 4. The HTML code blocks need to be modified to use <pre></pre> to display
   #    correctly.
+
+  if [ -x "$HOOK_NOTIFICATION" ]; then
+    $HOOK_NOTIFICATION "$SUBJECT" "$body"
+  else
   $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
     < <(echo "$body" | sed '/^[[:space:]]*$/d; /^ -*$/d; s/$/  /' |
       python -m markdown |
       sed 's/<code>/<pre>/;s%</code>%</pre>%')
+  fi
 }
 
 # Due to how process substitution and newer bash versions work, this function

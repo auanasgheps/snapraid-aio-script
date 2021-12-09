@@ -12,6 +12,13 @@ CONFIG_VERSION=3.1
 EMAIL_ADDRESS="youremailgoeshere"
 FROM_EMAIL_ADDRESS="fromemailgoeshere"
 
+
+# [optional] set this to a script to be used instead of the default email notification
+# $CURRENT_DIR can be used to get the running directory of the script
+# 1st parameter will be the subject
+# 2nd parameter will be the body
+HOOK_NOTIFICATION=""
+
 # Use Healthchecks.io to report script errors. Set to 1 to enable.
 # Please note that every "WARNING" will be reported as failure.
 # When enabled, enter your Healthchecks UUID (not the full URL).
