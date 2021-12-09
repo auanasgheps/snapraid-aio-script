@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.1.DEV6"
+SNAPSCRIPTVERSION="3.1.DEV7"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -120,6 +120,12 @@ function main(){
       fi
      pause_services
     fi
+  fi
+
+  # Custom Hook - Before
+  if [ "$CUSTOM_HOOK" -eq 1 ]; then
+    echo "### Custom Hook [$BEFORE_HOOK_NAME]";
+    bash -c "$BEFORE_HOOK_CMD"
   fi
 
   echo "----------------------------------------"
@@ -308,6 +314,12 @@ function main(){
 	echo "### Restarting Containers [$(date)]";
       fi
     resume_services
+  fi
+
+  # Custom Hook - After
+  if [ "$CUSTOM_HOOK" -eq 1 ]; then
+    echo "### Custom Hook - [$AFTER_HOOK_NAME]";
+    bash -c "$AFTER_HOOK_CMD"
   fi
 
   echo "All jobs ended. [$(date)]"
@@ -545,7 +557,7 @@ function chk_scrub_settings(){
 
 function run_scrub(){
   echo "\`\`\`"
-  $SNAPRAID_BIN scrub -p $SCRUB_PERCENT -o $SCRUB_AGE -q
+  $SNAPRAID_BIN scrub -p "$SCRUB_PERCENT" -o "$SCRUB_AGE" -q
   close_output_and_wait
   output_to_file_screen
   echo "\`\`\`"
