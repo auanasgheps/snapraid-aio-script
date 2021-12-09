@@ -41,10 +41,13 @@ Contributions are welcome!
 - When the script is done sends an email with the results, both in case of error or success.
 
 ### Additional Information
-- Docker container management, if enabled, will manage containers before SnapRAID operations and restore them when finished. It avoids nasty errors aboud data being written during SnapRAID sync.
+- Docker container management
+	- Manage containers before SnapRAID operations and restore them when finished. It avoids nasty errors aboud data being written during SnapRAID sync.
 	- Support for local or remote Docker instances. Also manage multiple remote Docker instances at once. 
 		- **Note:** Remote Docker instances require SSH passwordless access.
 	- You can either choose to pause or stop your containers.
+- Custom Hooks 
+	- Define shell commands or scripts to be run before and after SnapRAID operations.
 - Healthchecks.io and Telegram can be used to track script execution time and promptly alert about errors.
 - Important messages are also sent to the system log.
 - Emails are still the best place to get detailed but readable information.
@@ -77,6 +80,9 @@ If you don't know what to do, I recommend using the default values and see how i
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
    	- Docker remote - if docker is running on a remote machine
    	   - Docker remote action delay - Set by default to 10 seconds, reduces errors when using remote docker
+- Custom Hooks
+	- Commands or scripts to be run before and after SnapRAID operations.
+	- Option to display friendly name to in the email output
 - Spindown - spindown disks after the script has completed operations. Uses a rewritten version of [hd-idle](https://github.com/adelolmo/hd-idle).
 
  
