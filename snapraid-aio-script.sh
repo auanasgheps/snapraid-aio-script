@@ -49,7 +49,7 @@ function main(){
 
   echo "## Preprocessing"
 
-  # Initialize notification 
+  # Initialize notification
   if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ]; then
    # install curl if not found
    if [ "$(dpkg-query -W -f='${Status}' curl 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
@@ -58,13 +58,13 @@ function main(){
     # super silent and secret install command
     export DEBIAN_FRONTEND=noninteractive
     apt-get install -qq -o=Dpkg::Use-Pty=0 curl;
-   fi  
+   fi
    # invoke notification services if configured
     if [ "$HEALTHCHECKS" -eq 1 ]; then
    echo "Healthchecks.io notification is enabled."
    curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/start
    fi
-    if [ "$TELEGRAM" -eq 1 ]; then 
+    if [ "$TELEGRAM" -eq 1 ]; then
    echo "Telegram notification is enabled."
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
      -H "Content-Type: application/json" \
@@ -72,12 +72,12 @@ function main(){
      https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
 	 fi
   fi
-  
-  # Check if script configuration file has been found, if not send a message 
+
+  # Check if script configuration file has been found, if not send a message
   # to syslog and exit
   if [ ! -f "$CONFIG_FILE" ]; then
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
-	mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"	
+	mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
 	exit 1;
   # check if the config file has the correct version
   elif [ "$CONFIG_VERSION" != 3.1 ]; then
@@ -107,13 +107,13 @@ function main(){
   # sanity check first to make sure we can access the content and parity files
   mklog "INFO: Checking SnapRAID disks"
   sanity_check
-  
+
   # pause configured containers
   if [ "$MANAGE_SERVICES" -eq 1 ]; then
    service_array_setup
     if [ "$DOCKERALLOK" = YES ]; then
      echo
-      if [ "$DOCKER_MODE" = 1 ]; then 
+      if [ "$DOCKER_MODE" = 1 ]; then
        echo "### Pausing Containers [$(date)]";
        else
        echo "### Stopping Containers [$(date)]";
@@ -302,14 +302,14 @@ function main(){
   # Resume paused containers
   if [ "$SERVICES_STOPPED" -eq 1 ]; then
     echo
-      if [ "$DOCKER_MODE" = 1 ]; then 
+      if [ "$DOCKER_MODE" = 1 ]; then
         echo "### Resuming Containers [$(date)]";
 	else
 	echo "### Restarting Containers [$(date)]";
       fi
     resume_services
   fi
-  
+
   echo "All jobs ended. [$(date)]"
   mklog "INFO: Snapraid: all jobs ended."
 
@@ -351,7 +351,7 @@ function sanity_check() {
     echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
     mklog "WARN: Parity file ($i) not found!"
     mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
-				
+
     # Add a topline to email body
     SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
@@ -370,7 +370,7 @@ function sanity_check() {
       echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
       mklog "WARN: Content file ($i) not found!"
       mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
-				  
+
       # Add a topline to email body
       SUBJECT="[WARNING] - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
@@ -575,7 +575,7 @@ function service_array_setup() {
    echo "Docker containers management is enabled."
    ARRAY_VALIDATED=YES
   fi
-  
+
   # check what docker mode is set
   if [ "$DOCKER_MODE" = 1 ]; then
    DOCKER_CMD1=pause
@@ -585,15 +585,15 @@ function service_array_setup() {
    DOCKER_CMD1=stop
    DOCKER_CMD2=start
    DOCKERCMD_VALIDATED=YES
-  else	
+  else
    echo "Please check your command configuration. Unable to manage containers."
    DOCKERCMD_VALIDATED=NO
   fi
-  
-  # validate docker configuration 
+
+  # validate docker configuration
   if [ "$ARRAY_VALIDATED" = YES ] && [ "$DOCKERCMD_VALIDATED" = YES ]; then
    DOCKERALLOK=YES
-  else 
+  else
    DOCKERALLOK=NO
   fi
 }
@@ -615,7 +615,7 @@ function pause_services(){
     IFS=',' read -r -a remote_service_array <<<"$REMOTE_SERVICES"
     # Loop over services
     for j in "${remote_service_array[@]}"; do
-     if [ "$DOCKER_MODE" = 1 ]; then 
+     if [ "$DOCKER_MODE" = 1 ]; then
       echo "Pausing Container - ""${j^}";
      else
       echo "Stopping Container - ""${j^}";
@@ -627,7 +627,7 @@ function pause_services(){
   else
    IFS=' ' read -r -a service_array <<<"$SERVICES"
    for i in "${service_array[@]}"; do
-    if [ "$DOCKER_MODE" = 1 ]; then 
+    if [ "$DOCKER_MODE" = 1 ]; then
      echo "Pausing Container - ""${i^}";
     else
      echo "Stopping Container - ""${i^}";
@@ -657,7 +657,7 @@ function resume_services(){
      IFS=',' read -r -a remote_service_array <<<"$REMOTE_SERVICES"
      # Loop over services
      for j in "${remote_service_array[@]}"; do
-      if [ "$DOCKER_MODE" = 1 ]; then 
+      if [ "$DOCKER_MODE" = 1 ]; then
        echo "Resuming Container - ""${j^}";
       else
        echo "Restarting Container - ""${j^}";
@@ -669,7 +669,7 @@ function resume_services(){
    else
     IFS=' ' read -r -a service_array <<<"$SERVICES"
     for i in "${service_array[@]}"; do
-     if [ "$DOCKER_MODE" = 1 ]; then 
+     if [ "$DOCKER_MODE" = 1 ]; then
       echo "Resuming Container - ""${i^}";
      else
       echo "Restarting Container - ""${i^}";
@@ -685,12 +685,12 @@ function resume_services(){
 function clean_desc(){
   [[ $- == *i* ]] && exec &>/dev/tty
  }
-  
+
 function final_cleanup(){
   resume_services
   clean_desc
   exit
-}  
+}
 
 function prepare_mail() {
   if [ $CHK_FAIL -eq 1 ]; then
@@ -750,7 +750,7 @@ function notify_success(){
    https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   }
-  
+
 function notify_warning(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
@@ -762,7 +762,7 @@ function notify_warning(){
    https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   }
-   
+
 # Trim the log file read from stdin.
 function trim_log(){
   sed '
@@ -786,7 +786,7 @@ function send_mail(){
   #    maintained.
   # 4. The HTML code blocks need to be modified to use <pre></pre> to display
   #    correctly.
-  $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" "$EMAIL_ADDRESS" \
+  $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
     < <(echo "$body" | sed '/^[[:space:]]*$/d; /^ -*$/d; s/$/  /' |
       python -m markdown |
       sed 's/<code>/<pre>/;s%</code>%</pre>%')
