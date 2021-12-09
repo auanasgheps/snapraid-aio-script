@@ -122,10 +122,10 @@ function main(){
     fi
   fi
 
-  # stop hook
+  # Custom Hook - Before
   if [ "$CUSTOM_HOOK" -eq 1 ]; then
-    echo "### Before Hook [$BEFORE_HOOK]";
-    bash -c "$BEFORE_HOOK"
+    echo "### Custom Hook [$BEFORE_HOOK_NAME]";
+    bash -c "$BEFORE_HOOK_CMD"
   fi
 
   echo "----------------------------------------"
@@ -305,13 +305,6 @@ function main(){
      done
    fi
 
-
-  # Restart hook
-  if [ "$CUSTOM_HOOK" -eq 1 ]; then
-    echo "### After Hook [$AFTER_HOOK]";
-    bash -c "$AFTER_HOOK"
-  fi
-
   # Resume paused containers
   if [ "$SERVICES_STOPPED" -eq 1 ]; then
     echo
@@ -322,6 +315,12 @@ function main(){
       fi
     resume_services
   fi
+    
+  # Custom Hook - After
+  if [ "$CUSTOM_HOOK" -eq 1 ]; then
+    echo "### Custom Hook - [$AFTER_HOOK_NAME]";
+    bash -c "$AFTER_HOOK_CMD"
+  fi
   
   echo "All jobs ended. [$(date)]"
   mklog "INFO: Snapraid: all jobs ended."
@@ -329,7 +328,7 @@ function main(){
   # all jobs done, let's send output to user if configured
   if [ "$EMAIL_ADDRESS" ]; then
     echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
-    # check if deleted count exceeded threshold
+    # check snapraid output and build message subject, send notifications if enabled
     prepare_mail
 
     ELAPSED="$((SECONDS / 3600))hrs $(((SECONDS / 60) % 60))min $((SECONDS % 60))sec"
