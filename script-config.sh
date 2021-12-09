@@ -113,6 +113,7 @@ DOCKER_DELAY=10
 # Hooks are shell commands that the scripts executes for you.
 # You can specify before_hook to perform preparation steps before SnapRAID
 # actions and specify after_hook to perform steps afterwards.
+
 # Set to 1 to enable custom hooks
 CUSTOM_HOOK=0
 
@@ -120,13 +121,17 @@ CUSTOM_HOOK=0
 # This custom hook executes when pre-processing is complete and before
 # SnapRAID operations.
 # This option does not have any effect if CUSTOM_HOOK is set to 0
-BEFORE_HOOK=""
+# Use NAME for a friendly name, CMD for the command itself.
+BEFORE_HOOK_NAME=""
+BEFORE_HOOK_CMD=""
 
 # Custom hook after SnapRAID activities
-# This custom hook executes after SnapRAID operations and will be the
+# This custom hook executes after SnapRAID operations an will be the
 # last command.
 # This option does not have any effect if CUSTOM_HOOK is set to 0
-AFTER_HOOK=""
+# Use NAME for a friendly name, CMD for the command itself.
+AFTER_HOOK_NAME=""
+AFTER_HOOK_CMD=""
 
 ####################### USER CONFIGURATION END #######################
 
