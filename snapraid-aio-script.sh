@@ -122,6 +122,12 @@ function main(){
     fi
   fi
 
+  # stop hook
+  if [ "$CUSTOM_HOOK" -eq 1 ]; then
+    echo "### Before Hook [$BEFORE_HOOK]";
+    bash -c $BEFORE_HOOK
+  fi
+
   echo "----------------------------------------"
   echo "## Processing"
 
@@ -298,6 +304,13 @@ function main(){
        fi
      done
    fi
+
+
+  # Restart hook
+  if [ "$CUSTOM_HOOK" -eq 1 ]; then
+    echo "### After Hook [$AFTER_HOOK]";
+    bash -c $AFTER_HOOK
+  fi
 
   # Resume paused containers
   if [ "$SERVICES_STOPPED" -eq 1 ]; then

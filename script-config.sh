@@ -108,6 +108,19 @@ DOCKER_USER="sshusernamegoeshere"
 DOCKER_HOST_SERVICES=('HOSTIP1:container1,container2,container3' 'HOSTIP2:container1,container2,container3,container4')
 DOCKER_DELAY=10
 
+### Custom Hook ###
+
+# Set to 1 to enable custom hook
+CUSTOM_HOOK=0
+
+# Custom before commands when start
+# This option does not have any effect if CUSTOM_HOOK is set to 0
+BEFORE_HOOK=""
+
+# Custom after commands when start
+# This option does not have any effect if CUSTOM_HOOK is set to 0
+AFTER_HOOK=""
+
 ####################### USER CONFIGURATION END #######################
 
 ####################### SYSTEM CONFIGURATION #######################
