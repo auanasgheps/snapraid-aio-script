@@ -29,7 +29,7 @@ TELEGRAM_CHAT_ID='your-chat-id-here'
 # Set 1 to enable. Create a bot using @botfather, then copy the API token. 
 # To get your Wevhook URL go to the channel settings -> Integrations and create a web hook
 DISCORD=0
-DISCORD_WEBHOOK_URL=""
+DISCORD_WEBHOOK_URL="your-webhook-url"
 
 # Custom notification service
 # Set this to a script/service to be used instead of the default email 
