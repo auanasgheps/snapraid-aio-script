@@ -47,8 +47,10 @@ Contributions are welcome!
 		- **Note:** Remote Docker instances require SSH passwordless access.
 	- You can either choose to pause or stop your containers.
 - Custom Hooks 
-	- Define shell commands or scripts to be run before and after SnapRAID operations.
-- Healthchecks.io and Telegram can be used to track script execution time and promptly alert about errors.
+	- Define shell commands or scripts to run before and after SnapRAID operations.
+- 3rd Party notification support
+	- Healthchecks.io and Telegram can be used to track script execution time, status and promptly alert about errors.
+	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or even another mail binary
 - Important messages are also sent to the system log.
 - Emails are still the best place to get detailed but readable information.
 
@@ -75,6 +77,10 @@ If you don't know what to do, I recommend using the default values and see how i
   	- The script will report to Healthchecks.io and Telegram when is started and when is completed. If there's a failure it's included as well.
   	- **Healthchecks.io only:** If the script ends with a **_WARNING_** message, it will be reported **_DOWN_** to Healthchecks.io, instead if the message is **_COMPLETED_** it will be **_UP_**. 
   	- **Healthchecks.io only:** This service will also show how much time the script took to complete.
+- Notification Hook
+	- Made for external services or mail binaries with different commands than `mailx`.
+	- Configure the path of the script or the mail binary to be invoked.
+	- You can still use native services since it only replaces the standard email.
 - Container management - disabled by default. 
 	- A list of containers you want to be interrupted before running actions and restored when completed.
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
@@ -86,7 +92,7 @@ If you don't know what to do, I recommend using the default values and see how i
 - Spindown - spindown disks after the script has completed operations. Uses a rewritten version of [hd-idle](https://github.com/adelolmo/hd-idle).
 
  
-You can also change more advanced options such as mail binary (by default uses `mailx`), SnapRAID binary location, log file location.
+You can also change more advanced options such SnapRAID binary location, log file location and mail binary. If your mail binary uses different commands than `mailx`, use the Notification Hook feature.
 
 ## A nice email report
 This script produces emails that don't contain a list of changed files to improve clarity.
@@ -257,12 +263,11 @@ _Optional: install markdown `apt install python-markdown` and curl `apt install 
    - e.g. `/usr/sbin/snapraid`
 4. Give executable rights to the main script 
    - `chmod +x snapraid-aio-script.sh`
-5. Open the config file and add your email address
-6. Make other changes to the config file as required. 
-   - Every config is documented, but defaults are pretty resonable, so don't change what you don't know.
+5. Open the config file and make changes to the config file as required. 
+   - Every config is documented but defaults are pretty resonable, so don't make changes if you're not sure.
    - When you see  `""` or `''` in some options, do not remove these characters but just fill in your data.
    - If you want to spindown your disks, you need to install [hd-idle](https://github.com/adelolmo/hd-idle)
-7. Schedule the script execution. 
+6. Schedule the script execution. 
    - I recommend running the script daily. 
 
 It is tested on OMV5, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
@@ -293,3 +298,4 @@ This script would not exist without:
 - [tehniemer](https://github.com/tehniemer)
 - [cmcginty](https://github.com/cmcginty)
 - [nzlov](https://github.com/nzlov)
+- [Caedis](https://github.com/Caedis)
