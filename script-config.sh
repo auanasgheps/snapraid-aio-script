@@ -25,6 +25,12 @@ TELEGRAM=0
 TELEGRAM_TOKEN='your-token-here'
 TELEGRAM_CHAT_ID='your-chat-id-here'
 
+# Use Discord to report script execution summary (not the whole report) 
+# Set 1 to enable. Create a bot using @botfather, then copy the API token. 
+# To get your Wevhook URL go to the channel settings -> Integrations and create a web hook
+DISCORD=0
+DISCORD_WEBHOOK_URL=""
+
 # Custom notification service
 # Set this to a script/service to be used instead of the default email 
 # notification. You may want to use a service not natively supported by this 
@@ -35,6 +41,19 @@ TELEGRAM_CHAT_ID='your-chat-id-here'
 # 1st parameter will be the subject
 # 2nd parameter will be the body
 HOOK_NOTIFICATION=""
+
+# Set the option to log SMART info collected by SnapRAID. 1 to enable and any
+# other value to disable.
+SMART_LOG=1
+
+# Increase verbosity of the email output. If set to 1, TOUCH and DIFF outputs 
+# will be kept in the email, producing a mostly unreadable email. Keep this 
+# disabled for optimal results. You can always check TOUCH and DIFF outputs 
+# using the TMP file. 1 to enable, any other values to disable.
+VERBOSITY=0
+
+# Run snapraid status command to show array general information.
+SNAP_STATUS=0
 
 ### SCRIPT AND SNAPRAID SETTINGS ###
 
