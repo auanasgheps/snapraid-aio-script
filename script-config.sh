@@ -12,13 +12,6 @@ CONFIG_VERSION=3.1
 EMAIL_ADDRESS="youremailgoeshere"
 FROM_EMAIL_ADDRESS="fromemailgoeshere"
 
-
-# [optional] set this to a script to be used instead of the default email notification
-# $CURRENT_DIR can be used to get the running directory of the script
-# 1st parameter will be the subject
-# 2nd parameter will be the body
-HOOK_NOTIFICATION=""
-
 # Use Healthchecks.io to report script errors. Set to 1 to enable.
 # Please note that every "WARNING" will be reported as failure.
 # When enabled, enter your Healthchecks UUID (not the full URL).
@@ -32,18 +25,16 @@ TELEGRAM=0
 TELEGRAM_TOKEN='your-token-here'
 TELEGRAM_CHAT_ID='your-chat-id-here'
 
-# Set the option to log SMART info collected by SnapRAID. 1 to enable and any
-# other value to disable.
-SMART_LOG=1
-
-# Increase verbosity of the email output. If set to 1, TOUCH and DIFF outputs
-# will be kept in the email, producing a mostly unreadable email. Keep this
-# disabled for optimal results. You can always check TOUCH and DIFF outputs
-# using the TMP file. 1 to enable, any other values to disable.
-VERBOSITY=0
-
-# Run snapraid status command to show array general information.
-SNAP_STATUS=0
+# Custom notification service
+# Set this to a script/service to be used instead of the default email 
+# notification. You may want to use a service not natively supported by this 
+# script or a mail service with custom formatting. 
+# If you don't want to use this option, don't make changes to this.
+# $CURRENT_DIR can be used to get the running directory of the script.
+# This script will pass the following parameter to HOOK_NOTIFICATION:
+# 1st parameter will be the subject
+# 2nd parameter will be the body
+HOOK_NOTIFICATION=""
 
 ### SCRIPT AND SNAPRAID SETTINGS ###
 
@@ -82,6 +73,19 @@ PREHASH=1
 # Set if disk spindown should be performed. Depending on your system, this may
 # not work. 1 to enable, any other values to disable.
 SPINDOWN=0
+
+# Set the option to log SMART info collected by SnapRAID. 1 to enable and any
+# other value to disable.
+SMART_LOG=1
+
+# Increase verbosity of the email output. If set to 1, TOUCH and DIFF outputs
+# will be kept in the email, producing a mostly unreadable email. Keep this
+# disabled for optimal results. You can always check TOUCH and DIFF outputs
+# using the TMP file. 1 to enable, any other values to disable.
+VERBOSITY=0
+
+# Run snapraid status command to show array general information.
+SNAP_STATUS=0
 
 ### DOCKER CONTAINERS MANAGEMENT ###
 
