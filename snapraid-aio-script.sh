@@ -327,7 +327,7 @@ function main(){
 
   # all jobs done, let's send output to user if configured
   if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ]; then
-    # check if deleted count exceeded threshold
+    # check snapraid output and build the message subject, then send notifications if enabled
     prepare_mail
 
     ELAPSED="$((SECONDS / 3600))hrs $(((SECONDS / 60) % 60))min $((SECONDS % 60))sec"
