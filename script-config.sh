@@ -52,9 +52,6 @@ SMART_LOG=1
 # using the TMP file. 1 to enable, any other values to disable.
 VERBOSITY=0
 
-# Run snapraid status command to show array general information.
-SNAP_STATUS=0
-
 ### SCRIPT AND SNAPRAID SETTINGS ###
 
 # Set the threshold of deleted files to stop the sync job from running. NOTE
