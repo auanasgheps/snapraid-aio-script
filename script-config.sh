@@ -42,16 +42,6 @@ DISCORD_WEBHOOK_URL="your-webhook-url"
 # 2nd parameter will be the body
 HOOK_NOTIFICATION=""
 
-# Set the option to log SMART info collected by SnapRAID. 1 to enable and any
-# other value to disable.
-SMART_LOG=1
-
-# Increase verbosity of the email output. If set to 1, TOUCH and DIFF outputs 
-# will be kept in the email, producing a mostly unreadable email. Keep this 
-# disabled for optimal results. You can always check TOUCH and DIFF outputs 
-# using the TMP file. 1 to enable, any other values to disable.
-VERBOSITY=0
-
 ### SCRIPT AND SNAPRAID SETTINGS ###
 
 # Set the threshold of deleted files to stop the sync job from running. NOTE
