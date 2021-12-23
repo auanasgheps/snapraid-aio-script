@@ -49,7 +49,7 @@ Contributions are welcome!
 - Custom Hooks 
 	- Define shell commands or scripts to run before and after SnapRAID operations.
 - 3rd Party notification support
-	- Healthchecks.io and Telegram can be used to track script execution time, status and promptly alert about errors.
+	- Healthchecks.io, Telegram and Discord can be used to track script execution time, status and promptly alert about errors.
 	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or even another mail binary
 - Important messages are also sent to the system log.
 - Emails are still the best place to get detailed but readable information.
@@ -72,11 +72,11 @@ If you don't know what to do, I recommend using the default values and see how i
 - Snapraid Status - shows the status of the array, disabled by default.
 - SMART Log - enabled by default. A SnapRAID report for disks health status.
 - Verbosity option - disabled by default. When enabled, includes the TOUCH and DIFF commands output. Please note email will be huge and mostly unreadable.
-- Healthchecks.io and Telegram integration
+- Healthchecks.io, Telegram and Discord integration
 	- If you don't read your emails every day, this is a great one for you, since you can be quickly informed if things go wrong. 
-  	- The script will report to Healthchecks.io and Telegram when is started and when is completed. If there's a failure it's included as well.
-  	- **Healthchecks.io only:** If the script ends with a **_WARNING_** message, it will be reported **_DOWN_** to Healthchecks.io, instead if the message is **_COMPLETED_** it will be **_UP_**. 
-  	- **Healthchecks.io only:** This service will also show how much time the script took to complete.
+  	- The script will report to Healthchecks.io, Telegram and Discord when is started and when is completed. If there's a failure it's included as well.
+  	- **Healthchecks.io only:** If the script ends with a **_WARNING_** message, it will report **_DOWN_** to Healthchecks.io, if the message is **_COMPLETED_** it will report **_UP_**. 
+  	- **Healthchecks.io only:** This service will also show how much time the script takes to complete.
 - Notification Hook
 	- Made for external services or mail binaries with different commands than `mailx`.
 	- Configure the path of the script or the mail binary to be invoked.
