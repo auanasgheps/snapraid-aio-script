@@ -25,6 +25,12 @@ TELEGRAM=0
 TELEGRAM_TOKEN='your-token-here'
 TELEGRAM_CHAT_ID='your-chat-id-here'
 
+# Use Discord to report script execution summary (not the whole report) 
+# Set 1 to enable. Create a bot using @botfather, then copy the API token. 
+# To get your Webhook URL go to the channel settings -> Integrations and create a web hook
+DISCORD=0
+DISCORD_WEBHOOK_URL="your-webhook-url"
+
 # Custom notification service
 # Set this to a script/service to be used instead of the default email 
 # notification. You may want to use a service not natively supported by this 
