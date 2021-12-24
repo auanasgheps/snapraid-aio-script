@@ -16,14 +16,14 @@ FROM_EMAIL_ADDRESS="fromemailgoeshere"
 # Please note that every "WARNING" will be reported as failure.
 # When enabled, enter your Healthchecks UUID (not the full URL).
 HEALTHCHECKS=0
-HEALTHCHECKS_ID='your-uuid-here'
+HEALTHCHECKS_ID="your-uuid-here"
 
 # Use Telegram to report script execution summary (not the whole report)
 # Set 1 to enable. Create a bot using @botfather, then copy the API token.
 # To get your chat ID, use @getidsbot
 TELEGRAM=0
-TELEGRAM_TOKEN='your-token-here'
-TELEGRAM_CHAT_ID='your-chat-id-here'
+TELEGRAM_TOKEN="your-token-here"
+TELEGRAM_CHAT_ID="your-chat-id-here"
 
 # Use Discord to report script execution summary (not the whole report) 
 # Set 1 to enable. Create a bot using @botfather, then copy the API token. 
