@@ -746,11 +746,13 @@ function prepare_mail() {
   elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
     # Scrub ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-	NOTIFY_OUTPUT="$SUBJECT\nSUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+	NOTIFY_OUTPUT="$SUBJECT
+SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
 	notify_warning
   else
     SUBJECT="[COMPLETED] $JOBS_DONE Jobs $EMAIL_SUBJECT_PREFIX"
-	NOTIFY_OUTPUT="$SUBJECT\nSUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+	NOTIFY_OUTPUT="$SUBJECT
+SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
 	notify_success
   fi
 }
@@ -762,14 +764,14 @@ function notify_success(){
   if [ "$TELEGRAM" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
    -H "Content-Type: application/json" \
-   -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "'"$NOTIFY_OUTPUT"'"}' \
+   -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
    https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   if [ "$DISCORD" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
    -H "Content-Type: application/json" \
    -d '{"content": "'"$NOTIFY_OUTPUT"'"}' \
-   $DISCORD_WEBHOOK_URL
+   "$DISCORD_WEBHOOK_URL"
   fi
   }
 
@@ -780,7 +782,7 @@ function notify_warning(){
   if [ "$TELEGRAM" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
    -H "Content-Type: application/json" \
-   -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "'"$NOTIFY_OUTPUT"'"}' \
+   -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
    https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   if [ "$DISCORD" -eq 1 ]; then
