@@ -67,14 +67,14 @@ function main(){
     if [ "$TELEGRAM" -eq 1 ]; then
    echo "Telegram notification is enabled."
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-     -H "Content-Type: application/json" \
+     -H 'Content-Type: application/json' \
      -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "SnapRAID Script Job started"}' \
      https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
 	 fi
    if [ "$DISCORD" -eq 1 ]; then
      echo "Discord notification is enabled."
      curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-     -H "Content-Type: application/json" \
+     -H 'Content-Type: application/json' \
      -d '{"content": "SnapRAID Script Job started"}' \
      "$DISCORD_WEBHOOK_URL"
     fi
@@ -763,13 +763,13 @@ function notify_success(){
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-   -H "Content-Type: application/json" \
+   -H 'Content-Type: application/json' \
    -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
    https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   if [ "$DISCORD" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-   -H "Content-Type: application/json" \
+   -H 'Content-Type: application/json' \
    -d '{"content": "'"$NOTIFY_OUTPUT"'"}' \
    "$DISCORD_WEBHOOK_URL"
   fi
@@ -781,13 +781,13 @@ function notify_warning(){
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-   -H "Content-Type: application/json" \
+   -H 'Content-Type: application/json' \
    -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
    https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   if [ "$DISCORD" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-   -H "Content-Type: application/json" \
+   -H 'Content-Type: application/json' \
    -d '{"content": "'"$NOTIFY_OUTPUT"'"}' \
    "$DISCORD_WEBHOOK_URL"
   fi
