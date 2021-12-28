@@ -5,7 +5,7 @@ There are many SnapRAID scripts out there, but none has the features I want. So 
 
 It is meant to be run periodically (daily), do the heavy lifting and send an email you will actually read.
 
-Supports single and dual parity configurations. It is highly customizable and has been tested with Debian 10 and [OpenMediaVault 5](https://github.com/openmediavault/openmediavault).
+Supports single and dual parity configurations. It is highly customizable and has been tested with Debian 10/11 and [OpenMediaVault 5/6](https://github.com/openmediavault/openmediavault).
 
 Contributions are welcome!
 
@@ -250,7 +250,7 @@ Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 1
 ```
 
 # Requirements
-- [`markdown`](https://packages.debian.org/buster/python-markdown) to format emails - will be installed if not found
+- [`markdown`](https://packages.debian.org/buster/python3-markdown) to format emails - will be installed if not found
 - `curl` to use Healhchecks - will be installed if not found
 - `hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle)
 
@@ -270,7 +270,7 @@ _Optional: install markdown `apt install python-markdown` and curl `apt install 
 6. Schedule the script execution. 
    - I recommend running the script daily. 
 
-It is tested on OMV5, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
+It is tested on OMV5/6, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
 
 ## First Run
 If you start with empty disks, you cannot use (yet) this script, since it expects SnapRAID files which would not be found.
