@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.1.DEV8"
+SNAPSCRIPTVERSION="3.1.DEV9"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -103,12 +103,12 @@ function main(){
   fi
 
   # install markdown if not found
-  if [ "$(dpkg-query -W -f='${Status}' python-markdown 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
+  if [ "$(dpkg-query -W -f='${Status}' python3-markdown 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
     echo "**Markdown has not been found and will be installed.**"
     mklog "WARN: Markdown has not been found and will be installed."
     # super silent and secret install command
     export DEBIAN_FRONTEND=noninteractive
-    apt-get install -qq -o=Dpkg::Use-Pty=0 python-markdown;
+    apt-get install -qq -o=Dpkg::Use-Pty=0 python3-markdown;
   fi
 
   # sanity check first to make sure we can access the content and parity files
@@ -818,7 +818,7 @@ function send_mail(){
   #    correctly.
 
   body=$(echo "$body" | sed '/^[[:space:]]*$/d; /^ -*$/d; s/$/  /' |
-      python -m markdown |
+      python3 -m markdown |
       sed 's/<code>/<pre>/;s%</code>%</pre>%')
 
   if [ -x "$HOOK_NOTIFICATION" ]; then
