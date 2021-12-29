@@ -27,7 +27,8 @@ TELEGRAM_CHAT_ID="your-chat-id-here"
 
 # Use Discord to report script execution summary (not the whole report) 
 # Set 1 to enable. 
-# To get your Webhook URL go to the channel settings -> Integrations and create a web hook
+# To get your Webhook URL go to the channel settings -> Integrations and 
+# create a web hook
 DISCORD=0
 DISCORD_WEBHOOK_URL="your-webhook-url"
 
@@ -37,14 +38,14 @@ DISCORD_WEBHOOK_URL="your-webhook-url"
 # script or a mail service with custom formatting. 
 # If you don't want to use this option, don't make changes to this.
 # $CURRENT_DIR can be used to get the running directory of the script.
-# This script will pass the following parameter to HOOK_NOTIFICATION:
+# This script will pass the following parameters to HOOK_NOTIFICATION:
 # 1st parameter will be the subject
 # 2nd parameter will be the body
 HOOK_NOTIFICATION=""
 
 ### SCRIPT AND SNAPRAID SETTINGS ###
 
-# Set the threshold of deleted files to stop the sync job from running. NOTE
+# Set the threshold of deleted files to stop the sync job from running. Note
 # that depending on how active your filesystem is being used, a low number here
 # may result in your parity info being out of sync often and/or you having to
 # do lots of manual syncing.
@@ -73,11 +74,12 @@ SCRUB_DELAYED_RUN=0
 # "pre-hash" mode and have all the data read two times to ensure its integrity.
 # This option also verifies the files moved inside the array, to ensure that
 # the move operation went successfully, and in case to block the sync and to
-# allow to run a fix operation. 1 to enable, any other values to disable.
+# allow to run a fix operation. 1 to enable, any other value to disable.
 PREHASH=1
 
 # Set if disk spindown should be performed. Depending on your system, this may
-# not work. 1 to enable, any other values to disable.
+# not work. 1 to enable, any other value to disable.
+# hd-idle is required and must be already configured.
 SPINDOWN=0
 
 # Set the option to log SMART info collected by SnapRAID. 1 to enable and any
@@ -87,10 +89,11 @@ SMART_LOG=1
 # Increase verbosity of the email output. If set to 1, TOUCH and DIFF outputs
 # will be kept in the email, producing a mostly unreadable email. Keep this
 # disabled for optimal results. You can always check TOUCH and DIFF outputs
-# using the TMP file. 1 to enable, any other values to disable.
+# using the TMP file. 1 to enable, any other value to disable.
 VERBOSITY=0
 
-# Run snapraid status command to show array general information.
+# Run 'snapraid status' command to show array general information.
+# 1 to enable, any other value to disable.
 SNAP_STATUS=0
 
 ### DOCKER CONTAINERS MANAGEMENT ###
@@ -128,8 +131,8 @@ DOCKER_DELAY=10
 ### CUSTOM HOOKS ###
 
 # Hooks are shell commands that the scripts executes for you.
-# You can specify before_hook to perform preparation steps before SnapRAID
-# actions and specify after_hook to perform steps afterwards.
+# You can specify 'before_hook' to perform preparation steps before SnapRAID
+# actions and specify 'after_hook' to perform steps afterwards.
 
 # Set to 1 to enable custom hooks
 CUSTOM_HOOK=0
@@ -143,7 +146,7 @@ BEFORE_HOOK_NAME=""
 BEFORE_HOOK_CMD=""
 
 # Custom hook after SnapRAID activities
-# This custom hook executes after SnapRAID operations an will be the
+# This custom hook executes after SnapRAID operations and will be the
 # last command.
 # This option does not have any effect if CUSTOM_HOOK is set to 0
 # Use NAME for a friendly name, CMD for the command itself.
