@@ -770,7 +770,7 @@ function notify_success(){
   if [ "$DISCORD" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
    -H 'Content-Type: application/json' \
-   -d '{"content": "'"$NOTIFY_OUTPUT"'"}' \
+   -d '{"content": "'"$SUBJECT"'"}' \
    "$DISCORD_WEBHOOK_URL"
   fi
   }
@@ -788,7 +788,7 @@ function notify_warning(){
   if [ "$DISCORD" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
    -H 'Content-Type: application/json' \
-   -d '{"content": "'"$NOTIFY_OUTPUT"'"}' \
+   -d '{"content": "'"$SUBJECT"'"}' \
    "$DISCORD_WEBHOOK_URL"
   fi
   }
