@@ -51,6 +51,12 @@ HOOK_NOTIFICATION=""
 # do lots of manual syncing.
 DEL_THRESHOLD=500
 UP_THRESHOLD=500
+# Allow a sync that would otherwise violate the delete threshold but only 
+# if the ratio of added to deleted files is greater than the value set. 
+# Set to 0 to bypass this option.
+# Example: A senario with 5000 deleted files and 3800 added files would 
+# result in an ADD_DEL_RATIO of 0.76 (3800/5000) 
+ADD_DEL_RATIO=0
 
 # Set number of warnings before we force a sync job. This option comes in handy
 # when you cannot be bothered to manually start a sync job when DEL_THRESHOLD
