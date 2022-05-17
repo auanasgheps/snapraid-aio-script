@@ -431,16 +431,17 @@ function chk_del(){
       echo "There are deleted files. The number of deleted files ($DEL_COUNT) is below the threshold of ($DEL_THRESHOLD)."
       DO_SYNC=1
     fi
-  else if [ "$ADD_DEL_RATIO" -gt 0 ]; then
-    if [ ("$ADD_COUNT" / "$DEL_COUNT") -gt "$ADD_DEL_RATIO" ]; then
-	  echo "There are deleted files. The number of deleted files ($DEL_COUNT) is above the threshold of ($DEL_THRESHOLD)"
-	  echo "but the add/delete ratio is above the threshold of ($ADD_DEL_RATIO)."
+  elif awk "BEGIN {exit !($ADD_DEL_THRESHOLD > 0)}"; then
+    ADD_DEL_RATIO="$(awk -v a=$ADD_COUNT -v b=$DEL_COUNT 'BEGIN {print ( a / b )}')"
+    if awk "BEGIN {exit !($ADD_DEL_RATIO >= $ADD_DEL_THRESHOLD)}"; then
+      echo "There are deleted files. The number of deleted files ($DEL_COUNT) is above the threshold of ($DEL_THRESHOLD)"
+      echo "but the add/delete ratio of ($ADD_DEL_RATIO) is above the threshold of ($ADD_DEL_THRESHOLD), sync will proceed."
       DO_SYNC=1
-	else
-	  echo "**WARNING** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) was not met."
-      mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) was not met."
+    else 
+      echo "**WARNING** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD) and add/delete threshold ($ADD_DEL_THRESHOLD) was not met."
+      mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD) and add/delete threshold ($ADD_DEL_THRESHOLD) was not met."
       CHK_FAIL=1
-	fi
+    fi
   else
     echo "**WARNING** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
     mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
