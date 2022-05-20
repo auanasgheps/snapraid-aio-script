@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.2-DEV1"
+SNAPSCRIPTVERSION="3.2-DEV2"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -204,10 +204,14 @@ function main(){
     echo "### SnapRAID SYNC [$(date)]"
     mklog "INFO: SnapRAID SYNC Job started"
     echo "\`\`\`"
-    if [ "$PREHASH" -eq 1 ]; then
-      $SNAPRAID_BIN sync -h -q
-    else
-      $SNAPRAID_BIN sync -q
+    if [ "$PREHASH" -eq 1 ] && [ "$FORCE_ZERO" -eq 1 ]; then
+	  $SNAPRAID_BIN sync -h --force-zero -q
+	elif [ "$PREHASH" -eq 1 ]; then 
+      $SNAPRAID_BIN sync -h -q 
+    elif [ "$FORCE_ZERO" -eq 1 ]; then  
+	  $SNAPRAID_BIN sync --force-zero -q
+	else
+      $SNAPRAID_BIN sync -q 
     fi
     close_output_and_wait
     output_to_file_screen
