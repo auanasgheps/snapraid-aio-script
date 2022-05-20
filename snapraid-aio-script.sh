@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.1.DEV9"
+SNAPSCRIPTVERSION="3.2-DEV1"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -32,7 +32,7 @@ SCRUB_MARKER="SCRUB -"
 function main(){
   # create tmp file for output
   true > "$TMP_OUTPUT"
-
+    
   # Redirect all output to file and screen. Starts a tee process
   output_to_file_screen
 
@@ -80,6 +80,10 @@ function main(){
     fi
   fi
 
+  if [ "$RETENTION_DAYS" -gt 0 ]; then 
+  echo "SnapRAID output retention is enabled. Detailed logs will be kept in $SNAPRAID_LOG_DIR for $RETENTION_DAYS days."
+  fi
+
   # Check if script configuration file has been found, if not send a message
   # to syslog and exit
   if [ ! -f "$CONFIG_FILE" ]; then
@@ -87,7 +91,7 @@ function main(){
 	mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
 	exit 1;
   # check if the config file has the correct version
-  elif [ "$CONFIG_VERSION" != 3.1 ]; then
+  elif [ "$CONFIG_VERSION" != 3.2 ]; then
     echo "Please update your config file to the latest version. The current file is not compatible with this script!"
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
     if [ "$EMAIL_ADDRESS" ]; then
@@ -301,7 +305,7 @@ function main(){
   #   done
   # fi
 
-### Spinning down disks (Method 3: hd-idle - spins down all rotational devices)
+# Spin down disks (Method 3: hd-idle - spins down all rotational devices)
   if [ "$SPINDOWN" -eq 1 ]; then
    for DRIVE in $(lsblk -d -o name | tail -n +2)
      do
@@ -342,13 +346,20 @@ function main(){
     echo "## Total time elapsed for SnapRAID: $ELAPSED"
     mklog "INFO: Total time elapsed for SnapRAID: $ELAPSED"
 
-    # Add a topline to email body
+    # Add a topline to email body and send a long mail
     sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
     if [ "$VERBOSITY" -eq 1 ]; then
       send_mail < "$TMP_OUTPUT"
     else
-      trim_log < "$TMP_OUTPUT" | send_mail
+	# or send a short mail
+     trim_log < "$TMP_OUTPUT" | send_mail
     fi
+  fi
+
+  # Save and rotate logs if enabled 
+  if [ "$RETENTION_DAYS" -gt 0 ]; then 
+    find "$SNAPRAID_LOG_DIR"/SnapRAID-* -mtime +"$RETENTION_DAYS" -delete  # delete old logs
+    cp $TMP_OUTPUT "$SNAPRAID_LOG_DIR"/SnapRAID-"$(date +"%Y_%m_%d-%H%M")".out 
   fi
 
   # exit with success, letting the trap handle cleanup of file descriptors
@@ -432,9 +443,16 @@ function chk_del(){
       DO_SYNC=1
     fi
   else
-    echo "**WARNING** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
-    mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
-    CHK_FAIL=1
+    if [ "$RETENTION_DAYS" -gt 0 ]; then 
+     echo "**WARNING** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+     echo "For more information, please check the DIFF ouput saved in $SNAPRAID_LOG_DIR."
+     mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+     CHK_FAIL=1
+    else
+     echo "**WARNING** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+     mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+     CHK_FAIL=1
+    fi
   fi
 }
 
@@ -448,9 +466,16 @@ function chk_updated(){
       DO_SYNC=1
     fi
   else
-    echo "**WARNING** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
-    mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
-    CHK_FAIL=1
+    if [ "$RETENTION_DAYS" -gt 0 ]; then 
+     echo "**WARNING** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+     echo "For more information, please check the DIFF ouput saved in $SNAPRAID_LOG_DIR."
+     mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+     CHK_FAIL=1
+    else
+     echo "**WARNING** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+     mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+     CHK_FAIL=1
+    fi
   fi
 }
 
@@ -498,9 +523,15 @@ function chk_sync_warn(){
     fi
   else
     # NO, so let's skip SYNC
+    if [ "$RETENTION_DAYS" -gt 0 ]; then 
+    echo "Forced sync is not enabled. **NOT** proceeding with SYNC job. [$(date)]"
+    mklog "INFO: Forced sync is not enabled. **NOT** proceeding with SYNC job."
+    DO_SYNC=0    
+    else
     echo "Forced sync is not enabled. Check $TMP_OUTPUT for details. **NOT** proceeding with SYNC job. [$(date)]"
     mklog "INFO: Forced sync is not enabled. Check $TMP_OUTPUT for details. **NOT** proceeding with SYNC job."
     DO_SYNC=0
+    fi
   fi
 }
 
