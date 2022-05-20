@@ -77,6 +77,13 @@ SCRUB_DELAYED_RUN=0
 # allow to run a fix operation. 1 to enable, any other value to disable.
 PREHASH=1
 
+# Forces the operation of syncing a file with zero size that before was not. 
+# If SnapRAID detects a such condition, it stops proceeding unless you enable
+# this option. Useful when syncing system files which can genuinely get 
+# changed to zero.
+# Disabled by default, 1 to enable.
+FORCE_ZERO=0
+
 # Set if disk spindown should be performed. Depending on your system, this may
 # not work. 1 to enable, any other value to disable.
 # hd-idle is required and must be already configured.
