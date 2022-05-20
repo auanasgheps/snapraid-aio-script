@@ -1,5 +1,5 @@
 #!/bin/bash
-CONFIG_VERSION=3.1
+CONFIG_VERSION=3.2
 ######################
 #   USER VARIABLES   #
 ######################
@@ -86,11 +86,21 @@ SPINDOWN=0
 # other value to disable.
 SMART_LOG=1
 
-# Increase verbosity of the email output. If set to 1, TOUCH and DIFF outputs
-# will be kept in the email, producing a mostly unreadable email. Keep this
-# disabled for optimal results. You can always check TOUCH and DIFF outputs
-# using the TMP file. 1 to enable, any other value to disable.
+# Increase verbosity of the email output. NOT RECOMMENDED!
+# If set to 1, TOUCH and DIFF outputs will be kept in the email, producing 
+# a mostly unreadable email. You can always check TOUCH and DIFF outputs
+# using the TMP file or use the feature KEEP_LOG.
+# 1 to enable, any other value to disable.
 VERBOSITY=0
+
+# SnapRAID detailed output retention for each run.
+# Default behaviour is RETENTION_DAYS=0: every time your run SnapRAID, the 
+# output is saved to "/tmp" and is overridden during every run.
+# To enable retention, set RETENTION_DAYS to the days of output you want to 
+# keep in your home folder. Files will have timestamps. 
+# SNAPRAID_LOG_DIR can be changed to any folder you like.
+RETENTION_DAYS=0
+SNAPRAID_LOG_DIR="$HOME"
 
 # Run 'snapraid status' command to show array general information.
 # 1 to enable, any other value to disable.
@@ -132,7 +142,7 @@ DOCKER_DELAY=10
 
 # Hooks are shell commands that the scripts executes for you.
 # You can specify 'before_hook' to perform preparation steps before SnapRAID
-# actions and specify 'after_hook' to perform steps afterwards.
+# actions and 'after_hook' to perform steps afterwards.
 
 # Set to 1 to enable custom hooks
 CUSTOM_HOOK=0
@@ -171,7 +181,6 @@ SERVICES_STOPPED=0
 SYNC_WARN_FILE="$CURRENT_DIR/snapRAID.warnCount"
 SCRUB_COUNT_FILE="$CURRENT_DIR/snapRAID.scrubCount"
 TMP_OUTPUT="/tmp/snapRAID.out"
-SNAPRAID_LOG="/var/log/snapraid.log"
 SECONDS=0 #Capture time
 SNAPRAID_CONF="/etc/snapraid.conf"
 
