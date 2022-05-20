@@ -21,6 +21,7 @@ Contributions are welcome!
 - [Installation](#installation)
   * [First Run](#first-run)
   * [OMV5 and SnapRAID plugin](#omv5-and-snapraid-plugin)
+  * [Installing `hd-idle`](#installing-hd-idle-for-automatic-disk-spindown)
 - [Upgrade](#upgrade)
 - [Known Issues](#known-issues)
 - [Credits](#credits)
@@ -37,8 +38,8 @@ Contributions are welcome!
     - Note that each run of the scrub command will validate only a configurable portion of parity info to avoid having a long running job and affecting the performance of the server. 
     - Scrub frequency can also be customized in case you don't want to do it every time the script runs. 
     - It is still recommended to run scrub frequently. 
-- Extra information can be added, like SnapRAID's disk health report o SnapRAID array status.  
-- When the script is done sends an email with the results, both in case of error or success.
+- Extra information can be added, like SnapRAID's disk health report or SnapRAID array status.  
+- When the script is done sends an email with the results, both in case of error or success, and triggers any 3rd party notifications configured.
 
 ### Additional Information
 - Docker container management
@@ -49,7 +50,7 @@ Contributions are welcome!
 - Custom Hooks 
 	- Define shell commands or scripts to run before and after SnapRAID operations.
 - 3rd Party notification support
-	- Healthchecks.io, Telegram and Discord can be used to track script execution time, status and promptly alert about errors.
+	- [Healthchecks.io](https://healthchecks.io), Telegram and Discord can be used to track script execution time, status and promptly alert about errors.
 	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or even another mail binary
 - Important messages are also sent to the system log.
 - Emails are still the best place to get detailed but readable information.
@@ -252,7 +253,7 @@ Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 1
 # Requirements
 - [`markdown`](https://packages.debian.org/buster/python3-markdown) to format emails - will be installed if not found
 - `curl` to use Healhchecks - will be installed if not found
-- `hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle)
+- `hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle), installation instructions [below](#installing-hd-idle-for-automatic-disk-spindown)
 
 # Installation
 
@@ -277,9 +278,26 @@ If you start with empty disks, you cannot use (yet) this script, since it expect
 
 First run `snapraid sync`. Once completed, the array will be ready to be used with this script.
 
-## OMV5 and SnapRAID plugin
+## OMV5/6 and SnapRAID plugin
+Ignore what you see at _OMV GUI > Services > SnapRAID > Diff Script Settings_, since it only applies to the plugin's built-in script. Also don't forget to remove the built-in `omv-snapraid-diff` script from _OMV GUI > System > Scheduled Tasks_, either by deleting the job, or simply disabling it.
 
-Ignore what you see at _OMV GUI > Services > SnapRAID > Diff Script Settings_, since it only applies to the plugin's built-in script. Also don't forget to remove the built-in script from the scheduled jobs.  
+## Installing `hd-idle` for Automatic Disk Spindown
+If you would like to enable automatic disk spindown after the script job runs, then you will need to install `hd-idle`. The version included in default Debian and Ubuntu repositories is buggy and out of date - fortunately developer [adelolmo](https://github.com/adelolmo/hd-idle) has improved the project and released an updated version.
+
+**NOTE:** This script is NOT compatible with the `hd-idle` version found in the Debian repositories. You *must* use the updated `hd-idle` binaries for spindown to work. If you receive and error such as `hd-idle cannot spindown scsi disk /dev//dev/sda:` then that is a sign that you are using the old/buggy version. Follow the instructions below to update.
+
+1. Remove any previously existing versions of `hd-idle`, either by manually removing the binaries, or running `apt remove hd-idle` to remove the version from the default respositories.
+2. For all recent Ubuntu and Debian releases, install the developers's repository using instructions [on the developer's website](https://adelolmo.github.io/). The command snippet below will select the correct repository based on your current release, and add it to your apt sources.
+
+```
+sudo apt-get install apt-transport-https
+wget -O - http://adelolmo.github.io/andoni.delolmo@gmail.com.gpg.key | sudo apt-key add -
+echo "deb http://adelolmo.github.io/$(lsb_release -cs) $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/adelolmo.github.io.list
+```
+
+3. Run `apt update`, and `apt install hd-idle` to install the updated version. You do not need to specify the respository, apt will automatically install the newset version from the new repository.
+4. In your `script-config.sh` file, change `SPINDOWN=0` to `SPINDOWN=1` to enable spindown.
+5. If you wish to use `hd-idle` as a service to manage your disks outside of the scope of the Snapraid AIO Script, refer to these [additional instructions](https://forum.openmediavault.org/index.php?thread/37438-how-to-spin-down-hard-drives-with-hd-idle/) on the OpenMediaVault forum.
 
 # Upgrade 
 If you are using a previous version of the script, do not use your config file. Please move your preferences to the new `script-config.sh` found in the archive. 
