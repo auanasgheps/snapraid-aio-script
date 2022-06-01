@@ -74,7 +74,7 @@ If you don't know what to do, I recommend using the default values and see how i
 - Snapraid Status - shows the status of the array, disabled by default.
 - SMART Log - enabled by default. A SnapRAID report for disks health status.
 - Verbosity option - disabled by default. When enabled, includes the TOUCH and DIFF commands output. Please note email will be huge and mostly unreadable.
-- SnapRAID Log retention - disabled by default (log is overriden every run)
+- SnapRAID Output (log) retention - disabled by default (log is overriden every run)
 	- Detailed output retention for each run
 	- You can choose the amount of days and the path, by default set to the user home 
 - Healthchecks.io, Telegram and Discord integration
