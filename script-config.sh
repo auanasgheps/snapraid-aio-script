@@ -8,9 +8,11 @@ CONFIG_VERSION=3.2
 
 ### NOTIFICATION SETTINGS ###
 
-# address where the output of the jobs will be emailed to.
-EMAIL_ADDRESS="youremailgoeshere"
-FROM_EMAIL_ADDRESS="fromemailgoeshere"
+# Address where the output will be emailed to.
+# If you do not want to receive emails and rely on other notification 
+# methods, leave these fields empty.
+EMAIL_ADDRESS="destination-email-goes-here"
+FROM_EMAIL_ADDRESS="sender-email-goes-here"
 
 # Use Healthchecks.io to report script errors. Set to 1 to enable.
 # Please note that every "WARNING" will be reported as failure.
