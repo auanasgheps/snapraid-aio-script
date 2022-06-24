@@ -45,18 +45,18 @@ HOOK_NOTIFICATION=""
 
 ### SCRIPT AND SNAPRAID SETTINGS ###
 
-# Set the threshold of deleted files to stop the sync job from running. Note
-# that depending on how active your filesystem is being used, a low number here
-# may result in your parity info being out of sync often and/or you having to
-# do lots of manual syncing.
+# Set the threshold of deleted and updated files to stop the sync job from running. 
+# Note that depending on how active your filesystem is being used, a low number
+# here may result in your parity info being out of sync often and/or you having
+# to do lots of manual syncing.
 DEL_THRESHOLD=500
 UP_THRESHOLD=500
-# Allow a sync that would otherwise violate the delete threshold but only 
+# Allow a sync that would otherwise violate the delete threshold, but only
 # if the ratio of added to deleted files is greater than the value set. 
 # Set to 0 to disable this option.
 # Example: A senario with 5000 deleted files and 3800 added files would 
 # result in an ADD_DEL_THRESHOLD of 0.76 (3800/5000) 
-ADD_DEL_RATIO=0
+ADD_DEL_THRESHOLD=0
 
 # Set number of warnings before we force a sync job. This option comes in handy
 # when you cannot be bothered to manually start a sync job when DEL_THRESHOLD
