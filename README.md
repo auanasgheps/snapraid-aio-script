@@ -32,7 +32,8 @@ Contributions are welcome!
 - After some preliminary checks, the script will execute `snapraid diff` to figure out if parity info is out of date, which means checking for changes since the last execution. During this step, the script will ensure drives are fine by reading parity and content files. 
 - One of the following will happen:     
     - If parity info is out of sync **and** the number of deleted or changed files exceed the threshold you have configured it **stops**. You may want to take a look to the output log.
-    - If parity info is out of sync **and** the number of deleted or changed files exceed the threshold, you can still **force a sync** after a number of warnings. It's useful If  you often get a false alarm but you're confident enough. This is called "Sync with threshold warnings"
+    - If parity info is out of sync **and** the number of deleted or changed files exceed the threshold, you can still **force a sync** after a number of warnings. It's useful If you often get a false alarm but you're confident enough. This is called "Sync with threshold warnings"
+    	- Instead of forcing a sync based on the number of deleted files, you may consider the `ADD_DEL_THRESHOLD` feature, by allowing a sync that would otherwise violate the delete threshold, if the ratio of added to deleted files is greater than the value set. 
     - If parity info is out of sync **but** the number of deleted or changed files did not exceed the threshold, it **executes a sync** to update the parity info.
 - When the parity info is in sync, either because nothing has changed or after a successfully sync, it runs the `snapraid scrub` command to validate the integrity of the data, both the files and the parity info. If sync was cancelled or other issues were found, scrub will not be run. 
     - Note that each run of the scrub command will validate only a configurable portion of parity info to avoid having a long running job and affecting the performance of the server. 
@@ -64,6 +65,7 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Sync always (forced sync).
 	- Sync after a number of breached threshold warnings. 
 	- Sync only if thresholds warnings are not breached (enabled by default).
+	- Sync even if the delete threshold has been breached, but the ratio of added to deleted files is greater than the value set. 
 	- User definable thresholds for deleted and updated files.
 - Scrub options 
 	- Enable or disable scrub job.
@@ -283,7 +285,7 @@ If you start with empty disks, you cannot use (yet) this script, since it expect
 First run `snapraid sync`. Once completed, the array will be ready to be used with this script.
 
 ## OMV5/6 and SnapRAID plugin
-Ignore what you see at _OMV GUI > Services > SnapRAID > Diff Script Settings_, since it only applies to the plugin's built-in script. Also don't forget to remove the built-in `omv-snapraid-diff` script from _OMV GUI > System > Scheduled Tasks_, either by deleting the job, or simply disabling it.
+Ignore what you see at _OMV GUI > Services > SnapRAID > Diff Script Settings_, since it only applies to the plugin's built-in script. Also don't forget to remove the built-in `omv-snapraid-diff` job from _OMV GUI > System > Scheduled Tasks_, either by deleting the job, or simply disabling it.
 
 ## Installing `hd-idle` for Automatic Disk Spindown
 If you would like to enable automatic disk spindown after the script job runs, then you will need to install `hd-idle`. The version included in default Debian and Ubuntu repositories is buggy and out of date - fortunately developer [adelolmo](https://github.com/adelolmo/hd-idle) has improved the project and released an updated version.
