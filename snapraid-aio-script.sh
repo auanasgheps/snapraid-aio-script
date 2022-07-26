@@ -609,6 +609,15 @@ function chk_scrub_settings(){
 }
 
 function run_scrub(){
+  if [ "$SCRUB_NEW" -eq 1 ]; then
+  echo "SCRUB New Blocks"
+	echo "\`\`\`"
+    $SNAPRAID_BIN scrub -p new -q
+    close_output_and_wait
+    output_to_file_screen
+	echo "\`\`\`"
+  fi
+  echo "SCRUB Old Blocks"
   echo "\`\`\`"
   $SNAPRAID_BIN scrub -p "$SCRUB_PERCENT" -o "$SCRUB_AGE" -q
   close_output_and_wait
