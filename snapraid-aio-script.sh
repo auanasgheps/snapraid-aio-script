@@ -624,7 +624,7 @@ function run_scrub(){
   output_to_file_screen
   echo "\`\`\`"
   echo "SCRUB finished [$(date)]"
-  mklog "INFO: SnapRAID SCRUB Job finished"
+  mklog "INFO: SnapRAID SCRUB Job(s) finished"
   JOBS_DONE="$JOBS_DONE + SCRUB"
   # insert SCRUB marker to 'Everything OK' or 'Nothing to do' string to
   # differentiate it from SYNC job above
