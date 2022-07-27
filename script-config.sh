@@ -68,7 +68,7 @@ ADD_DEL_THRESHOLD=0
 # manual sync if delete threshold is breached).
 SYNC_WARN_THRESHOLD=-1
 
-# Set percentage of and age of blocks in array to scrub if it is in sync.
+# Set percentage of and age, in days, of blocks in array to scrub if it is in sync.
 # i.e. 0 to disable and 100 to scrub the full array in one go.
 # WARNING - depending on size of your array, setting to 100 can take a long time!
 SCRUB_PERCENT=5
