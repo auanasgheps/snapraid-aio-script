@@ -74,8 +74,8 @@ SYNC_WARN_THRESHOLD=-1
 SCRUB_PERCENT=5
 SCRUB_AGE=10
 
-# Scrub new blocks after sync that have yet to be scrubbed. 1 to enable and any
-# other value to disable.
+# Scrub new blocks after sync that have yet to be scrubbed.
+# i.e. 1 to enable and any other value to disable.
 SCRUB_NEW=0
 
 # Set number of script runs before running a scrub. Use this option if you
