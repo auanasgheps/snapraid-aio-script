@@ -88,7 +88,7 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Made for external services or mail binaries with different commands than `mailx`.
 	- Configure the path of the script or the mail binary to be invoked.
 	- You can still use native services since it only replaces the standard email.
-- Container management - disabled by default. 
+- Docker Container management
 	- A list of containers you want to be interrupted before running actions and restored when completed.
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
    	- Docker remote - if docker is running on a remote machine
@@ -104,7 +104,7 @@ You can also change more advanced options such SnapRAID binary location, log fil
 ## A nice email report
 This script produces emails that don't contain a list of changed files to improve clarity.
 
-You can re-enable full output in the email by switching the option `VERBOSITY`. The full report will always be available in `/tmp/snapRAID.out` but will be replaced after each run, or deleted when the system is shut down. You can change the location of the file if you need to keep it.
+You can re-enable full output in the email by switching the option `VERBOSITY`. The full report is available in `/tmp/snapRAID.out` but will be replaced after each run, or deleted when the system is shut down. You can enable the retention policy to keep logs for some days and customize the folder location.
 
 Here's an example email report. 
 
