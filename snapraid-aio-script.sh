@@ -769,10 +769,16 @@ function prepare_mail() {
   if [ $CHK_FAIL -eq 1 ]; then
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
       MSG="Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
+	  if awk "BEGIN {exit !($ADD_DEL_RATIO < $ADD_DEL_THRESHOLD)}"; then
+        MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD)"
+      fi
     fi
 
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 1 ]; then
       MSG="Forced sync with deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
+	  if awk "BEGIN {exit !($ADD_DEL_RATIO < $ADD_DEL_THRESHOLD)}"; then
+        MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD)"
+      fi
     fi
 
     if [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
@@ -785,10 +791,16 @@ function prepare_mail() {
 
     if [ "$DEL_COUNT" -ge  "$DEL_THRESHOLD" ] && [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
       MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+	  if awk "BEGIN {exit !($ADD_DEL_RATIO < $ADD_DEL_THRESHOLD)}"; then
+        MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+      fi
     fi
 
     if [ "$DEL_COUNT" -ge  "$DEL_THRESHOLD" ] && [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 1 ]; then
       MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+	  if awk "BEGIN {exit !($ADD_DEL_RATIO < $ADD_DEL_THRESHOLD)}"; then
+        MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+      fi
     fi
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
 	NOTIFY_OUTPUT="$SUBJECT"
