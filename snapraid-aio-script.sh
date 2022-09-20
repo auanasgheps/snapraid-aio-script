@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.2-DEV3"
+SNAPSCRIPTVERSION="3.3-DEV1"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
