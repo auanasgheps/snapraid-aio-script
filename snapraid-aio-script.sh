@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.3-DEV1"
+SNAPSCRIPTVERSION=3.3 #-DEV2
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -91,7 +91,7 @@ function main(){
 	mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
 	exit 1;
   # check if the config file has the correct version
-  elif [ "$CONFIG_VERSION" != 3.3 ]; then
+  elif [ "$CONFIG_VERSION" != "$SNAPSCRIPTVERSION" ]; then
     echo "Please update your config file to the latest version. The current file is not compatible with this script!"
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
     if [ "$EMAIL_ADDRESS" ]; then
@@ -610,14 +610,14 @@ function chk_scrub_settings(){
 
 function run_scrub(){
   if [ "$SCRUB_NEW" -eq 1 ]; then
-  echo "SCRUB New Blocks"
+  echo "SCRUB New Blocks [$(date)]"
 	echo "\`\`\`"
     $SNAPRAID_BIN scrub -p new -q
     close_output_and_wait
     output_to_file_screen
 	echo "\`\`\`"
   fi
-  echo "SCRUB Old Blocks"
+  echo "SCRUB Old Blocks [$(date)]"
   echo "\`\`\`"
   $SNAPRAID_BIN scrub -p "$SCRUB_PERCENT" -o "$SCRUB_AGE" -q
   close_output_and_wait
