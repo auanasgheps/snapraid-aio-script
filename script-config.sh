@@ -15,8 +15,11 @@ FROM_EMAIL_ADDRESS="fromemailgoeshere"
 # Use Healthchecks.io to report script errors. Set to 1 to enable.
 # Please note that every "WARNING" will be reported as failure.
 # When enabled, enter your Healthchecks UUID (not the full URL).
+# If using a self-hosted instance, change the URL to your endpoint                                                                                                      
+# including the trailing slash.
 HEALTHCHECKS=0
 HEALTHCHECKS_ID="your-uuid-here"
+HEALTHCHECKS_URL="https://hc-ping.com/"
 
 # Use Telegram to report script execution summary (not the whole report)
 # Set 1 to enable. Create a bot using @botfather, then copy the API token.
