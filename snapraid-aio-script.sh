@@ -61,8 +61,8 @@ function main(){
    fi
    # invoke notification services if configured
     if [ "$HEALTHCHECKS" -eq 1 ]; then
-   echo "Healthchecks.io notification is enabled."
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/start
+   echo "Healthchecks.io notification is enabled. Notifications sent to $HEALTHCHECKS_URL."
+   curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/start
    fi
     if [ "$TELEGRAM" -eq 1 ]; then
    echo "Telegram notification is enabled."
@@ -759,7 +759,7 @@ SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [
 
 function notify_success(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/0 --data-raw "$NOTIFY_OUTPUT"
+   curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/0 --data-raw "$NOTIFY_OUTPUT"
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
@@ -777,7 +777,7 @@ function notify_success(){
 
 function notify_warning(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
+   curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
