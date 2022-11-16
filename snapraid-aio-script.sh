@@ -20,6 +20,9 @@ CONFIG_FILE=$CURRENT_DIR/script-config.sh
 #shellcheck source=script-config.sh
 source "$CONFIG_FILE"
 
+# set default variables for backward compatibility with older config files
+: ${HEALTHCHECKS_URL:="https://hc-ping.com/"}
+
 ########################################################################
 
 SYNC_MARKER="SYNC -"
