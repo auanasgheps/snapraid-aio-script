@@ -265,7 +265,7 @@ Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 1
 
 _Optional: install markdown `apt install python-markdown` and curl `apt install curl` . You can skip this step since the script will try to install missing packages for you._
 
-1. Download the latest version from [Releases](https://github.com/auanasgheps/snapraid-aio-script/releaseshttps://github.com/auanasgheps/snapraid-aio-script/releases) 
+1. Download the latest version from [Releases](https://github.com/auanasgheps/snapraid-aio-script/releases) 
 3. Extract the archive wherever you prefer 
    - e.g. `/usr/sbin/snapraid`
 4. Give executable rights to the main script 
