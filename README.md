@@ -324,3 +324,4 @@ This script would not exist without:
 - [nzlov](https://github.com/nzlov)
 - [Caedis](https://github.com/Caedis)
 - [Pushpender](https://github.com/ranapushpender)
+- [Phidauex](https://github.com/phidauex)
