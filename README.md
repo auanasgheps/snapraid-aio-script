@@ -32,7 +32,8 @@ Contributions are welcome!
 - After some preliminary checks, the script will execute `snapraid diff` to figure out if parity info is out of date, which means checking for changes since the last execution. During this step, the script will ensure drives are fine by reading parity and content files. 
 - One of the following will happen:     
     - If parity info is out of sync **and** the number of deleted or changed files exceed the threshold you have configured it **stops**. You may want to take a look to the output log.
-    - If parity info is out of sync **and** the number of deleted or changed files exceed the threshold, you can still **force a sync** after a number of warnings. It's useful If  you often get a false alarm but you're confident enough. This is called "Sync with threshold warnings"
+    - If parity info is out of sync **and** the number of deleted or changed files exceed the threshold, you can still **force a sync** after a number of warnings. It's useful If you often get a false alarm but you're confident enough. This is called "Sync with threshold warnings"
+    	- Instead of forcing a sync based on the number of deleted files, you may consider the `ADD_DEL_THRESHOLD` feature, by allowing a sync that would otherwise violate the delete threshold, if the ratio of added to deleted files is greater than the value set. 
     - If parity info is out of sync **but** the number of deleted or changed files did not exceed the threshold, it **executes a sync** to update the parity info.
 - When the parity info is in sync, either because nothing has changed or after a successfully sync, it runs the `snapraid scrub` command to validate the integrity of the data, both the files and the parity info. If sync was cancelled or other issues were found, scrub will not be run. 
     - Note that each run of the scrub command will validate only a configurable portion of parity info to avoid having a long running job and affecting the performance of the server. 
@@ -64,15 +65,20 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Sync always (forced sync).
 	- Sync after a number of breached threshold warnings. 
 	- Sync only if thresholds warnings are not breached (enabled by default).
+	- Sync even if the delete threshold has been breached, but the ratio of added to deleted files is greater than the value set. 
 	- User definable thresholds for deleted and updated files.
 - Scrub options 
 	- Enable or disable scrub job.
 	- Delayed option, disabled by default. Run scrub only after a number of script executions, e.g. every 7 times. If you don't want to scrub your array every time, this one is for you.
 	- Data to be scrubbed - by default 5% older than 10 days.
-- Pre-hashing - enabled by default. Mitigate the lack of ECC memory, reading data twice to avoid silent read errors. 
+- Pre-hashing - enabled by default. Mitigate the lack of ECC memory, reading data twice to avoid silent read errors.
+- Force zero size sync -  disabled by default. Forces the operation of syncing a file with zero size that before was not. Use with caution!
 - Snapraid Status - shows the status of the array, disabled by default.
 - SMART Log - enabled by default. A SnapRAID report for disks health status.
 - Verbosity option - disabled by default. When enabled, includes the TOUCH and DIFF commands output. Please note email will be huge and mostly unreadable.
+- SnapRAID Output (log) retention - disabled by default (log is overriden every run)
+	- Detailed output retention for each run
+	- You can choose the amount of days and the path, by default set to the user home 
 - Healthchecks.io, Telegram and Discord integration
 	- If you don't read your emails every day, this is a great one for you, since you can be quickly informed if things go wrong. 
   	- The script will report to Healthchecks.io, Telegram and Discord when is started and when is completed. If there's a failure it's included as well.
@@ -82,7 +88,7 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Made for external services or mail binaries with different commands than `mailx`.
 	- Configure the path of the script or the mail binary to be invoked.
 	- You can still use native services since it only replaces the standard email.
-- Container management - disabled by default. 
+- Docker Container management
 	- A list of containers you want to be interrupted before running actions and restored when completed.
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
    	- Docker remote - if docker is running on a remote machine
@@ -98,7 +104,7 @@ You can also change more advanced options such SnapRAID binary location, log fil
 ## A nice email report
 This script produces emails that don't contain a list of changed files to improve clarity.
 
-You can re-enable full output in the email by switching the option `VERBOSITY`. The full report will always be available in `/tmp/snapRAID.out` but will be replaced after each run, or deleted when the system is shut down. You can change the location of the file if you need to keep it.
+You can re-enable full output in the email by switching the option `VERBOSITY`. The full report is available in `/tmp/snapRAID.out` but will be replaced after each run, or deleted when the system is shut down. You can enable the retention policy to keep logs for some days and customize the folder location.
 
 Here's an example email report. 
 
@@ -279,7 +285,7 @@ If you start with empty disks, you cannot use (yet) this script, since it expect
 First run `snapraid sync`. Once completed, the array will be ready to be used with this script.
 
 ## OMV5/6 and SnapRAID plugin
-Ignore what you see at _OMV GUI > Services > SnapRAID > Diff Script Settings_, since it only applies to the plugin's built-in script. Also don't forget to remove the built-in `omv-snapraid-diff` script from _OMV GUI > System > Scheduled Tasks_, either by deleting the job, or simply disabling it.
+Ignore what you see at _OMV GUI > Services > SnapRAID > Diff Script Settings_, since it only applies to the plugin's built-in script. Also don't forget to remove the built-in `omv-snapraid-diff` job from _OMV GUI > System > Scheduled Tasks_, either by deleting the job, or simply disabling it.
 
 ## Installing `hd-idle` for Automatic Disk Spindown
 If you would like to enable automatic disk spindown after the script job runs, then you will need to install `hd-idle`. The version included in default Debian and Ubuntu repositories is buggy and out of date - fortunately developer [adelolmo](https://github.com/adelolmo/hd-idle) has improved the project and released an updated version.
