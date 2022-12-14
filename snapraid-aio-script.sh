@@ -250,7 +250,7 @@ function main(){
       if [ "$DO_SYNC" -eq 1 ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
         # Sync ran but did not complete successfully so lets not run scrub to
         # be safe
-        echo "**WARNING** - check output of SYNC job. Could not detect marker."
+        echo "**WARNING!** - Check output of SYNC job. Could not detect marker."
         echo "Not running SCRUB job. [$(date)]"
         mklog "WARN: Check output of SYNC job. Could not detect marker. Not running SCRUB job."
       else
@@ -451,18 +451,18 @@ function chk_del(){
       echo "but the add/delete ratio of ($ADD_DEL_RATIO) is above the threshold of ($ADD_DEL_THRESHOLD), sync will proceed."
       DO_SYNC=1
     else
-      echo "**WARNING** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD) and add/delete threshold ($ADD_DEL_THRESHOLD) was not met."
+      echo "**WARNING!** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD) and add/delete threshold ($ADD_DEL_THRESHOLD) was not met."
       mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD) and add/delete threshold ($ADD_DEL_THRESHOLD) was not met."
       CHK_FAIL=1
     fi
   else
     if [ "$RETENTION_DAYS" -gt 0 ]; then
-     echo "**WARNING** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+     echo "**WARNING!** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
      echo "For more information, please check the DIFF ouput saved in $SNAPRAID_LOG_DIR."
      mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
      CHK_FAIL=1
     else
-     echo "**WARNING** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+     echo "**WARNING!** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
      mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
      CHK_FAIL=1
     fi
@@ -480,12 +480,12 @@ function chk_updated(){
     fi
   else
     if [ "$RETENTION_DAYS" -gt 0 ]; then
-     echo "**WARNING** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+     echo "**WARNING!** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
      echo "For more information, please check the DIFF ouput saved in $SNAPRAID_LOG_DIR."
      mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
      CHK_FAIL=1
     else
-     echo "**WARNING** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+     echo "**WARNING!** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
      mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
      CHK_FAIL=1
     fi
@@ -615,7 +615,7 @@ function run_scrub(){
     output_to_file_screen
     echo "\`\`\`"
   fi
-  echo "SCRUB Old Blocks [$(date)]"
+  echo "SCRUB Previous Blocks [$(date)]"
   echo "\`\`\`"
   $SNAPRAID_BIN scrub -p "$SCRUB_PERCENT" -o "$SCRUB_AGE" -q
   close_output_and_wait
