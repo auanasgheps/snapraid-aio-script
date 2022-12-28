@@ -71,6 +71,7 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Enable or disable scrub job.
 	- Delayed option, disabled by default. Run scrub only after a number of script executions, e.g. every 7 times. If you don't want to scrub your array every time, this one is for you.
 	- Data to be scrubbed - by default 5% older than 10 days.
+	- Scrub new data - scrub the data that was just added by the sync.
 - Pre-hashing - enabled by default. Mitigate the lack of ECC memory, reading data twice to avoid silent read errors.
 - Force zero size sync -  disabled by default. Forces the operation of syncing a file with zero size that before was not. Use with caution!
 - Snapraid Status - shows the status of the array, disabled by default.
