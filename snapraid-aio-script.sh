@@ -1,14 +1,14 @@
 #!/bin/bash
 ########################################################################
-#								       #
+#                                      #
 #   Project page: https://github.com/auanasgheps/snapraid-aio-script   #
-#								       #
+#                                      #
 ########################################################################
 
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.1.DEV9"
+SNAPSCRIPTVERSION="3.2" #-DEV5
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -49,7 +49,7 @@ function main(){
 
   echo "## Preprocessing"
 
-  # Initialize notification 
+  # Initialize notification
   if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ]; then
    # install curl if not found
    if [ "$(dpkg-query -W -f='${Status}' curl 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
@@ -61,8 +61,8 @@ function main(){
    fi
    # invoke notification services if configured
     if [ "$HEALTHCHECKS" -eq 1 ]; then
-   echo "Healthchecks.io notification is enabled."
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/start
+   echo "Healthchecks.io notification is enabled. Notifications sent to $HEALTHCHECKS_URL."
+   curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/start
    fi
     if [ "$TELEGRAM" -eq 1 ]; then
    echo "Telegram notification is enabled."
@@ -70,7 +70,7 @@ function main(){
      -H 'Content-Type: application/json' \
      -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "SnapRAID Script Job started"}' \
      https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
-	 fi
+     fi
    if [ "$DISCORD" -eq 1 ]; then
      echo "Discord notification is enabled."
      curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
@@ -80,14 +80,18 @@ function main(){
     fi
   fi
 
+  if [ "$RETENTION_DAYS" -gt 0 ]; then
+  echo "SnapRAID output retention is enabled. Detailed logs will be kept in $SNAPRAID_LOG_DIR for $RETENTION_DAYS days."
+  fi
+
   # Check if script configuration file has been found, if not send a message
   # to syslog and exit
   if [ ! -f "$CONFIG_FILE" ]; then
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
-	mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
-	exit 1;
+    mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
+    exit 1;
   # check if the config file has the correct version
-  elif [ "$CONFIG_VERSION" != 3.1 ]; then
+  elif [ "$CONFIG_VERSION" != "$SNAPSCRIPTVERSION" ]; then
     echo "Please update your config file to the latest version. The current file is not compatible with this script!"
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
     if [ "$EMAIL_ADDRESS" ]; then
@@ -96,7 +100,7 @@ function main(){
       trim_log < "$TMP_OUTPUT" | send_mail
       notify_warning
     fi
-	exit 1;
+    exit 1;
   else
     echo "Configuration file found."
     mklog "INFO: Script configuration file found."
@@ -162,13 +166,13 @@ function main(){
     # failed to get one or more of the count values, lets report to user and
     # exit with error code
     echo "**ERROR** - Failed to get one or more count values. Unable to continue."
-	mklog "WARN: Failed to get one or more count values. Unable to continue."
+    mklog "WARN: Failed to get one or more count values. Unable to continue."
     echo "Exiting script. [$(date)]"
     if [ "$EMAIL_ADDRESS" ]; then
       SUBJECT="[WARNING] - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
-	    NOTIFY_OUTPUT="$SUBJECT"
+        NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
-	  notify_warning
+      notify_warning
     fi
     exit 1;
   fi
@@ -200,8 +204,12 @@ function main(){
     echo "### SnapRAID SYNC [$(date)]"
     mklog "INFO: SnapRAID SYNC Job started"
     echo "\`\`\`"
-    if [ "$PREHASH" -eq 1 ]; then
+    if [ "$PREHASH" -eq 1 ] && [ "$FORCE_ZERO" -eq 1 ]; then
+      $SNAPRAID_BIN sync -h --force-zero -q
+    elif [ "$PREHASH" -eq 1 ]; then
       $SNAPRAID_BIN sync -h -q
+    elif [ "$FORCE_ZERO" -eq 1 ]; then
+      $SNAPRAID_BIN sync --force-zero -q
     else
       $SNAPRAID_BIN sync -q
     fi
@@ -226,14 +234,14 @@ function main(){
 
   # Moving onto scrub now. Check if user has enabled scrub
   echo "### SnapRAID SCRUB [$(date)]"
-	mklog "INFO: SnapRAID SCRUB Job started"
+    mklog "INFO: SnapRAID SCRUB Job started"
   if [ "$SCRUB_PERCENT" -gt 0 ]; then
     # YES, first let's check if delete threshold has been breached and we have
     # not forced a sync.
     if [ "$CHK_FAIL" -eq 1 ] && [ "$DO_SYNC" -eq 0 ]; then
       # YES, parity is out of sync so let's not run scrub job
       echo "Parity info is out of sync (deleted or changed files threshold has been breached)."
-	  echo "Not running SCRUB job. [$(date)]"
+      echo "Not running SCRUB job. [$(date)]"
       mklog "INFO: Parity info is out of sync (deleted or changed files threshold has been breached). Not running SCRUB job."
     else
       # NO, delete threshold has not been breached OR we forced a sync, but we
@@ -242,8 +250,8 @@ function main(){
       if [ "$DO_SYNC" -eq 1 ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
         # Sync ran but did not complete successfully so lets not run scrub to
         # be safe
-        echo "**WARNING** - check output of SYNC job. Could not detect marker."
-		echo "Not running SCRUB job. [$(date)]"
+        echo "**WARNING!** - Check output of SYNC job. Could not detect marker."
+        echo "Not running SCRUB job. [$(date)]"
         mklog "WARN: Check output of SYNC job. Could not detect marker. Not running SCRUB job."
       else
         # Everything ok - ready to run the scrub job!
@@ -254,7 +262,7 @@ function main(){
     fi
   else
     echo "Scrub job is not enabled. "
-	echo "Not running SCRUB job. [$(date)]"
+    echo "Not running SCRUB job. [$(date)]"
     mklog "INFO: Scrub job is not enabled. Not running SCRUB job."
   fi
 
@@ -301,7 +309,7 @@ function main(){
   #   done
   # fi
 
-### Spinning down disks (Method 3: hd-idle - spins down all rotational devices)
+# Spin down disks (Method 3: hd-idle - spins down all rotational devices)
   if [ "$SPINDOWN" -eq 1 ]; then
    for DRIVE in $(lsblk -d -o name | tail -n +2)
      do
@@ -317,8 +325,8 @@ function main(){
     echo
       if [ "$DOCKER_MODE" = 1 ]; then
         echo "### Resuming Containers [$(date)]";
-	else
-	echo "### Restarting Containers [$(date)]";
+    else
+    echo "### Restarting Containers [$(date)]";
       fi
     resume_services
   fi
@@ -342,13 +350,20 @@ function main(){
     echo "## Total time elapsed for SnapRAID: $ELAPSED"
     mklog "INFO: Total time elapsed for SnapRAID: $ELAPSED"
 
-    # Add a topline to email body
+    # Add a topline to email body and send a long mail
     sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
     if [ "$VERBOSITY" -eq 1 ]; then
       send_mail < "$TMP_OUTPUT"
     else
-      trim_log < "$TMP_OUTPUT" | send_mail
+    # or send a short mail
+     trim_log < "$TMP_OUTPUT" | send_mail
     fi
+  fi
+
+  # Save and rotate logs if enabled
+  if [ "$RETENTION_DAYS" -gt 0 ]; then
+    find "$SNAPRAID_LOG_DIR"/SnapRAID-* -mtime +"$RETENTION_DAYS" -delete  # delete old logs
+    cp $TMP_OUTPUT "$SNAPRAID_LOG_DIR"/SnapRAID-"$(date +"%Y_%m_%d-%H%M")".out
   fi
 
   # exit with success, letting the trap handle cleanup of file descriptors
@@ -364,8 +379,8 @@ function sanity_check() {
   mklog "INFO: Checking if all parity and content files are present."
   for i in "${PARITY_FILES[@]}"; do
     if [ ! -e "$i" ]; then
-	echo "[$(date)] ERROR - Parity file ($i) not found!"
-	echo "ERROR - Parity file ($i) not found!" >> "$TMP_OUTPUT"
+    echo "[$(date)] ERROR - Parity file ($i) not found!"
+    echo "ERROR - Parity file ($i) not found!" >> "$TMP_OUTPUT"
     echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
     mklog "WARN: Parity file ($i) not found!"
     mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
@@ -374,7 +389,7 @@ function sanity_check() {
     SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     trim_log < "$TMP_OUTPUT" | send_mail
-	notify_warning
+    notify_warning
     exit 1;
   fi
   done
@@ -393,7 +408,7 @@ function sanity_check() {
       SUBJECT="[WARNING] - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
-	  notify_warning
+      notify_warning
     exit 1;
    fi
   done
@@ -423,18 +438,34 @@ function sed_me(){
 }
 
 function chk_del(){
-  if [ "$DEL_COUNT" -lt "$DEL_THRESHOLD" ]; then
-    if [ "$DEL_COUNT" -eq 0 ]; then
-      echo "There are no deleted files, that's fine."
+  if [ "$DEL_COUNT" -eq 0 ]; then
+    echo "There are no deleted files, that's fine."
+    DO_SYNC=1
+  elif [ "$DEL_COUNT" -lt "$DEL_THRESHOLD" ]; then
+    echo "There are deleted files. The number of deleted files ($DEL_COUNT) is below the threshold of ($DEL_THRESHOLD)."
+    DO_SYNC=1
+  elif awk "BEGIN {exit !($ADD_DEL_THRESHOLD > 0)}"; then
+    ADD_DEL_RATIO="$(awk -v a=$ADD_COUNT -v b=$DEL_COUNT 'BEGIN {print ( a / b )}')"
+    if awk "BEGIN {exit !($ADD_DEL_RATIO >= $ADD_DEL_THRESHOLD)}"; then
+      echo "There are deleted files. The number of deleted files ($DEL_COUNT) is above the threshold of ($DEL_THRESHOLD)"
+      echo "but the add/delete ratio of ($ADD_DEL_RATIO) is above the threshold of ($ADD_DEL_THRESHOLD), sync will proceed."
       DO_SYNC=1
     else
-      echo "There are deleted files. The number of deleted files ($DEL_COUNT) is below the threshold of ($DEL_THRESHOLD)."
-      DO_SYNC=1
+      echo "**WARNING!** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD) and add/delete threshold ($ADD_DEL_THRESHOLD) was not met."
+      mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD) and add/delete threshold ($ADD_DEL_THRESHOLD) was not met."
+      CHK_FAIL=1
     fi
   else
-    echo "**WARNING** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
-    mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
-    CHK_FAIL=1
+    if [ "$RETENTION_DAYS" -gt 0 ]; then
+     echo "**WARNING!** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+     echo "For more information, please check the DIFF ouput saved in $SNAPRAID_LOG_DIR."
+     mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+     CHK_FAIL=1
+    else
+     echo "**WARNING!** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+     mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+     CHK_FAIL=1
+    fi
   fi
 }
 
@@ -448,9 +479,16 @@ function chk_updated(){
       DO_SYNC=1
     fi
   else
-    echo "**WARNING** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
-    mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
-    CHK_FAIL=1
+    if [ "$RETENTION_DAYS" -gt 0 ]; then
+     echo "**WARNING!** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+     echo "For more information, please check the DIFF ouput saved in $SNAPRAID_LOG_DIR."
+     mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+     CHK_FAIL=1
+    else
+     echo "**WARNING!** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+     mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+     CHK_FAIL=1
+    fi
   fi
 }
 
@@ -498,9 +536,15 @@ function chk_sync_warn(){
     fi
   else
     # NO, so let's skip SYNC
+    if [ "$RETENTION_DAYS" -gt 0 ]; then
+    echo "Forced sync is not enabled. **NOT** proceeding with SYNC job. [$(date)]"
+    mklog "INFO: Forced sync is not enabled. **NOT** proceeding with SYNC job."
+    DO_SYNC=0
+    else
     echo "Forced sync is not enabled. Check $TMP_OUTPUT for details. **NOT** proceeding with SYNC job. [$(date)]"
     mklog "INFO: Forced sync is not enabled. Check $TMP_OUTPUT for details. **NOT** proceeding with SYNC job."
     DO_SYNC=0
+    fi
   fi
 }
 
@@ -523,17 +567,17 @@ function chk_zero(){
 }
 
 function chk_scrub_settings(){
-	if [ "$SCRUB_DELAYED_RUN" -gt 0 ]; then
+    if [ "$SCRUB_DELAYED_RUN" -gt 0 ]; then
     echo "Delayed scrub is enabled."
     mklog "INFO: Delayed scrub is enabled.."
   fi
 
-	local scrub_count
+    local scrub_count
   scrub_count=$(sed '/^[0-9]*$/!d' "$SCRUB_COUNT_FILE" 2>/dev/null)
   # zero if file does not exist or did not contain a number
   : "${scrub_count:=0}"
 
-	if [ "$scrub_count" -ge "$SCRUB_DELAYED_RUN" ]; then
+    if [ "$scrub_count" -ge "$SCRUB_DELAYED_RUN" ]; then
     # Run a scrub job. if the warn count is zero it means the scrub was already
     # forced, do not output a dumb message and continue with the scrub job.
     if [ "$scrub_count" -eq 0 ]; then
@@ -548,7 +592,7 @@ function chk_scrub_settings(){
       echo
       run_scrub
     fi
-	else
+    else
     # NO, so let's increment the warning count and skip the scrub job
     ((scrub_count += 1))
     echo "$scrub_count" > "$SCRUB_COUNT_FILE"
@@ -559,17 +603,26 @@ function chk_scrub_settings(){
       echo "$((SCRUB_DELAYED_RUN - scrub_count)) runs until the next scrub. **NOT** proceeding with SCRUB job. [$(date)]"
       mklog "INFO: $((SCRUB_DELAYED_RUN - scrub_count)) runs until the next scrub. **NOT** proceeding with SCRUB job. [$(date)]"
     fi
-	fi
+    fi
 }
 
 function run_scrub(){
+  if [ "$SCRUB_NEW" -eq 1 ]; then
+  echo "SCRUB New Blocks [$(date)]"
+    echo "\`\`\`"
+    $SNAPRAID_BIN scrub -p new -q
+    close_output_and_wait
+    output_to_file_screen
+    echo "\`\`\`"
+  fi
+  echo "SCRUB Previous Blocks [$(date)]"
   echo "\`\`\`"
   $SNAPRAID_BIN scrub -p "$SCRUB_PERCENT" -o "$SCRUB_AGE" -q
   close_output_and_wait
   output_to_file_screen
   echo "\`\`\`"
   echo "SCRUB finished [$(date)]"
-  mklog "INFO: SnapRAID SCRUB Job finished"
+  mklog "INFO: SnapRAID SCRUB Job(s) finished"
   JOBS_DONE="$JOBS_DONE + SCRUB"
   # insert SCRUB marker to 'Everything OK' or 'Nothing to do' string to
   # differentiate it from SYNC job above
@@ -714,10 +767,16 @@ function prepare_mail() {
   if [ $CHK_FAIL -eq 1 ]; then
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
       MSG="Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
+      if awk "BEGIN {exit !($ADD_DEL_RATIO < $ADD_DEL_THRESHOLD)}"; then
+        MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD)"
+      fi
     fi
 
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 1 ]; then
       MSG="Forced sync with deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
+      if awk "BEGIN {exit !($ADD_DEL_RATIO < $ADD_DEL_THRESHOLD)}"; then
+        MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD)"
+      fi
     fi
 
     if [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
@@ -730,36 +789,42 @@ function prepare_mail() {
 
     if [ "$DEL_COUNT" -ge  "$DEL_THRESHOLD" ] && [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
       MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+      if awk "BEGIN {exit !($ADD_DEL_RATIO < $ADD_DEL_THRESHOLD)}"; then
+        MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+      fi
     fi
 
     if [ "$DEL_COUNT" -ge  "$DEL_THRESHOLD" ] && [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 1 ]; then
       MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+      if awk "BEGIN {exit !($ADD_DEL_RATIO < $ADD_DEL_THRESHOLD)}"; then
+        MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+      fi
     fi
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
-	NOTIFY_OUTPUT="$SUBJECT"
-	notify_warning
+    NOTIFY_OUTPUT="$SUBJECT"
+    notify_warning
   elif [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
     # Sync ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-	NOTIFY_OUTPUT="$SUBJECT"
-	notify_warning
+    NOTIFY_OUTPUT="$SUBJECT"
+    notify_warning
   elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
     # Scrub ran but did not complete successfully so lets warn the user
     SUBJECT="[WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-	NOTIFY_OUTPUT="$SUBJECT
+    NOTIFY_OUTPUT="$SUBJECT
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
-	notify_warning
+    notify_warning
   else
     SUBJECT="[COMPLETED] $JOBS_DONE Jobs $EMAIL_SUBJECT_PREFIX"
-	NOTIFY_OUTPUT="$SUBJECT
+    NOTIFY_OUTPUT="$SUBJECT
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
-	notify_success
+    notify_success
   fi
 }
 
 function notify_success(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/0 --data-raw "$NOTIFY_OUTPUT"
+   curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/0 --data-raw "$NOTIFY_OUTPUT"
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
@@ -777,7 +842,7 @@ function notify_success(){
 
 function notify_warning(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null https://hc-ping.com/"$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
+   curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
