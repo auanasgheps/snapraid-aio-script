@@ -66,10 +66,7 @@ function main(){
    fi
     if [ "$TELEGRAM" -eq 1 ]; then
    echo "Telegram notification is enabled."
-   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-     -H 'Content-Type: application/json' \
-     -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "SnapRAID Script Job started"}' \
-     https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
+   $CURRENT_DIR/sendTelegram.sh "SnapRAID Script Job started"
      fi
    if [ "$DISCORD" -eq 1 ]; then
      echo "Discord notification is enabled."
@@ -827,10 +824,7 @@ function notify_success(){
    curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/0 --data-raw "$NOTIFY_OUTPUT"
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-   -H 'Content-Type: application/json' \
-   -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
-   https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
+   $CURRENT_DIR/sendTelegram.sh "'"$NOTIFY_OUTPUT"'"
   fi
   if [ "$DISCORD" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
@@ -845,10 +839,7 @@ function notify_warning(){
    curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-   -H 'Content-Type: application/json' \
-   -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
-   https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
+  $CURRENT_DIR/sendTelegram.sh "'"$NOTIFY_OUTPUT"'"
   fi
   if [ "$DISCORD" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
