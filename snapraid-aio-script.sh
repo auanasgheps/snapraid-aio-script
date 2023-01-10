@@ -66,7 +66,7 @@ function main(){
    fi
     if [ "$TELEGRAM" -eq 1 ]; then
    echo "Telegram notification is enabled."
-   $CURRENT_DIR/sendTelegram.sh "SnapRAID Script Job started"
+   $CURRENT_DIR/sendTelegram.sh $'\U2139'$'\n'"SnapRAID Script Job started"
      fi
    if [ "$DISCORD" -eq 1 ]; then
      echo "Discord notification is enabled."
@@ -824,7 +824,7 @@ function notify_success(){
    curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/0 --data-raw "$NOTIFY_OUTPUT"
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
-   $CURRENT_DIR/sendTelegram.sh "'"$NOTIFY_OUTPUT"'"
+   $CURRENT_DIR/sendTelegram.sh  $'\U2705'$'\n'"'"$NOTIFY_OUTPUT"'"
   fi
   if [ "$DISCORD" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
@@ -839,7 +839,7 @@ function notify_warning(){
    curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
-  $CURRENT_DIR/sendTelegram.sh "'"$NOTIFY_OUTPUT"'"
+  $CURRENT_DIR/sendTelegram.sh  $'\U26A0'$'\n'"'"$NOTIFY_OUTPUT"'"
   fi
   if [ "$DISCORD" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
