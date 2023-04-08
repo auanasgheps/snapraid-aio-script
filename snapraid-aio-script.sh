@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.3DEV1"
+SNAPSCRIPTVERSION="3.3DEV2"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -768,7 +768,22 @@ function final_cleanup(){
 }
 
 function prepare_output() {
-  if [ $CHK_FAIL -eq 1 ]; then
+# severe warning first
+  if [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
+    # Sync ran but did not complete successfully so lets warn the user
+    SUBJECT="[SEVERE WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT
+This is a severe warning, check your logs immediately."
+    notify_warning
+  elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
+    # Scrub ran but did not complete successfully so lets warn the user
+    SUBJECT="[SEVERE WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT
+This is a severe warning, check your logs immediately.
+SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+    notify_warning
+# other warnings, less critical
+  elif [ "$CHK_FAIL" -eq 1 ]; then
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
       MSG="Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
       if awk "BEGIN {exit !($ADD_DEL_RATIO < $ADD_DEL_THRESHOLD)}"; then
@@ -807,17 +822,7 @@ function prepare_output() {
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning
-  elif [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
-    # Sync ran but did not complete successfully so lets warn the user
-    SUBJECT="[WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-    NOTIFY_OUTPUT="$SUBJECT"
-    notify_warning
-  elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
-    # Scrub ran but did not complete successfully so lets warn the user
-    SUBJECT="[WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-    NOTIFY_OUTPUT="$SUBJECT
-SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
-    notify_warning
+# good run
   else
     SUBJECT="[COMPLETED] $JOBS_DONE Jobs $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT
