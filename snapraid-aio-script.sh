@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION=3.2
+SNAPSCRIPTVERSION="3.3DEV1"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -94,11 +94,11 @@ function main(){
   elif [ "$CONFIG_VERSION" != "$SNAPSCRIPTVERSION" ]; then
     echo "Please update your config file to the latest version. The current file is not compatible with this script!"
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
+    SUBJECT="[WARNING] - Configuration Error $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT"
+    notify_warning
     if [ "$EMAIL_ADDRESS" ]; then
-      SUBJECT="[WARNING] - Configuration Error $EMAIL_SUBJECT_PREFIX"
-      NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
-      notify_warning
     fi
     exit 1;
   else
@@ -168,11 +168,11 @@ function main(){
     echo "**ERROR** - Failed to get one or more count values. Unable to continue."
     mklog "WARN: Failed to get one or more count values. Unable to continue."
     echo "Exiting script. [$(date)]"
+    SUBJECT="[WARNING] - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT"
+    notify_warning
     if [ "$EMAIL_ADDRESS" ]; then
-      SUBJECT="[WARNING] - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
-        NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
-      notify_warning
     fi
     exit 1;
   fi
@@ -340,25 +340,25 @@ function main(){
   echo "All jobs ended. [$(date)]"
   mklog "INFO: Snapraid: all jobs ended."
 
-  # all jobs done, let's send output to user if configured
-  if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ]; then
-    # check snapraid output and build the message subject, then send notifications if enabled
-    prepare_mail
-
+  # all jobs done
+    # check snapraid output and build the message output
+    # if notification services are enabled, messages will be sent now
+    prepare_output
     ELAPSED="$((SECONDS / 3600))hrs $(((SECONDS / 60) % 60))min $((SECONDS % 60))sec"
     echo "----------------------------------------"
     echo "## Total time elapsed for SnapRAID: $ELAPSED"
     mklog "INFO: Total time elapsed for SnapRAID: $ELAPSED"
-
-    # Add a topline to email body and send a long mail
-    sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
-    if [ "$VERBOSITY" -eq 1 ]; then
-      send_mail < "$TMP_OUTPUT"
-    else
-    # or send a short mail
-     trim_log < "$TMP_OUTPUT" | send_mail
+    # if email or hook service are enabled, will be sent now
+    if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ]; then
+      # Add a topline to email body and send a long mail
+      sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
+      if [ "$VERBOSITY" -eq 1 ]; then
+        send_mail < "$TMP_OUTPUT"
+      else
+      # or send a short mail
+      trim_log < "$TMP_OUTPUT" | send_mail
+      fi
     fi
-  fi
 
   # Save and rotate logs if enabled
   if [ "$RETENTION_DAYS" -gt 0 ]; then
@@ -388,8 +388,10 @@ function sanity_check() {
     # Add a topline to email body
     SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
-    trim_log < "$TMP_OUTPUT" | send_mail
     notify_warning
+    if [ "$EMAIL_ADDRESS" ]; then
+      trim_log < "$TMP_OUTPUT" | send_mail
+    fi
     exit 1;
   fi
   done
@@ -407,8 +409,10 @@ function sanity_check() {
       # Add a topline to email body
       SUBJECT="[WARNING] - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
-      trim_log < "$TMP_OUTPUT" | send_mail
       notify_warning
+      if [ "$EMAIL_ADDRESS" ]; then
+        trim_log < "$TMP_OUTPUT" | send_mail
+      fi
     exit 1;
    fi
   done
@@ -763,7 +767,7 @@ function final_cleanup(){
   exit
 }
 
-function prepare_mail() {
+function prepare_output() {
   if [ $CHK_FAIL -eq 1 ]; then
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
       MSG="Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
