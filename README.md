@@ -20,7 +20,7 @@ Contributions are welcome!
 - [Requirements](#requirements)
 - [Installation](#installation)
   * [First Run](#first-run)
-  * [OMV5/6 and SnapRAID plugin](#omv5-and-snapraid-plugin)
+  * [OMV5/6 and SnapRAID plugin](#omv56-and-snapraid-plugin)
   * [Installing `hd-idle`](#installing-hd-idle-for-automatic-disk-spindown)
 - [Upgrade](#upgrade)
 - [Known Issues](#known-issues)
