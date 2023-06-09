@@ -1,14 +1,14 @@
 #!/bin/bash
 ########################################################################
-#                                      #
+#                                                                      #
 #   Project page: https://github.com/auanasgheps/snapraid-aio-script   #
-#                                      #
+#                                                                      #
 ########################################################################
 
-######################
-#   CONFIG VARIABLES #
-######################
-SNAPSCRIPTVERSION="3.3DEV2"
+########################
+#   CONFIG VARIABLES   #
+########################
+SNAPSCRIPTVERSION=3.3 #-DEV2
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -205,13 +205,13 @@ function main(){
     mklog "INFO: SnapRAID SYNC Job started"
     echo "\`\`\`"
     if [ "$PREHASH" -eq 1 ] && [ "$FORCE_ZERO" -eq 1 ]; then
-      $SNAPRAID_BIN sync -h --force-zero -q
+      $SNAPRAID_BIN -h --force-zero -q sync
     elif [ "$PREHASH" -eq 1 ]; then
-      $SNAPRAID_BIN sync -h -q
+      $SNAPRAID_BIN -h -q sync
     elif [ "$FORCE_ZERO" -eq 1 ]; then
-      $SNAPRAID_BIN sync --force-zero -q
+      $SNAPRAID_BIN --force-zero -q sync
     else
-      $SNAPRAID_BIN sync -q
+      $SNAPRAID_BIN -q sync
     fi
     close_output_and_wait
     output_to_file_screen
@@ -614,7 +614,7 @@ function run_scrub(){
   if [ "$SCRUB_NEW" -eq 1 ]; then
   echo "SCRUB New Blocks [$(date)]"
     echo "\`\`\`"
-    $SNAPRAID_BIN scrub -p new -q
+    $SNAPRAID_BIN -p new -q scrub
     close_output_and_wait
     output_to_file_screen
     echo "\`\`\`"
