@@ -1,14 +1,14 @@
 #!/bin/bash
 ########################################################################
-#                                                                      #
+#                                      #
 #   Project page: https://github.com/auanasgheps/snapraid-aio-script   #
-#                                                                      #
+#                                      #
 ########################################################################
 
-########################
-#   CONFIG VARIABLES   #
-########################
-SNAPSCRIPTVERSION=3.3 #-DEV1
+######################
+#   CONFIG VARIABLES #
+######################
+SNAPSCRIPTVERSION="3.3DEV2"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -94,11 +94,11 @@ function main(){
   elif [ "$CONFIG_VERSION" != "$SNAPSCRIPTVERSION" ]; then
     echo "Please update your config file to the latest version. The current file is not compatible with this script!"
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
+    SUBJECT="[WARNING] - Configuration Error $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT"
+    notify_warning
     if [ "$EMAIL_ADDRESS" ]; then
-      SUBJECT="[WARNING] - Configuration Error $EMAIL_SUBJECT_PREFIX"
-      NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
-      notify_warning
     fi
     exit 1;
   else
@@ -168,11 +168,11 @@ function main(){
     echo "**ERROR** - Failed to get one or more count values. Unable to continue."
     mklog "WARN: Failed to get one or more count values. Unable to continue."
     echo "Exiting script. [$(date)]"
+    SUBJECT="[WARNING] - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT"
+    notify_warning
     if [ "$EMAIL_ADDRESS" ]; then
-      SUBJECT="[WARNING] - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
-        NOTIFY_OUTPUT="$SUBJECT"
       trim_log < "$TMP_OUTPUT" | send_mail
-      notify_warning
     fi
     exit 1;
   fi
@@ -205,13 +205,13 @@ function main(){
     mklog "INFO: SnapRAID SYNC Job started"
     echo "\`\`\`"
     if [ "$PREHASH" -eq 1 ] && [ "$FORCE_ZERO" -eq 1 ]; then
-      $SNAPRAID_BIN -h --force-zero -q sync
+      $SNAPRAID_BIN sync -h --force-zero -q
     elif [ "$PREHASH" -eq 1 ]; then
-      $SNAPRAID_BIN -h -q sync
+      $SNAPRAID_BIN sync -h -q
     elif [ "$FORCE_ZERO" -eq 1 ]; then
-      $SNAPRAID_BIN --force-zero -q sync
+      $SNAPRAID_BIN sync --force-zero -q
     else
-      $SNAPRAID_BIN -q sync
+      $SNAPRAID_BIN sync -q
     fi
     close_output_and_wait
     output_to_file_screen
@@ -340,25 +340,25 @@ function main(){
   echo "All jobs ended. [$(date)]"
   mklog "INFO: Snapraid: all jobs ended."
 
-  # all jobs done, let's send output to user if configured
-  if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ]; then
-    # check snapraid output and build the message subject, then send notifications if enabled
-    prepare_mail
-
+  # all jobs done
+    # check snapraid output and build the message output
+    # if notification services are enabled, messages will be sent now
+    prepare_output
     ELAPSED="$((SECONDS / 3600))hrs $(((SECONDS / 60) % 60))min $((SECONDS % 60))sec"
     echo "----------------------------------------"
     echo "## Total time elapsed for SnapRAID: $ELAPSED"
     mklog "INFO: Total time elapsed for SnapRAID: $ELAPSED"
-
-    # Add a topline to email body and send a long mail
-    sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
-    if [ "$VERBOSITY" -eq 1 ]; then
-      send_mail < "$TMP_OUTPUT"
-    else
-    # or send a short mail
-     trim_log < "$TMP_OUTPUT" | send_mail
+    # if email or hook service are enabled, will be sent now
+    if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ]; then
+      # Add a topline to email body and send a long mail
+      sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
+      if [ "$VERBOSITY" -eq 1 ]; then
+        send_mail < "$TMP_OUTPUT"
+      else
+      # or send a short mail
+      trim_log < "$TMP_OUTPUT" | send_mail
+      fi
     fi
-  fi
 
   # Save and rotate logs if enabled
   if [ "$RETENTION_DAYS" -gt 0 ]; then
@@ -388,8 +388,10 @@ function sanity_check() {
     # Add a topline to email body
     SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
-    trim_log < "$TMP_OUTPUT" | send_mail
     notify_warning
+    if [ "$EMAIL_ADDRESS" ]; then
+      trim_log < "$TMP_OUTPUT" | send_mail
+    fi
     exit 1;
   fi
   done
@@ -407,8 +409,10 @@ function sanity_check() {
       # Add a topline to email body
       SUBJECT="[WARNING] - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
-      trim_log < "$TMP_OUTPUT" | send_mail
       notify_warning
+      if [ "$EMAIL_ADDRESS" ]; then
+        trim_log < "$TMP_OUTPUT" | send_mail
+      fi
     exit 1;
    fi
   done
@@ -610,7 +614,7 @@ function run_scrub(){
   if [ "$SCRUB_NEW" -eq 1 ]; then
   echo "SCRUB New Blocks [$(date)]"
     echo "\`\`\`"
-    $SNAPRAID_BIN -p new -q scrub
+    $SNAPRAID_BIN scrub -p new -q
     close_output_and_wait
     output_to_file_screen
     echo "\`\`\`"
@@ -763,8 +767,23 @@ function final_cleanup(){
   exit
 }
 
-function prepare_mail() {
-  if [ $CHK_FAIL -eq 1 ]; then
+function prepare_output() {
+# severe warning first
+  if [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
+    # Sync ran but did not complete successfully so lets warn the user
+    SUBJECT="[SEVERE WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT
+This is a severe warning, check your logs immediately."
+    notify_warning
+  elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
+    # Scrub ran but did not complete successfully so lets warn the user
+    SUBJECT="[SEVERE WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT
+This is a severe warning, check your logs immediately.
+SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+    notify_warning
+# other warnings, less critical
+  elif [ "$CHK_FAIL" -eq 1 ]; then
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
       MSG="Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
       if awk "BEGIN {exit !($ADD_DEL_RATIO < $ADD_DEL_THRESHOLD)}"; then
@@ -803,17 +822,7 @@ function prepare_mail() {
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning
-  elif [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
-    # Sync ran but did not complete successfully so lets warn the user
-    SUBJECT="[WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-    NOTIFY_OUTPUT="$SUBJECT"
-    notify_warning
-  elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
-    # Scrub ran but did not complete successfully so lets warn the user
-    SUBJECT="[WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-    NOTIFY_OUTPUT="$SUBJECT
-SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
-    notify_warning
+# good run
   else
     SUBJECT="[COMPLETED] $JOBS_DONE Jobs $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT

@@ -17,7 +17,7 @@ FROM_EMAIL_ADDRESS="sender-email-goes-here"
 # Use Healthchecks.io to report script errors. Set to 1 to enable.
 # Please note that every "WARNING" will be reported as failure.
 # When enabled, enter your Healthchecks UUID (not the full URL).
-# If using a self-hosted instance, change the URL to your endpoint
+# If using a self-hosted instance, change the URL to your endpoint                                                                                                      
 # including the trailing slash.
 HEALTHCHECKS=0
 HEALTHCHECKS_ID="your-uuid-here"
