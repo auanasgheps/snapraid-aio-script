@@ -1,5 +1,5 @@
 #!/bin/bash
-CONFIG_VERSION=3.2
+CONFIG_VERSION=3.3 #-DEV1
 ######################
 #   USER VARIABLES   #
 ######################
@@ -9,7 +9,7 @@ CONFIG_VERSION=3.2
 ### NOTIFICATION SETTINGS ###
 
 # Address where the output will be emailed to.
-# If you do not want to receive emails and rely on other notification 
+# If you do not want to receive emails and rely on other notification
 # methods, leave these fields empty.
 EMAIL_ADDRESS="destination-email-goes-here"
 FROM_EMAIL_ADDRESS="sender-email-goes-here"
@@ -17,8 +17,11 @@ FROM_EMAIL_ADDRESS="sender-email-goes-here"
 # Use Healthchecks.io to report script errors. Set to 1 to enable.
 # Please note that every "WARNING" will be reported as failure.
 # When enabled, enter your Healthchecks UUID (not the full URL).
+# If using a self-hosted instance, change the URL to your endpoint
+# including the trailing slash.
 HEALTHCHECKS=0
 HEALTHCHECKS_ID="your-uuid-here"
+HEALTHCHECKS_URL="https://hc-ping.com/"
 
 # Use Telegram to report script execution summary (not the whole report)
 # Set 1 to enable. Create a bot using @botfather, then copy the API token.
@@ -27,17 +30,17 @@ TELEGRAM=0
 TELEGRAM_TOKEN="your-token-here"
 TELEGRAM_CHAT_ID="your-chat-id-here"
 
-# Use Discord to report script execution summary (not the whole report) 
-# Set 1 to enable. 
-# To get your Webhook URL go to the channel settings -> Integrations and 
+# Use Discord to report script execution summary (not the whole report)
+# Set 1 to enable.
+# To get your Webhook URL go to the channel settings -> Integrations and
 # create a web hook
 DISCORD=0
 DISCORD_WEBHOOK_URL="your-webhook-url"
 
 # Custom notification service
-# Set this to a script/service to be used instead of the default email 
-# notification. You may want to use a service not natively supported by this 
-# script or a mail service with custom formatting. 
+# Set this to a script/service to be used instead of the default email
+# notification. You may want to use a service not natively supported by this
+# script or a mail service with custom formatting.
 # If you don't want to use this option, don't make changes to this.
 # $CURRENT_DIR can be used to get the running directory of the script.
 # This script will pass the following parameters to HOOK_NOTIFICATION:
@@ -47,7 +50,7 @@ HOOK_NOTIFICATION=""
 
 ### SCRIPT AND SNAPRAID SETTINGS ###
 
-# Set the threshold of deleted and updated files to stop the sync job from running. 
+# Set the threshold of deleted and updated files to stop the sync job from running.
 # Note that depending on how active your filesystem is being used, a low number
 # here may result in your parity info being out of sync often and/or you having
 # to do lots of manual syncing.
@@ -55,10 +58,10 @@ DEL_THRESHOLD=500
 UP_THRESHOLD=500
 
 # Allow a sync that would otherwise violate the delete threshold, but only
-# if the ratio of added to deleted files is greater than the value set. 
+# if the ratio of added to deleted files is greater than the value set.
 # Set to 0 to disable this option.
-# Example: A senario with 5000 deleted files and 3800 added files would 
-# result in an ADD_DEL_THRESHOLD of 0.76 (3800/5000) 
+# Example: A senario with 5000 deleted files and 3800 added files would
+# result in an ADD_DEL_THRESHOLD of 0.76 (3800/5000)
 ADD_DEL_THRESHOLD=0
 
 # Set number of warnings before we force a sync job. This option comes in handy
@@ -68,7 +71,7 @@ ADD_DEL_THRESHOLD=0
 # manual sync if delete threshold is breached).
 SYNC_WARN_THRESHOLD=-1
 
-# Set percentage of and age of blocks in array to scrub if it is in sync.
+# Set percentage and age, in days, of blocks in array to scrub if it is in sync.
 # i.e. 0 to disable and 100 to scrub the full array in one go.
 # WARNING - depending on size of your array, setting to 100 can take a long time!
 SCRUB_PERCENT=5
@@ -90,9 +93,9 @@ SCRUB_DELAYED_RUN=0
 # allow to run a fix operation. 1 to enable, any other value to disable.
 PREHASH=1
 
-# Forces the operation of syncing a file with zero size that before was not. 
+# Forces the operation of syncing a file with zero size that before was not.
 # If SnapRAID detects a such condition, it stops proceeding unless you enable
-# this option. Useful when syncing system files which can genuinely get 
+# this option. Useful when syncing system files which can genuinely get
 # changed to zero.
 # Disabled by default, 1 to enable.
 FORCE_ZERO=0
@@ -107,17 +110,17 @@ SPINDOWN=0
 SMART_LOG=1
 
 # Increase verbosity of the email output. NOT RECOMMENDED!
-# If set to 1, TOUCH and DIFF outputs will be kept in the email, producing 
+# If set to 1, TOUCH and DIFF outputs will be kept in the email, producing
 # a mostly unreadable email. You can always check TOUCH and DIFF outputs
 # using the TMP file or use the feature KEEP_LOG.
 # 1 to enable, any other value to disable.
 VERBOSITY=0
 
 # SnapRAID detailed output retention for each run.
-# Default behaviour is RETENTION_DAYS=0: every time your run SnapRAID, the 
+# Default behaviour is RETENTION_DAYS=0: every time your run SnapRAID, the
 # output is saved to "/tmp" and is overridden during every run.
-# To enable retention, set RETENTION_DAYS to the days of output you want to 
-# keep in your home folder. Files will have timestamps. 
+# To enable retention, set RETENTION_DAYS to the days of output you want to
+# keep in your home folder. Files will have timestamps.
 # SNAPRAID_LOG_DIR can be changed to any folder you like.
 RETENTION_DAYS=0
 SNAPRAID_LOG_DIR="$HOME"
@@ -139,7 +142,8 @@ DOCKER_MODE=1
 
 # Containers to manage (separated with spaces). Please ensure these containers
 # are always running before executing the script, otherwise an error will be logged.
-SERVICES='container1 container2 container3'
+DOCKER_LOCAL=0
+SERVICES='container1,container2,container3'
 
 # Manage docker containers running on a remote machine. To use this feature,
 # you must setup passwordless ssh access between snapRAID host and Docker host.
