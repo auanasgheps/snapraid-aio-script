@@ -140,7 +140,7 @@ MANAGE_SERVICES=0
 # This option does not have any effect if MANAGE_SERVICES is set to 0
 DOCKER_MODE=1
 
-# Containers to manage (separated with spaces, commas, or colons). Please ensure these containers
+# Containers to manage (separated with spaces). Please ensure these containers
 # are always running before executing the script, otherwise an error will be logged.
 DOCKER_LOCAL=0
 SERVICES='container1 container2 container3'
