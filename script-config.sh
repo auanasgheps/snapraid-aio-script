@@ -17,7 +17,7 @@ FROM_EMAIL_ADDRESS="sender-email-goes-here"
 # Use Healthchecks.io to report script errors. Set to 1 to enable.
 # Please note that every "WARNING" will be reported as failure.
 # When enabled, enter your Healthchecks UUID (not the full URL).
-# If using a self-hosted instance, change the URL to your endpoint                                                                                                      
+# If using a self-hosted instance, change the URL to your endpoint
 # including the trailing slash.
 HEALTHCHECKS=0
 HEALTHCHECKS_ID="your-uuid-here"
@@ -143,23 +143,21 @@ DOCKER_MODE=1
 # Containers to manage (separated with spaces). Please ensure these containers
 # are always running before executing the script, otherwise an error will be logged.
 DOCKER_LOCAL=0
-SERVICES='container1,container2,container3'
+SERVICES='container1 container2 container3'
 
 # Manage docker containers running on a remote machine. To use this feature,
 # you must setup passwordless ssh access between snapRAID host and Docker host.
 # Set to 1 to enable, then enter Docker host SSH user and machine IP or hostname.
 # You can manage multiple remote Docker hosts.
-# Please note: for this configuration DO NOT separate containers with spaces.
-# Use a comma instead.
 # Reference:
-# ('HOSTIP1:container1,container2,container3' 'HOSTIP2:container1,container2,container3,container4')
+# ('HOSTIP1:container1 container2 container3' 'HOSTIP2:container1 container2 container3 container4')
 # Example:
-# ('192.168.0.125:code-server,portainer,plex' '192.168.0.126:nextcloud,handbrake,transmission')
+# ('192.168.0.125:code-server portainer plex' '192.168.0.126:nextcloud handbrake transmission')
 # Delay is the number of seconds to wait before sending the next docker
 # command to avoid errors. Change it if you're experiencing errors.
 DOCKER_REMOTE=0
 DOCKER_USER="sshusernamegoeshere"
-DOCKER_HOST_SERVICES=('HOSTIP1:container1,container2,container3' 'HOSTIP2:container1,container2,container3,container4')
+DOCKER_HOST_SERVICES=('HOSTIP1:container1 container2 container3' 'HOSTIP2:container1 container2 container3 container4')
 DOCKER_DELAY=10
 
 ### CUSTOM HOOKS ###
