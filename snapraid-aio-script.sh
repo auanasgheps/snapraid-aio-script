@@ -675,75 +675,67 @@ function service_array_setup() {
 
 function pause_services(){
   if [ "$DOCKER_REMOTE" -eq 1 ]; then
-   for i in "${DOCKER_HOST_SERVICES[@]}"; do
-    # split sub-list if available
-    if [[ $i == *":"* ]]
-     then
-      # split host name from services
-      tmpArray=(${i//:/ })
-      REMOTE_HOST=${tmpArray[0]}
+    for (( i=0; i < "${#DOCKER_HOST_SERVICES[@]}"; i++ )); do
+      # delete previous array/list (this is crucial!)
+      unset tmpArray
+      IFS=':, ' read -r -a tmpArray <<< "${DOCKER_HOST_SERVICES[i]}"
+      REMOTE_HOST="${tmpArray[0]}"
       REMOTE_SERVICES=""
-      j=1
-      while [ "$j" -le "${#tmpArray[@]}" ]; do
-       REMOTE_SERVICES="$REMOTE_SERVICES${tmpArray[j]} "
-       j=$(($j + 1))
+      for (( j=1; j < "${#tmpArray[@]}"; j++ )); do
+        REMOTE_SERVICES="$REMOTE_SERVICES${tmpArray[j]} "
       done
-    fi
-    if [ "$DOCKER_MODE" = 1 ]; then
-     echo "Pausing Container(s) - ""$REMOTE_SERVICES";
-    else
-     echo "Stopping Container(s) - ""$REMOTE_SERVICES";
-    fi
-    ssh "$DOCKER_USER"@"$REMOTE_HOST" docker "$DOCKER_CMD1" "$REMOTE_SERVICES"
-    sleep "$DOCKER_DELAY"
-   done
+      if [ "$DOCKER_MODE" = 1 ]; then
+        echo "Pausing Container(s) on $REMOTE_HOST - $REMOTE_SERVICES";
+      else
+        echo "Stopping Container(s) on $REMOTE_HOST - $REMOTE_SERVICES";
+      fi
+      ssh "$DOCKER_USER"@"$REMOTE_HOST" docker "$DOCKER_CMD1" "$REMOTE_SERVICES"
+      sleep "$DOCKER_DELAY"
+    done
   fi
   if [ "$DOCKER_LOCAL" -eq 1 ]; then
-   if [ "$DOCKER_MODE" = 1 ]; then
-    echo "Pausing Container(s) - ""$SERVICES";
-   else
-    echo "Stopping Container(s) - ""$SERVICES";
-   fi
-   docker "$DOCKER_CMD1" "$SERVICES"
+    if [ "$DOCKER_MODE" = 1 ]; then
+      echo "Pausing Local Container(s) - $SERVICES";
+    else
+      echo "Stopping Local Container(s) - $SERVICES";
+    fi
+    docker $DOCKER_CMD1 $SERVICES
   fi
   SERVICES_STOPPED=1
+  unset IFS
 }
 
 function resume_services(){
   if [ "$SERVICES_STOPPED" -eq 1 ]; then
-   if [ "$DOCKER_REMOTE" -eq 1 ]; then
-    for i in "${DOCKER_HOST_SERVICES[@]}"; do
-     # split sub-list if available
-     if [[ $i == *":"* ]]
-      then
-       # split host name from services
-       tmpArray=(${i//:/ })
-       REMOTE_HOST=${tmpArray[0]}
-       REMOTE_SERVICES=""
-       j=1
-       while [ "$j" -le "${#tmpArray[@]}" ]; do
-        REMOTE_SERVICES="$REMOTE_SERVICES${tmpArray[j]} "
-        j=$(($j + 1))
-       done
-     fi
-     if [ "$DOCKER_MODE" = 1 ]; then
-      echo "Resuming Container(s) - ""$REMOTE_SERVICES";
-     else
-      echo "Restarting Container(s)- ""$REMOTE_SERVICES";
-     fi
-     ssh "$DOCKER_USER"@"$REMOTE_HOST" docker "$DOCKER_CMD2" "$REMOTE_SERVICES"
-     sleep "$DOCKER_DELAY"
-    done
-   fi
-   if [ "$DOCKER_LOCAL" -eq 1 ]; then
-    if [ "$DOCKER_MODE" = 1 ]; then
-     echo "Resuming Container(s) - ""$SERVICES";
-    else
-     echo "Restarting Container(s) - ""$SERVICES";
+    if [ "$DOCKER_REMOTE" -eq 1 ]; then
+      for (( i=0; i < "${#DOCKER_HOST_SERVICES[@]}"; i++ )); do
+        # delete previous array/list (this is crucial!)
+        unset tmpArray
+        IFS=':, ' read -r -a tmpArray <<< "${DOCKER_HOST_SERVICES[i]}"
+        REMOTE_HOST="${tmpArray[0]}"
+        REMOTE_SERVICES=""
+        for (( j=1; j < "${#tmpArray[@]}"; j++ )); do
+          REMOTE_SERVICES="$REMOTE_SERVICES${tmpArray[j]} "
+        done
+        if [ "$DOCKER_MODE" = 1 ]; then
+          echo "Resuming Container(s) on ""$REMOTE_HOST"" - ""$REMOTE_SERVICES";
+        else
+          echo "Restarting Container(s) on ""$REMOTE_HOST"" - ""$REMOTE_SERVICES";
+        fi
+        ssh "$DOCKER_USER"@"$REMOTE_HOST" docker "$DOCKER_CMD2" "$REMOTE_SERVICES"
+        sleep "$DOCKER_DELAY"
+      done
     fi
-    docker "$DOCKER_CMD2" "$SERVICES"
-   fi
-   SERVICES_STOPPED=0
+    if [ "$DOCKER_LOCAL" -eq 1 ]; then
+      if [ "$DOCKER_MODE" = 1 ]; then
+        echo "Resuming Local Container(s) - ""$SERVICES";
+      else
+        echo "Restarting Local Container(s) - ""$SERVICES";
+      fi
+      docker $DOCKER_CMD2 $SERVICES
+    fi
+    SERVICES_STOPPED=0
+    unset IFS
   fi
 }
 
