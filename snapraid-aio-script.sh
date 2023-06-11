@@ -674,6 +674,14 @@ function service_array_setup() {
 }
 
 function pause_services(){
+  if [ "$DOCKER_LOCAL" -eq 1 ]; then
+    if [ "$DOCKER_MODE" = 1 ]; then
+      echo "Pausing Local Container(s)";
+    else
+      echo "Stopping Local Container(s)";
+    fi
+    docker $DOCKER_CMD1 $SERVICES
+  fi
   if [ "$DOCKER_REMOTE" -eq 1 ]; then
     for (( i=0; i < "${#DOCKER_HOST_SERVICES[@]}"; i++ )); do
       # delete previous array/list (this is crucial!)
@@ -693,20 +701,20 @@ function pause_services(){
       sleep "$DOCKER_DELAY"
     done
   fi
-  if [ "$DOCKER_LOCAL" -eq 1 ]; then
-    if [ "$DOCKER_MODE" = 1 ]; then
-      echo "Pausing Local Container(s)";
-    else
-      echo "Stopping Local Container(s)";
-    fi
-    docker $DOCKER_CMD1 $SERVICES
-  fi
   SERVICES_STOPPED=1
   unset IFS
 }
 
 function resume_services(){
   if [ "$SERVICES_STOPPED" -eq 1 ]; then
+    if [ "$DOCKER_LOCAL" -eq 1 ]; then
+      if [ "$DOCKER_MODE" = 1 ]; then
+        echo "Resuming Local Container(s)";
+      else
+        echo "Restarting Local Container(s)";
+      fi
+      docker $DOCKER_CMD2 $SERVICES
+    fi
     if [ "$DOCKER_REMOTE" -eq 1 ]; then
       for (( i=0; i < "${#DOCKER_HOST_SERVICES[@]}"; i++ )); do
         # delete previous array/list (this is crucial!)
@@ -725,14 +733,6 @@ function resume_services(){
         ssh "$DOCKER_USER"@"$REMOTE_HOST" docker "$DOCKER_CMD2" "$REMOTE_SERVICES"
         sleep "$DOCKER_DELAY"
       done
-    fi
-    if [ "$DOCKER_LOCAL" -eq 1 ]; then
-      if [ "$DOCKER_MODE" = 1 ]; then
-        echo "Resuming Local Container(s)";
-      else
-        echo "Restarting Local Container(s)";
-      fi
-      docker $DOCKER_CMD2 $SERVICES
     fi
     SERVICES_STOPPED=0
     unset IFS
