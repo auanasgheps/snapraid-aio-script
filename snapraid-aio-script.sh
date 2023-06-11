@@ -685,9 +685,9 @@ function pause_services(){
         REMOTE_SERVICES="$REMOTE_SERVICES${tmpArray[j]} "
       done
       if [ "$DOCKER_MODE" = 1 ]; then
-        echo "Pausing Container(s) on $REMOTE_HOST - $REMOTE_SERVICES";
+        echo "Pausing Container(s) on $REMOTE_HOST";
       else
-        echo "Stopping Container(s) on $REMOTE_HOST - $REMOTE_SERVICES";
+        echo "Stopping Container(s) on $REMOTE_HOST";
       fi
       ssh "$DOCKER_USER"@"$REMOTE_HOST" docker "$DOCKER_CMD1" "$REMOTE_SERVICES"
       sleep "$DOCKER_DELAY"
@@ -695,9 +695,9 @@ function pause_services(){
   fi
   if [ "$DOCKER_LOCAL" -eq 1 ]; then
     if [ "$DOCKER_MODE" = 1 ]; then
-      echo "Pausing Local Container(s) - $SERVICES";
+      echo "Pausing Local Container(s)";
     else
-      echo "Stopping Local Container(s) - $SERVICES";
+      echo "Stopping Local Container(s)";
     fi
     docker $DOCKER_CMD1 $SERVICES
   fi
@@ -718,9 +718,9 @@ function resume_services(){
           REMOTE_SERVICES="$REMOTE_SERVICES${tmpArray[j]} "
         done
         if [ "$DOCKER_MODE" = 1 ]; then
-          echo "Resuming Container(s) on ""$REMOTE_HOST"" - ""$REMOTE_SERVICES";
+          echo "Resuming Container(s) on $REMOTE_HOST";
         else
-          echo "Restarting Container(s) on ""$REMOTE_HOST"" - ""$REMOTE_SERVICES";
+          echo "Restarting Container(s) on $REMOTE_HOST";
         fi
         ssh "$DOCKER_USER"@"$REMOTE_HOST" docker "$DOCKER_CMD2" "$REMOTE_SERVICES"
         sleep "$DOCKER_DELAY"
@@ -728,9 +728,9 @@ function resume_services(){
     fi
     if [ "$DOCKER_LOCAL" -eq 1 ]; then
       if [ "$DOCKER_MODE" = 1 ]; then
-        echo "Resuming Local Container(s) - ""$SERVICES";
+        echo "Resuming Local Container(s)";
       else
-        echo "Restarting Local Container(s) - ""$SERVICES";
+        echo "Restarting Local Container(s)";
       fi
       docker $DOCKER_CMD2 $SERVICES
     fi
