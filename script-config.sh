@@ -112,7 +112,7 @@ SMART_LOG=1
 # Increase verbosity of the email output. NOT RECOMMENDED!
 # If set to 1, TOUCH and DIFF outputs will be kept in the email, producing
 # a mostly unreadable email. You can always check TOUCH and DIFF outputs
-# using the TMP file or use the feature KEEP_LOG.
+# using the TMP file or use the feature RETENTION_DAYS.
 # 1 to enable, any other value to disable.
 VERBOSITY=0
 
@@ -158,7 +158,7 @@ SERVICES='container1 container2 container3'
 DOCKER_REMOTE=0
 DOCKER_USER="sshusernamegoeshere"
 DOCKER_HOST_SERVICES=('HOSTIP1:container1 container2 container3' 'HOSTIP2:container1 container2 container3 container4')
-DOCKER_DELAY=10
+DOCKER_DELAY=0
 
 ### CUSTOM HOOKS ###
 
