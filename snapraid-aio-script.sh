@@ -51,37 +51,37 @@ function main(){
 
   # Initialize notification
   if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ]; then
-   # install curl if not found
-   if [ "$(dpkg-query -W -f='${Status}' curl 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
-    echo "**Curl has not been found and will be installed.**"
-    mklog "WARN: Curl has not been found and will be installed."
-    # super silent and secret install command
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get install -qq -o=Dpkg::Use-Pty=0 curl;
-   fi
-   # invoke notification services if configured
+    # install curl if not found
+    if [ "$(dpkg-query -W -f='${Status}' curl 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
+      echo "**Curl has not been found and will be installed.**"
+      mklog "WARN: Curl has not been found and will be installed."
+      # super silent and secret install command
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get install -qq -o=Dpkg::Use-Pty=0 curl;
+    fi
+    # invoke notification services if configured
     if [ "$HEALTHCHECKS" -eq 1 ]; then
-   echo "Healthchecks.io notification is enabled. Notifications sent to $HEALTHCHECKS_URL."
-   curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/start
-   fi
+      echo "Healthchecks.io notification is enabled. Notifications sent to $HEALTHCHECKS_URL."
+      curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/start
+    fi
     if [ "$TELEGRAM" -eq 1 ]; then
-   echo "Telegram notification is enabled."
-   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-     -H 'Content-Type: application/json' \
-     -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "SnapRAID Script Job started"}' \
-     https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
-     fi
-   if [ "$DISCORD" -eq 1 ]; then
-     echo "Discord notification is enabled."
-     curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-     -H 'Content-Type: application/json' \
-     -d '{"content": "SnapRAID Script Job started"}' \
-     "$DISCORD_WEBHOOK_URL"
+      echo "Telegram notification is enabled."
+      curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+      -H 'Content-Type: application/json' \
+      -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "SnapRAID Script Job started"}' \
+      https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
+    fi
+    if [ "$DISCORD" -eq 1 ]; then
+      echo "Discord notification is enabled."
+      curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+      -H 'Content-Type: application/json' \
+      -d '{"content": "SnapRAID Script Job started"}' \
+      "$DISCORD_WEBHOOK_URL"
     fi
   fi
 
   if [ "$RETENTION_DAYS" -gt 0 ]; then
-  echo "SnapRAID output retention is enabled. Detailed logs will be kept in $SNAPRAID_LOG_DIR for $RETENTION_DAYS days."
+    echo "SnapRAID output retention is enabled. Detailed logs will be kept in $SNAPRAID_LOG_DIR for $RETENTION_DAYS days."
   fi
 
   # Check if script configuration file has been found, if not send a message
@@ -121,15 +121,11 @@ function main(){
 
   # pause configured containers
   if [ "$MANAGE_SERVICES" -eq 1 ]; then
-   service_array_setup
+    service_array_setup
     if [ "$DOCKERALLOK" = YES ]; then
-     echo
-      if [ "$DOCKER_MODE" = 1 ]; then
-       echo "### Pausing Containers [$(date)]";
-       else
-       echo "### Stopping Containers [$(date)]";
-      fi
-     pause_services
+      echo
+      pause_services
+      echo
     fi
   fi
 
@@ -183,11 +179,9 @@ function main(){
   # CHK 1 - if files have changed
   if [ "$DEL_COUNT" -gt 0 ] || [ "$ADD_COUNT" -gt 0 ] || [ "$MOVE_COUNT" -gt 0 ] || [ "$COPY_COUNT" -gt 0 ] || [ "$UPDATE_COUNT" -gt 0 ]; then
     chk_del
-
     if [ "$CHK_FAIL" -eq 0 ]; then
       chk_updated
     fi
-
     if [ "$CHK_FAIL" -eq 1 ]; then
       chk_sync_warn
     fi
@@ -314,21 +308,17 @@ function main(){
    for DRIVE in $(lsblk -d -o name | tail -n +2)
      do
        if [[ $(smartctl -a /dev/"$DRIVE" | grep 'Rotation Rate' | grep rpm) ]]; then
-         echo "spinning down /dev/$DRIVE"
-         hd-idle -t /dev/"$DRIVE"
+          echo "spinning down /dev/$DRIVE"
+          hd-idle -t /dev/"$DRIVE"
        fi
      done
    fi
 
-  # Resume paused containers
+  # Resume Docker containers
   if [ "$SERVICES_STOPPED" -eq 1 ]; then
     echo
-      if [ "$DOCKER_MODE" = 1 ]; then
-        echo "### Resuming Containers [$(date)]";
-    else
-    echo "### Restarting Containers [$(date)]";
-      fi
     resume_services
+    echo
   fi
 
   # Custom Hook - After
@@ -341,24 +331,24 @@ function main(){
   mklog "INFO: Snapraid: all jobs ended."
 
   # all jobs done
-    # check snapraid output and build the message output
-    # if notification services are enabled, messages will be sent now
-    prepare_output
-    ELAPSED="$((SECONDS / 3600))hrs $(((SECONDS / 60) % 60))min $((SECONDS % 60))sec"
-    echo "----------------------------------------"
-    echo "## Total time elapsed for SnapRAID: $ELAPSED"
-    mklog "INFO: Total time elapsed for SnapRAID: $ELAPSED"
-    # if email or hook service are enabled, will be sent now
-    if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ]; then
-      # Add a topline to email body and send a long mail
-      sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
-      if [ "$VERBOSITY" -eq 1 ]; then
-        send_mail < "$TMP_OUTPUT"
-      else
+  # check snapraid output and build the message output
+  # if notification services are enabled, messages will be sent now
+  prepare_output
+  ELAPSED="$((SECONDS / 3600))hrs $(((SECONDS / 60) % 60))min $((SECONDS % 60))sec"
+  echo "----------------------------------------"
+  echo "## Total time elapsed for SnapRAID: $ELAPSED"
+  mklog "INFO: Total time elapsed for SnapRAID: $ELAPSED"
+  # if email or hook service are enabled, will be sent now
+  if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ]; then
+    # Add a topline to email body and send a long mail
+    sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
+    if [ "$VERBOSITY" -eq 1 ]; then
+      send_mail < "$TMP_OUTPUT"
+    else
       # or send a short mail
       trim_log < "$TMP_OUTPUT" | send_mail
-      fi
     fi
+  fi
 
   # Save and rotate logs if enabled
   if [ "$RETENTION_DAYS" -gt 0 ]; then
@@ -414,7 +404,7 @@ function sanity_check() {
         trim_log < "$TMP_OUTPUT" | send_mail
       fi
     exit 1;
-   fi
+    fi
   done
   echo "All content files found."
   mklog "INFO: All content files found."
@@ -461,14 +451,14 @@ function chk_del(){
     fi
   else
     if [ "$RETENTION_DAYS" -gt 0 ]; then
-     echo "**WARNING!** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
-     echo "For more information, please check the DIFF ouput saved in $SNAPRAID_LOG_DIR."
-     mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
-     CHK_FAIL=1
+      echo "**WARNING!** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+      echo "For more information, please check the DIFF ouput saved in $SNAPRAID_LOG_DIR."
+      mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+      CHK_FAIL=1
     else
-     echo "**WARNING!** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
-     mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
-     CHK_FAIL=1
+      echo "**WARNING!** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+      mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
+      CHK_FAIL=1
     fi
   fi
 }
@@ -484,14 +474,14 @@ function chk_updated(){
     fi
   else
     if [ "$RETENTION_DAYS" -gt 0 ]; then
-     echo "**WARNING!** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
-     echo "For more information, please check the DIFF ouput saved in $SNAPRAID_LOG_DIR."
-     mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
-     CHK_FAIL=1
+      echo "**WARNING!** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+      echo "For more information, please check the DIFF ouput saved in $SNAPRAID_LOG_DIR."
+      mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+      CHK_FAIL=1
     else
-     echo "**WARNING!** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
-     mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
-     CHK_FAIL=1
+      echo "**WARNING!** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+      mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
+      CHK_FAIL=1
     fi
   fi
 }
@@ -571,19 +561,19 @@ function chk_zero(){
 }
 
 function chk_scrub_settings(){
-    if [ "$SCRUB_DELAYED_RUN" -gt 0 ]; then
+  if [ "$SCRUB_DELAYED_RUN" -gt 0 ]; then
     echo "Delayed scrub is enabled."
     mklog "INFO: Delayed scrub is enabled.."
   fi
 
-    local scrub_count
+  local scrub_count
   scrub_count=$(sed '/^[0-9]*$/!d' "$SCRUB_COUNT_FILE" 2>/dev/null)
   # zero if file does not exist or did not contain a number
   : "${scrub_count:=0}"
 
-    if [ "$scrub_count" -ge "$SCRUB_DELAYED_RUN" ]; then
-    # Run a scrub job. if the warn count is zero it means the scrub was already
-    # forced, do not output a dumb message and continue with the scrub job.
+  if [ "$scrub_count" -ge "$SCRUB_DELAYED_RUN" ]; then
+  # Run a scrub job. if the warn count is zero it means the scrub was already
+  # forced, do not output a dumb message and continue with the scrub job.
     if [ "$scrub_count" -eq 0 ]; then
       echo
       run_scrub
@@ -607,7 +597,7 @@ function chk_scrub_settings(){
       echo "$((SCRUB_DELAYED_RUN - scrub_count)) runs until the next scrub. **NOT** proceeding with SCRUB job. [$(date)]"
       mklog "INFO: $((SCRUB_DELAYED_RUN - scrub_count)) runs until the next scrub. **NOT** proceeding with SCRUB job. [$(date)]"
     fi
-    fi
+  fi
 }
 
 function run_scrub(){
@@ -644,98 +634,90 @@ function run_scrub(){
 function service_array_setup() {
   # check if container names are set correctly
   if [ -z "$SERVICES" ] && [ -z "$DOCKER_HOST_SERVICES" ]; then
-   echo "Please configure Containers. Unable to manage containers."
-   ARRAY_VALIDATED=NO
+    echo "Please configure Containers. Unable to manage containers."
+    ARRAY_VALIDATED=NO
   else
-   echo "Docker containers management is enabled."
-   ARRAY_VALIDATED=YES
+    echo "Docker containers management is enabled."
+    ARRAY_VALIDATED=YES
   fi
 
   # check what docker mode is set
   if [ "$DOCKER_MODE" = 1 ]; then
-   DOCKER_CMD1=pause
-   DOCKER_CMD2=unpause
-   DOCKERCMD_VALIDATED=YES
+    DOCKER_CMD1=pause
+    DOCKER_CMD1_LOG="Pausing"
+    DOCKER_CMD2=unpause
+    DOCKER_CMD2_LOG="Unpausing"
+    DOCKERCMD_VALIDATED=YES
   elif [ "$DOCKER_MODE" = 2 ]; then
-   DOCKER_CMD1=stop
-   DOCKER_CMD2=start
-   DOCKERCMD_VALIDATED=YES
+    DOCKER_CMD1=stop
+    DOCKER_CMD1_LOG="Stopping"
+    DOCKER_CMD2=start
+    DOCKER_CMD2_LOG="Starting"
+    DOCKERCMD_VALIDATED=YES
   else
-   echo "Please check your command configuration. Unable to manage containers."
-   DOCKERCMD_VALIDATED=NO
+    echo "Please check your command configuration. Unable to manage containers."
+    DOCKERCMD_VALIDATED=NO
   fi
 
   # validate docker configuration
   if [ "$ARRAY_VALIDATED" = YES ] && [ "$DOCKERCMD_VALIDATED" = YES ]; then
-   DOCKERALLOK=YES
+    DOCKERALLOK=YES
   else
-   DOCKERALLOK=NO
+    DOCKERALLOK=NO
   fi
 }
 
 function pause_services(){
+  echo "### $DOCKER_CMD1_LOG Containers [$(date)]";
   if [ "$DOCKER_LOCAL" -eq 1 ]; then
-    if [ "$DOCKER_MODE" = 1 ]; then
-      echo "Pausing Local Container(s)";
-    else
-      echo "Stopping Local Container(s)";
-    fi
+    echo "$DOCKER_CMD1_LOG Local Container(s)";
     docker $DOCKER_CMD1 $SERVICES
   fi
   if [ "$DOCKER_REMOTE" -eq 1 ]; then
+    IFS=':, '
     for (( i=0; i < "${#DOCKER_HOST_SERVICES[@]}"; i++ )); do
       # delete previous array/list (this is crucial!)
       unset tmpArray
-      IFS=':, ' read -r -a tmpArray <<< "${DOCKER_HOST_SERVICES[i]}"
+      read -r -a tmpArray <<< "${DOCKER_HOST_SERVICES[i]}"
       REMOTE_HOST="${tmpArray[0]}"
       REMOTE_SERVICES=""
       for (( j=1; j < "${#tmpArray[@]}"; j++ )); do
         REMOTE_SERVICES="$REMOTE_SERVICES${tmpArray[j]} "
       done
-      if [ "$DOCKER_MODE" = 1 ]; then
-        echo "Pausing Container(s) on $REMOTE_HOST";
-      else
-        echo "Stopping Container(s) on $REMOTE_HOST";
-      fi
+      echo "$DOCKER_CMD1_LOG Container(s) on $REMOTE_HOST";
       ssh "$DOCKER_USER"@"$REMOTE_HOST" docker "$DOCKER_CMD1" "$REMOTE_SERVICES"
       sleep "$DOCKER_DELAY"
     done
+    unset IFS
   fi
   SERVICES_STOPPED=1
-  unset IFS
 }
 
 function resume_services(){
   if [ "$SERVICES_STOPPED" -eq 1 ]; then
+    echo "### $DOCKER_CMD2_LOG Containers [$(date)]";
     if [ "$DOCKER_LOCAL" -eq 1 ]; then
-      if [ "$DOCKER_MODE" = 1 ]; then
-        echo "Resuming Local Container(s)";
-      else
-        echo "Restarting Local Container(s)";
-      fi
+      echo "$DOCKER_CMD2_LOG Local Container(s)";
       docker $DOCKER_CMD2 $SERVICES
     fi
     if [ "$DOCKER_REMOTE" -eq 1 ]; then
+      IFS=':, '
       for (( i=0; i < "${#DOCKER_HOST_SERVICES[@]}"; i++ )); do
         # delete previous array/list (this is crucial!)
         unset tmpArray
-        IFS=':, ' read -r -a tmpArray <<< "${DOCKER_HOST_SERVICES[i]}"
+        read -r -a tmpArray <<< "${DOCKER_HOST_SERVICES[i]}"
         REMOTE_HOST="${tmpArray[0]}"
         REMOTE_SERVICES=""
         for (( j=1; j < "${#tmpArray[@]}"; j++ )); do
           REMOTE_SERVICES="$REMOTE_SERVICES${tmpArray[j]} "
         done
-        if [ "$DOCKER_MODE" = 1 ]; then
-          echo "Resuming Container(s) on $REMOTE_HOST";
-        else
-          echo "Restarting Container(s) on $REMOTE_HOST";
-        fi
+        echo "$DOCKER_CMD2_LOG Container(s) on $REMOTE_HOST";
         ssh "$DOCKER_USER"@"$REMOTE_HOST" docker "$DOCKER_CMD2" "$REMOTE_SERVICES"
         sleep "$DOCKER_DELAY"
       done
+      unset IFS
     fi
     SERVICES_STOPPED=0
-    unset IFS
   fi
 }
 
@@ -815,37 +797,37 @@ SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [
 
 function notify_success(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/0 --data-raw "$NOTIFY_OUTPUT"
+    curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/0 --data-raw "$NOTIFY_OUTPUT"
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-   -H 'Content-Type: application/json' \
-   -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
-   https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
+    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
+    https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   if [ "$DISCORD" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-   -H 'Content-Type: application/json' \
-   -d '{"content": "'"$SUBJECT"'"}' \
-   "$DISCORD_WEBHOOK_URL"
+    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{"content": "'"$SUBJECT"'"}' \
+    "$DISCORD_WEBHOOK_URL"
   fi
   }
 
 function notify_warning(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
+    curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-   -H 'Content-Type: application/json' \
-   -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
-   https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
+    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
+    https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   if [ "$DISCORD" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-   -H 'Content-Type: application/json' \
-   -d '{"content": "'"$SUBJECT"'"}' \
-   "$DISCORD_WEBHOOK_URL"
+    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+    -H 'Content-Type: application/json' \
+    -d '{"content": "'"$SUBJECT"'"}' \
+    "$DISCORD_WEBHOOK_URL"
   fi
   }
 
