@@ -8,7 +8,7 @@
 ######################
 #   CONFIG VARIABLES #
 ######################
-SNAPSCRIPTVERSION="3.3DEV2"
+SNAPSCRIPTVERSION="3.3DEV3"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -78,6 +78,22 @@ function main(){
      -d '{"content": "SnapRAID Script Job started"}' \
      "$DISCORD_WEBHOOK_URL"
     fi
+  fi
+
+  ### Check if SnapRAID is already running
+  if pgrep -x snapraid >/dev/null; then
+    echo "SnapRAID is already running. Please check the status of the previous SnapRAID job before running this script again."
+      mklog "WARN: SnapRAID is already running. Please check the status of the previous SnapRAID job before running this script again."
+      SUBJECT="[WARNING] - SnapRAID already running $EMAIL_SUBJECT_PREFIX"
+      NOTIFY_OUTPUT="$SUBJECT"
+      notify_warning
+      if [ "$EMAIL_ADDRESS" ]; then
+        trim_log < "$TMP_OUTPUT" | send_mail
+      fi
+      exit 1;
+  else
+      echo "SnapRAID is not running, proceeding."
+    mklog "INFO: SnapRAID is not running, proceeding."
   fi
 
   if [ "$RETENTION_DAYS" -gt 0 ]; then
