@@ -45,7 +45,7 @@ Contributions are welcome!
 ### Additional Information
 - Docker container management
 	- Manage containers before SnapRAID operations and restore them when finished. It avoids nasty errors aboud data being written during SnapRAID sync.
-	- Support for local or remote Docker instances. Also manage multiple remote Docker instances at once. 
+	- Support for local and remote Docker instances. Also manage multiple remote Docker instances at once. 
 		- **Note:** Remote Docker instances require SSH passwordless access.
 	- You can either choose to pause or stop your containers.
 - Custom Hooks 
@@ -93,7 +93,6 @@ If you don't know what to do, I recommend using the default values and see how i
 	- A list of containers you want to be interrupted before running actions and restored when completed.
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
    	- Docker remote - if docker is running on a remote machine
-   	   - Docker remote action delay - Set by default to 10 seconds, reduces errors when using remote docker
 - Custom Hooks
 	- Commands or scripts to be run before and after SnapRAID operations.
 	- Option to display friendly name to in the email output
