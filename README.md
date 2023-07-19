@@ -50,6 +50,8 @@ Contributions are welcome!
 	- You can either choose to pause or stop your containers.
 - Custom Hooks 
 	- Define shell commands or scripts to run before and after SnapRAID operations.
+- Multiple configuration files
+  	- Use a different configuration file when running the script instead of the default config
 - 3rd Party notification support
 	- [Healthchecks.io](https://healthchecks.io), Telegram and Discord can be used to track script execution time, status and promptly alert about errors.
 	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or even another mail binary
@@ -93,6 +95,9 @@ If you don't know what to do, I recommend using the default values and see how i
 	- A list of containers you want to be interrupted before running actions and restored when completed.
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
    	- Docker remote - if docker is running on a remote machine
+- Multiple Configuration files
+  	- By default the script will use the predefined config file `script-config.sh` that must be placed in the same folder
+  	- You can specify another file when running the script like `snapraid-aio-script.sh /home/alternate_config.sh`
 - Custom Hooks
 	- Commands or scripts to be run before and after SnapRAID operations.
 	- Option to display friendly name to in the email output
@@ -275,7 +280,9 @@ _Optional: install markdown `apt install python-markdown` and curl `apt install 
    - When you see  `""` or `''` in some options, do not remove these characters but just fill in your data.
    - If you want to spindown your disks, you need to install [hd-idle](https://github.com/adelolmo/hd-idle)
 6. Schedule the script execution. 
-   - I recommend running the script daily. 
+   - I recommend running the script daily.
+  
+**TIP**: You can create multiple schedules if you want to use a different config file for a specific need. Just append the config file path after the script, like `snapraid-aio-script.sh /home/alternate_config.sh`
 
 It is tested on OMV6, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
 
