@@ -58,7 +58,7 @@ function main(){
   echo "SnapRAID Script Job started [$(date)]"
   echo "Running SnapRAID version $SNAPRAIDVERSION"
   echo "SnapRAID AIO Script version $SNAPSCRIPTVERSION"
-  echo "Using configuration file: $CONFIG_FILE"											   
+  echo "Using configuration file: $CONFIG_FILE"
   echo "----------------------------------------"
   mklog "INFO: ----------------------------------------"
   mklog "INFO: SnapRAID Script Job started"
@@ -101,8 +101,8 @@ function main(){
 
   ### Check if SnapRAID is already running
   if pgrep -x snapraid >/dev/null; then
-    echo "SnapRAID is already running. Please check the status of the previous SnapRAID job before running this script again."
-      mklog "WARN: SnapRAID is already running. Please check the status of the previous SnapRAID job before running this script again."
+    echo "The script has detected SnapRAID is already running. Please check the status of the previous SnapRAID job before running this script again."
+      mklog "WARN: The script has detected SnapRAID is already running. Please check the status of the previous SnapRAID job before running this script again."
       SUBJECT="[WARNING] - SnapRAID already running $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
       notify_warning
@@ -117,28 +117,6 @@ function main(){
 
   if [ "$RETENTION_DAYS" -gt 0 ]; then
     echo "SnapRAID output retention is enabled. Detailed logs will be kept in $SNAPRAID_LOG_DIR for $RETENTION_DAYS days."
-  fi
-
-  # Check if script configuration file has been found, if not send a message
-  # to syslog and exit
-  if [ ! -f "$CONFIG_FILE" ]; then
-    echo "Script configuration file not found! The script cannot be run! Please check and try again!"
-    mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
-    exit 1;
-  # check if the config file has the correct version
-  elif [ "$CONFIG_VERSION" != "$SNAPSCRIPTVERSION" ]; then
-    echo "Please update your config file to the latest version. The current file is not compatible with this script!"
-    mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
-    SUBJECT="[WARNING] - Configuration Error $EMAIL_SUBJECT_PREFIX"
-    NOTIFY_OUTPUT="$SUBJECT"
-    notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
-    exit 1;
-  else
-    echo "Configuration file found."
-    mklog "INFO: Script configuration file found."
   fi
 
   # install markdown if not found
