@@ -6,9 +6,9 @@
 ########################################################################
 
 ######################
-#   CONFIG VARIABLES #
+#  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.3DEV3"
+SNAPSCRIPTVERSION="3.3DEV4"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -16,14 +16,32 @@ SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
 # import the config file for this script which contain user configuration
-CONFIG_FILE=$CURRENT_DIR/script-config.sh
+CONFIG_FILE=${1:-$CURRENT_DIR/script-config.sh}
 #shellcheck source=script-config.sh
 source "$CONFIG_FILE"
 
-########################################################################
+# Check if script configuration file has been found, if not send a message
+# to syslog and exit
+  if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Script configuration file not found! The script cannot be run! Please check and try again!"
+    mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
+    exit 1;
+  # check if the config file has the correct version
+  elif [ "$CONFIG_VERSION" != "$SNAPSCRIPTVERSION" ]; then
+    echo "Please update your config file to the latest version. The current file is not compatible with this script!"
+    mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
+    SUBJECT="[WARNING] - Configuration Error $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT"
+    notify_warning
+    if [ "$EMAIL_ADDRESS" ]; then
+      trim_log < "$TMP_OUTPUT" | send_mail
+    fi
+    exit 1;
+  fi
 
 SYNC_MARKER="SYNC -"
 SCRUB_MARKER="SCRUB -"
+
 
 ####################
 #   MAIN SCRIPT    #
@@ -40,12 +58,13 @@ function main(){
   echo "SnapRAID Script Job started [$(date)]"
   echo "Running SnapRAID version $SNAPRAIDVERSION"
   echo "SnapRAID AIO Script version $SNAPSCRIPTVERSION"
+  echo "Using configuration file: $CONFIG_FILE"											   
   echo "----------------------------------------"
   mklog "INFO: ----------------------------------------"
   mklog "INFO: SnapRAID Script Job started"
   mklog "INFO: Running SnapRAID version $SNAPRAIDVERSION"
   mklog "INFO: SnapRAID Script version $SNAPSCRIPTVERSION"
-
+  mklog "INFO: Using configuration file: $CONFIG_FILE"
 
   echo "## Preprocessing"
 
