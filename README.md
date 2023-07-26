@@ -54,7 +54,8 @@ Contributions are welcome!
   	- Use a different configuration file when running the script instead of the default config
 - 3rd Party notification support
 	- [Healthchecks.io](https://healthchecks.io), Telegram and Discord can be used to track script execution time, status and promptly alert about errors.
-	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or even another mail binary
+   	- You can also get notified with the `Snapraid SMART log` and `Snapraid Status`
+	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or another mail binary
 - Important messages are also sent to the system log.
 - Emails are still the best place to get detailed but readable information.
 
@@ -76,8 +77,10 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Scrub new data - scrub the data that was just added by the sync.
 - Pre-hashing - enabled by default. Mitigate the lack of ECC memory, reading data twice to avoid silent read errors.
 - Force zero size sync -  disabled by default. Forces the operation of syncing a file with zero size that before was not. Use with caution!
-- Snapraid Status - shows the status of the array, disabled by default.
+- Snapraid Status - disabled by default. Shows the status of the array.
+	- This info can also be sent to Telegram or Discord
 - SMART Log - enabled by default. A SnapRAID report for disks health status.
+  	- This info can also be sent to Telegram or Discord
 - Verbosity option - disabled by default. When enabled, includes the TOUCH and DIFF commands output. Please note email will be huge and mostly unreadable.
 - SnapRAID Output (log) retention - disabled by default (log is overriden every run)
 	- Detailed output retention for each run
