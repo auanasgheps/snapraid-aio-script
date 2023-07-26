@@ -1,5 +1,5 @@
 # Snapraid AIO Script
-The definitive all-in-one [SnapRAID](https://github.com/amadvance/snapraid) script. I hope you'll agree :).
+The definitive all-in-one [SnapRAID](https://github.com/amadvance/snapraid) script on Linux. I hope you'll agree :).
 
 There are many SnapRAID scripts out there, but none has the features I want. So I made my own, inspired by existing solutions.
 
