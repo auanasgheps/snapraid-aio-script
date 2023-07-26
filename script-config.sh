@@ -1,5 +1,5 @@
 #!/bin/bash
-CONFIG_VERSION=3.3 #-DEV2
+CONFIG_VERSION="3.3" #DEV5
 ######################
 #   USER VARIABLES   #
 ######################
@@ -105,10 +105,6 @@ FORCE_ZERO=0
 # hd-idle is required and must be already configured.
 SPINDOWN=0
 
-# Set the option to log SMART info collected by SnapRAID. 1 to enable and any
-# other value to disable.
-SMART_LOG=1
-
 # Increase verbosity of the email output. NOT RECOMMENDED!
 # If set to 1, TOUCH and DIFF outputs will be kept in the email, producing
 # a mostly unreadable email. You can always check TOUCH and DIFF outputs
@@ -125,9 +121,17 @@ VERBOSITY=0
 RETENTION_DAYS=0
 SNAPRAID_LOG_DIR="$HOME"
 
+# Set the option to log SMART info collected by SnapRAID. 
+# Use SMART_LOG_NOTIFY to send the output to Telegram/Discord
+# 1 to enable, any other value to disable.
+SMART_LOG=1
+SMART_LOG_NOTIFY=0
+
 # Run 'snapraid status' command to show array general information.
+# Use SNAP_STATUS_NOTIFY to send the output to Telegram/Discord
 # 1 to enable, any other value to disable.
 SNAP_STATUS=0
+SNAP_STATUS_NOTIFY=0
 
 ### DOCKER CONTAINERS MANAGEMENT ###
 
