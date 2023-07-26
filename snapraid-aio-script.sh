@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.3" #DEV4
+SNAPSCRIPTVERSION="3.3" #DEV5
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -276,47 +276,26 @@ function main(){
   echo "----------------------------------------"
   echo "## Postprocessing"
 
-  # Show SnapRAID SMART info if enabled
-  if [ "$SMART_LOG" -eq 1 ]; then
-    echo "### SnapRAID Smart"
-    echo "\`\`\`"
-    $SNAPRAID_BIN smart
-    close_output_and_wait
-    output_to_file_screen
-    echo "\`\`\`"
-  fi
 
-  # Show SnapRAID Status information if enabled
-  if [ "$SNAP_STATUS" -eq 1 ]; then
-    echo "### SnapRAID Status"
-    echo "\`\`\`"
-    $SNAPRAID_BIN status
-    close_output_and_wait
-    output_to_file_screen
-    echo "\`\`\`"
-  fi
+# Show SnapRAID SMART info and send notification
+if [ "$SMART_LOG" -eq 1 ]; then
+  show_snapraid_info "$SNAPRAID_BIN smart" "### SnapRAID Smart"
+   if [ "$SMART_LOG_NOTIFY" -eq 1 ]; then
+    notify_snapraid_info
+   fi
+fi
 
-  # Spinning down disks (Method 1: snapraid - preferred)
-  # if [ "$SPINDOWN" -eq 1 ]; then
-  #  echo "### SnapRAID Spindown"
-  #  echo "\`\`\`"
-  #  $SNAPRAID_BIN down
-  #  close_output_and_wait
-  #  output_to_file_screen
-  #  echo "\`\`\`"
-  #fi
+# Show SnapRAID Status information and send notification
+if [ "$SNAP_STATUS" -eq 1 ]; then
+  show_snapraid_info "$SNAPRAID_BIN status" "### SnapRAID Status"
+   if [ "$SNAP_STATUS_NOTIFY" -eq 1 ]; then
+    notify_snapraid_info
+   fi
+fi
 
-  # Spinning down disks (Method 2: hdparm - spins down all rotational devices)
-  # if [ $SPINDOWN -eq 1 ]; then
-  # for DRIVE in `lsblk -d -o name | tail -n +2`
-  #   do
-  #     if [[ `smartctl -a /dev/$DRIVE | grep 'Rotation Rate' | grep rpm` ]]; then
-  #       hdparm -Y /dev/$DRIVE
-  #     fi
-  #   done
-  # fi
+# Spin down disks (Method hd-idle - spins down all rotational devices)
+# NOTE: Uses hd-idle rewrite
 
-# Spin down disks (Method 3: hd-idle - spins down all rotational devices)
   if [ "$SPINDOWN" -eq 1 ]; then
    for DRIVE in $(lsblk -d -o name | tail -n +2)
      do
@@ -759,7 +738,7 @@ This is a severe warning, check your logs immediately."
 This is a severe warning, check your logs immediately.
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
     notify_warning
-# other warnings, less critical
+# minor warnings, less critical
   elif [ "$CHK_FAIL" -eq 1 ]; then
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
       MSG="Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
@@ -799,7 +778,7 @@ SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning
-# good run
+# else a good run, no warnings
   else
     SUBJECT="[COMPLETED] $JOBS_DONE Jobs $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT
@@ -807,6 +786,8 @@ SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [
     notify_success
   fi
 }
+
+### Notify functions
 
 function notify_success(){
   if [ "$HEALTHCHECKS" -eq 1 ]; then
@@ -819,9 +800,10 @@ function notify_success(){
     https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   if [ "$DISCORD" -eq 1 ]; then
+  DISCORD_SUBJECT=$(echo "$NOTIFY_OUTPUT" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
     curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
     -H 'Content-Type: application/json' \
-    -d '{"content": "'"$SUBJECT"'"}' \
+    -d '{"content": "'"$DISCORD_SUBJECT"'"}' \
     "$DISCORD_WEBHOOK_URL"
   fi
   }
@@ -837,13 +819,42 @@ function notify_warning(){
     https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   if [ "$DISCORD" -eq 1 ]; then
+  DISCORD_SUBJECT=$(echo "$NOTIFY_OUTPUT" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
     curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
     -H 'Content-Type: application/json' \
-    -d '{"content": "'"$SUBJECT"'"}' \
+    -d '{"content": "'"$DISCORD_SUBJECT"'"}' \
     "$DISCORD_WEBHOOK_URL"
   fi
   }
-
+  
+function show_snapraid_info() {
+  local command_output=$($1)
+  echo "$2"
+  echo "\`\`\`"
+  echo "$command_output"
+  close_output_and_wait
+  output_to_file_screen
+  echo "\`\`\`"
+  INFO_MESSAGE="$2 - \`\`\`$command_output\`\`\`"
+  INFO_MESSAGE_DISCORD="$2 - $command_output"
+  }
+  
+ function notify_snapraid_info() { 
+  if [ "$TELEGRAM" -eq 1 ]; then
+   curl -fsS -m 5 --retry 3 -o /dev/null -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+   -d chat_id="$TELEGRAM_CHAT_ID" \
+   -d text="$INFO_MESSAGE" \
+   -d parse_mode="markdown"
+  fi 
+  if [ "$DISCORD" -eq 1 ]; then
+  INFO_MESSAGE_ESCAPED=$(echo "$INFO_MESSAGE_DISCORD" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
+   curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+   -H 'Content-Type: application/json' \
+   -d "{\"content\": \"\`\`\`\\n${INFO_MESSAGE_ESCAPED}\\n\`\`\`\"}" \
+   "$DISCORD_WEBHOOK_URL"
+  fi
+}
+  
 # Trim the log file read from stdin.
 function trim_log(){
   sed '
