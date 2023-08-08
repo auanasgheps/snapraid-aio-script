@@ -14,6 +14,12 @@ CONFIG_VERSION="3.3" #DEV5
 EMAIL_ADDRESS="destination-email-goes-here"
 FROM_EMAIL_ADDRESS="sender-email-goes-here"
 
+# Check for script updates.
+# On each run, the script will check via GitHub if there's an update, and will
+# inform the user via the configured notification systems.
+# 1 to enable, 0 to disable.
+CHECK_UPDATES=1
+
 # Use Healthchecks.io to report script errors. Set to 1 to enable.
 # Please note that every "WARNING" will be reported as failure.
 # When enabled, enter your Healthchecks UUID (not the full URL).
