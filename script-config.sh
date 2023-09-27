@@ -69,13 +69,14 @@ UP_THRESHOLD=500
 # ^(?!.*(?:$IGNORE_PATTERN).*$).*$
 # It will exclude any file which includes the pattern IGNORE_PATTERN.
 # Examples:
-# IGNORE_PATTERN=Hello -> all files including "Hello" will be ignored
-# IGNORE_PATTERN=Backup/kopia -> all files including "Backup/kopia" will be ignored
+# IGNORE_PATTERN="Hello" -> all files including Hello will be ignored
+# IGNORE_PATTERN="Backup/kopia" -> all files including Backup/kopia will be ignored
 #           in this case it will be all files containing any path with Backup/kopia
-# IGNORE_PATTERN=(Backup/kopia)|(Hello) -> all files containing either "Backup/kopia"
-#        or "Hello" will be ignored
+# IGNORE_PATTERN="(Backup/kopia)|(Hello)" -> all files containing either Backup/kopia
+#        or Hello will be ignored
 # This is probably a rather strange approach to file filtering, please test
-# your pattern using https://regex101.com/r/Igs4kX/1
+# your pattern using https://regex101.com/r/Igs4kX/1 (the quotes used in the
+# configuration are not part of the pattern)
 IGNORE_PATTERN=
 
 # Allow a sync that would otherwise violate the delete threshold, but only
