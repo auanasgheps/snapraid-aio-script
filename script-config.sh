@@ -150,14 +150,20 @@ MANAGE_SERVICES=0
 # This option does not have any effect if MANAGE_SERVICES is set to 0
 DOCKER_MODE=1
 
-# Containers to manage (separated with spaces). Please ensure these containers
+# Manage Docker containers running on the same host. 
+# Set to 1 to enable, 0 to disable it.
+# Enter containers to be managed separated with spaces. Please ensure these containers
 # are always running before executing the script, otherwise an error will be logged.
+# Example: 
+# SERVICES=('syncthing kopia nextcloud immich')
+
 DOCKER_LOCAL=0
 SERVICES=('container1 container2 container3')
 
-# Manage docker containers running on a remote machine. To use this feature,
+# Manage Docker containers running on a remote machine. To use this feature,
 # you must setup passwordless ssh access between snapRAID host and Docker host.
-# Set to 1 to enable, then enter Docker host SSH user and machine IP or hostname.
+# Set to 1 to enabl management of Docker containers running eslewhere, then enter 
+# Docker host SSH user and machine IP or hostname.
 # You can manage multiple remote Docker hosts.
 # Reference:
 # ('HOSTIP1:container1 container2 container3' 'HOSTIP2:container1 container2 container3 container4')
