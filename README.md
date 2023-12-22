@@ -268,9 +268,10 @@ Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 1
 ```
 
 # Requirements
-- [`markdown`](https://packages.debian.org/buster/python3-markdown) to format emails - will be installed if not found
+- [`markdown`](https://packages.debian.org/bullseye/python3-markdown) to format emails - will be installed if not found
 - `curl` to use Healhchecks - will be installed if not found
 - `hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle), installation instructions [below](#installing-hd-idle-for-automatic-disk-spindown)
+- [`jq`](https://packages.debian.org/bullseye/jq) - used to send discord notifications, is a lightweight and flexible command-line JSON processor
 
 # Installation
 
