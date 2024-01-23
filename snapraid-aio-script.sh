@@ -344,7 +344,7 @@ fi
   echo "## Total time elapsed for SnapRAID: $ELAPSED"
   mklog "INFO: Total time elapsed for SnapRAID: $ELAPSED"
   # if email or hook service are enabled, will be sent now
-  if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ]; then
+  if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ] || [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ]; then
     # Add a topline to email body and send a long mail
     sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
     if [ "$VERBOSITY" -eq 1 ]; then
