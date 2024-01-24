@@ -268,16 +268,22 @@ Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 1
 ```
 
 # Requirements
-- [`markdown`](https://packages.debian.org/bullseye/python3-markdown) to format emails - will be installed if not found
+
+If you are running a Debian based distro (with `apt` package manager) the script will automatically install these dependencies for you.
+- [`python3-markdown`](https://packages.debian.org/bullseye/python3-markdown) to format emails - will be installed if not found
 - `curl` to use Healhchecks - will be installed if not found
-- `hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle), installation instructions [below](#installing-hd-idle-for-automatic-disk-spindown)
 - [`jq`](https://packages.debian.org/bullseye/jq) - used to send discord notifications, is a lightweight and flexible command-line JSON processor
+- [`bc`](https://packages.debian.org/bullseye/bc) - used for for floating-point comparisons
+
+
+Dependencies that require manual installation:
+- `hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle), installation instructions [below](#installing-hd-idle-for-automatic-disk-spindown)
 
 # Installation
 
-_Optional: install markdown `apt install python-markdown` and curl `apt install curl` . You can skip this step since the script will try to install missing packages for you._
 
-1. Download the latest version from [Releases](https://github.com/auanasgheps/snapraid-aio-script/releases) 
+1. Install the packages listed in the Requirements section if you're not running a distro with `apt` package manager
+2. Download the latest version from [Releases](https://github.com/auanasgheps/snapraid-aio-script/releases) 
 3. Extract the archive wherever you prefer 
    - e.g. `/usr/sbin/snapraid`
 4. Give executable rights to the main script 
