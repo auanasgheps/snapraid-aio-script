@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.3" #DEV7
+SNAPSCRIPTVERSION="3.3" #DEV8
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -68,16 +68,17 @@ function main(){
 
   echo "## Preprocessing"
 
+  # Check for basic dependencies
+  check_and_install python3-markdown
+  check_and_install bc
+
+
   # Initialize notification
   if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ]; then
-    # install curl if not found
-    if [ "$(dpkg-query -W -f='${Status}' curl 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
-      echo "**Curl has not been found and will be installed.**"
-      mklog "WARN: Curl has not been found and will be installed."
-      # super silent and secret install command
-      export DEBIAN_FRONTEND=noninteractive
-      apt-get install -qq -o=Dpkg::Use-Pty=0 curl;
-    fi
+  # Check for notification dependencies
+  check_and_install curl
+  check_and_install jq
+   
     # invoke notification services if configured
     if [ "$HEALTHCHECKS" -eq 1 ]; then
       echo "Healthchecks.io notification is enabled. Notifications sent to $HEALTHCHECKS_URL."
@@ -950,6 +951,16 @@ function mklog_noconfig() {
     LOGMESSAGE=${BASH_REMATCH[2]} # the Log-Message
   }
   echo "$(date '+[%Y-%m-%d %H:%M:%S]') $(basename "$0"): $PRIORITY: '$LOGMESSAGE'" >> "/var/log/snapraid.log"
+}
+
+# Function to check and install packages if not found
+check_and_install() {
+  PACKAGE_NAME=$1
+  if [ "$(dpkg-query -W -f='${Status}' $PACKAGE_NAME 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
+    echo "$package_name has not been found and will be installed..."
+    sudo apt-get install -y $PACKAGE_NAME > /dev/null 2>&1
+    echo "$PACKAGE_NAME installed successfully."
+  fi
 }
 
 # Set TRAP
