@@ -155,10 +155,10 @@ DOCKER_MODE=1
 # Enter containers to be managed separated with spaces. Please ensure these containers
 # are always running before executing the script, otherwise an error will be logged.
 # Example: 
-# SERVICES=('syncthing kopia nextcloud immich')
+# SERVICES="syncthing kopia nextcloud $(docker container ls -q --filter name=immich*)"
 
 DOCKER_LOCAL=0
-SERVICES=('container1 container2 container3')
+SERVICES="container1 container2 container3"
 
 # Manage Docker containers running on a remote machine. To use this feature,
 # you must setup passwordless ssh access between snapRAID host and Docker host.
