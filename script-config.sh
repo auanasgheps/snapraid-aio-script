@@ -162,7 +162,7 @@ SERVICES="container1 container2 container3"
 
 # Manage Docker containers running on a remote machine. To use this feature,
 # you must setup passwordless ssh access between snapRAID host and Docker host.
-# Set to 1 to enabl management of Docker containers running eslewhere, then enter 
+# Set to 1 to enable management of Docker containers running eslewhere, then enter 
 # Docker host SSH user and machine IP or hostname.
 # You can manage multiple remote Docker hosts.
 # Reference:
