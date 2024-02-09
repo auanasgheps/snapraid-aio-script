@@ -172,7 +172,7 @@ function main(){
   echo "### SnapRAID DIFF [$(date)]"
   mklog "INFO: SnapRAID DIFF started"
   echo "\`\`\`"
-  $SNAPRAID_BIN diff
+  $SNAPRAID_BIN -c $SNAPRAID_CONF diff
   close_output_and_wait
   output_to_file_screen
   echo "\`\`\`"
@@ -226,13 +226,13 @@ function main(){
     mklog "INFO: SnapRAID SYNC Job started"
     echo "\`\`\`"
     if [ "$PREHASH" -eq 1 ] && [ "$FORCE_ZERO" -eq 1 ]; then
-      $SNAPRAID_BIN -h --force-zero -q sync
+      $SNAPRAID_BIN -c $SNAPRAID_CONF -h --force-zero -q sync
     elif [ "$PREHASH" -eq 1 ]; then
-      $SNAPRAID_BIN -h -q sync
+      $SNAPRAID_BIN -c $SNAPRAID_CONF -h -q sync
     elif [ "$FORCE_ZERO" -eq 1 ]; then
-      $SNAPRAID_BIN --force-zero -q sync
+      $SNAPRAID_BIN -c $SNAPRAID_CONF --force-zero -q sync
     else
-      $SNAPRAID_BIN -q sync
+      $SNAPRAID_BIN -c $SNAPRAID_CONF -q sync
     fi
     close_output_and_wait
     output_to_file_screen
@@ -293,7 +293,7 @@ function main(){
 
 # Show SnapRAID SMART info and send notification
 if [ "$SMART_LOG" -eq 1 ]; then
-  show_snapraid_info "$SNAPRAID_BIN smart" "### SnapRAID Smart"
+  show_snapraid_info "$SNAPRAID_BIN -c $SNAPRAID_CONF smart" "### SnapRAID Smart"
    if [ "$SMART_LOG_NOTIFY" -eq 1 ]; then
     notify_snapraid_info
    fi
@@ -301,7 +301,7 @@ fi
 
 # Show SnapRAID Status information and send notification
 if [ "$SNAP_STATUS" -eq 1 ]; then
-  show_snapraid_info "$SNAPRAID_BIN status" "### SnapRAID Status"
+  show_snapraid_info "$SNAPRAID_BIN -c $SNAPRAID_CONF status" "### SnapRAID Status"
    if [ "$SNAP_STATUS_NOTIFY" -eq 1 ]; then
     notify_snapraid_info
    fi
@@ -552,12 +552,12 @@ function chk_sync_warn(){
 function chk_zero(){
   echo "### SnapRAID TOUCH [$(date)]"
   echo "Checking for zero sub-second files."
-  TIMESTATUS=$($SNAPRAID_BIN status | grep 'You have [1-9][0-9]* files with zero sub-second timestamp\.' | sed 's/^You have/Found/g')
+  TIMESTATUS=$($SNAPRAID_BIN -c $SNAPRAID_CONF status | grep 'You have [1-9][0-9]* files with zero sub-second timestamp\.' | sed 's/^You have/Found/g')
   if [ -n "$TIMESTATUS" ]; then
     echo "$TIMESTATUS"
     echo "Running TOUCH job to timestamp. [$(date)]"
     echo "\`\`\`"
-    $SNAPRAID_BIN touch
+    $SNAPRAID_BIN -c $SNAPRAID_CONF touch
     close_output_and_wait
     output_to_file_screen
     echo "\`\`\`"
@@ -611,14 +611,14 @@ function run_scrub(){
   if [ "$SCRUB_NEW" -eq 1 ]; then
   echo "SCRUB New Blocks [$(date)]"
     echo "\`\`\`"
-    $SNAPRAID_BIN -p new -q scrub
+    $SNAPRAID_BIN -c $SNAPRAID_CONF -p new -q scrub
     close_output_and_wait
     output_to_file_screen
     echo "\`\`\`"
   fi
   echo "SCRUB Previous Blocks [$(date)]"
   echo "\`\`\`"
-  $SNAPRAID_BIN -p "$SCRUB_PERCENT" -o "$SCRUB_AGE" -q scrub
+  $SNAPRAID_BIN -c $SNAPRAID_CONF -p "$SCRUB_PERCENT" -o "$SCRUB_AGE" -q scrub
   close_output_and_wait
   output_to_file_screen
   echo "\`\`\`"
