@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.3" #DEV8
+SNAPSCRIPTVERSION="3.3" #DEV9
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -766,8 +766,9 @@ SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [
     fi
 
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 1 ]; then
+      if [ "$(echo "$ADD_DEL_THRESHOLD" == 0 | bc -l)" -eq 1 ]; then
       MSG="Forced sync with deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
-	    if [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
+	    elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
 		  MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD)"
 		fi
     fi
