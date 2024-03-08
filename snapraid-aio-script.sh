@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.3" #DEV9
+SNAPSCRIPTVERSION="3.3" #DEV10
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -118,15 +118,6 @@ function main(){
 
   if [ "$RETENTION_DAYS" -gt 0 ]; then
     echo "SnapRAID output retention is enabled. Detailed logs will be kept in $SNAPRAID_LOG_DIR for $RETENTION_DAYS days."
-  fi
-
-  # install markdown if not found
-  if [ "$(dpkg-query -W -f='${Status}' python3-markdown 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
-    echo "**Markdown has not been found and will be installed.**"
-    mklog "WARN: Markdown has not been found and will be installed."
-    # super silent and secret install command
-    export DEBIAN_FRONTEND=noninteractive
-    apt-get install -qq -o=Dpkg::Use-Pty=0 python3-markdown;
   fi
 
   # check for script updates
