@@ -124,7 +124,7 @@ function main(){
   if [ "$CHECK_UPDATES" -eq 1 ]; then
    remote_version=$(curl -fsS -m 5 --retry 3 https://raw.githubusercontent.com/auanasgheps/snapraid-aio-script/dev/version)
     if [[ "$remote_version" != "$SNAPSCRIPTVERSION" ]]; then
-     update_message="A newer version ($remote_version) is available! You can find more information by visiting https://github.com/auanasgheps/snapraid-aio-script/"
+     update_message="A newer version ($remote_version) is available! You can find more information by visiting https://github.com/auanasgheps/snapraid-aio-script/releases"
      echo "$update_message"
      mklog "WARN: $update_message"
      INFO_MESSAGE="$update_message"
@@ -949,7 +949,7 @@ function mklog_noconfig() {
 check_and_install() {
   PACKAGE_NAME=$1
   if [ "$(dpkg-query -W -f='${Status}' $PACKAGE_NAME 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
-    echo "$package_name has not been found and will be installed..."
+    echo "$PACKAGE_NAME has not been found and will be installed..."
     sudo apt-get install -y $PACKAGE_NAME > /dev/null 2>&1
     echo "$PACKAGE_NAME installed successfully."
   fi
