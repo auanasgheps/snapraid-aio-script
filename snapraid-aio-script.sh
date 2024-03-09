@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.3" #DEV10
+SNAPSCRIPTVERSION="3.3" #DEV11
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -132,6 +132,20 @@ function main(){
      notify_snapraid_info
     fi
   fi
+  
+  # Check if Snapraid configuration file has been found, if not, notify and exit
+  if [ ! -f "$SNAPRAID_CONF" ]; then
+    echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
+    mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
+	SUBJECT="[WARNING] - SnapRAID configuration file not found!"
+    FORMATTED_CONF="\`$SNAPRAID_CONF\`"
+	NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
+    notify_warning
+    if [ "$EMAIL_ADDRESS" ]; then
+      trim_log < "$TMP_OUTPUT" | send_mail
+    fi
+    exit 1;
+	fi
   
   # sanity check first to make sure we can access the content and parity files
   mklog "INFO: Checking SnapRAID disks"
