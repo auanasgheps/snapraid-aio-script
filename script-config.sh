@@ -139,6 +139,13 @@ SMART_LOG_NOTIFY=0
 SNAP_STATUS=0
 SNAP_STATUS_NOTIFY=0
 
+# SnapRAID configuration file location. The default path works on most 
+# installations, including OMV6.
+# If you're using OMV7, you must manually specify your config file, which is
+# located in /etc/snapraid/
+# SNAPRAID_CONF="/etc/snapraid/snapraid.conf"
+SNAPRAID_CONF="/etc/snapraid.conf"
+
 ### DOCKER CONTAINERS MANAGEMENT ###
 
 # Set to 1 to manage docker containers. They will be paused/stopped or
@@ -221,7 +228,6 @@ SCRUB_COUNT_FILE="$CURRENT_DIR/snapRAID.scrubCount"
 TMP_OUTPUT="/tmp/snapRAID.out"
 SNAPRAID_LOG="/var/log/snapraid.log"
 SECONDS=0 #Capture time
-SNAPRAID_CONF="/etc/snapraid.conf"
 
 # Expand PATH for smartctl
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
