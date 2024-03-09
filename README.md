@@ -5,7 +5,7 @@ There are many SnapRAID scripts out there, but none has the features I want. So 
 
 It is meant to be run periodically (daily), do the heavy lifting and send an email you will actually read.
 
-Supports single and dual parity configurations. It is highly customizable and has been tested with Debian 11 and [OpenMediaVault 6](https://github.com/openmediavault/openmediavault).
+Supports single and dual parity configurations. It is highly customizable and has been tested with Debian 11/12 and [OpenMediaVault 6/7](https://github.com/openmediavault/openmediavault).
 
 Contributions are welcome!
 
@@ -20,7 +20,7 @@ Contributions are welcome!
 - [Requirements](#requirements)
 - [Installation](#installation)
   * [First Run](#first-run)
-  * [OMV6 and SnapRAID plugin](#omv6-and-snapraid-plugin)
+  * [OMV and SnapRAID plugin](#omv6-and-snapraid-plugin)
   * [Installing `hd-idle`](#installing-hd-idle-for-automatic-disk-spindown)
 - [Upgrade](#upgrade)
 - [Known Issues](#known-issues)
@@ -297,14 +297,20 @@ Dependencies that require manual installation:
   
 **TIP**: You can create multiple schedules if you want to use a different config file for a specific need. Just append the config file path after the script, like `snapraid-aio-script.sh /home/alternate_config.sh`
 
-It is tested on OMV6, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
+It is tested on OMV6 and OMV7, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
+
+### OMV7 USERS
+OMV7's SnapRAID plugins introduced support for multiple arrays. This means each SnapRAID config file does not have a predictable name, unlike what occurred with OMV6 or standard SnapRAID installs. 
+The AIO Script will display an error message if the default SnapRAID config file is not found, alerting you to any issues that need adjusting in your settings. 
+OMV7 SnapRAID config files are stored in /etc/snapraid/."
+
 
 ## First Run
 If you start with empty disks, you cannot use (yet) this script, since it expects SnapRAID files which would not be found.
 
 First run `snapraid sync`. Once completed, the array will be ready to be used with this script.
 
-## OMV6 and SnapRAID plugin
+## OMV and SnapRAID plugin
 Ignore what you see at _OMV GUI > Services > SnapRAID > Diff Script Settings_, since it only applies to the plugin's built-in script. Also don't forget to remove the built-in `omv-snapraid-diff` job from _OMV GUI > System > Scheduled Tasks_, either by deleting the job, or simply disabling it.
 
 ## Installing `hd-idle` for Automatic Disk Spindown
