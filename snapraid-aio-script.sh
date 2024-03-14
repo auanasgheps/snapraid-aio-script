@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.3" #DEV11
+SNAPSCRIPTVERSION="3.3" #DEV12
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -135,7 +135,12 @@ function main(){
   
   # Check if Snapraid configuration file has been found, if not, notify and exit
   if [ ! -f "$SNAPRAID_CONF" ]; then
-    echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
+	# if running on OMV7, try to find the SnapRAID conf file automatically
+	check_omv_version
+	if [ "$OMV_VERSION" -ge 7 ]; then
+	pick_snapraid_conf_file
+	else 
+	echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
     mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
 	SUBJECT="[WARNING] - SnapRAID configuration file not found!"
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
@@ -146,6 +151,8 @@ function main(){
     fi
     exit 1;
 	fi
+	fi
+	
   
   # sanity check first to make sure we can access the content and parity files
   mklog "INFO: Checking SnapRAID disks"
@@ -967,6 +974,90 @@ check_and_install() {
     sudo apt-get install -y $PACKAGE_NAME > /dev/null 2>&1
     echo "$PACKAGE_NAME installed successfully."
   fi
+}
+
+# Check OMV Version
+check_omv_version() {
+    if dpkg -l | grep -q "openmediavault"; then
+        version=$(dpkg-query -W -f='${Version}' openmediavault)
+        if [[ $version ]]; then
+            if dpkg --compare-versions "$version" "ge" "7"; then
+                OMV_VERSION=7
+            else
+                OMV_VERSION=6
+            fi
+        else
+            OMV_VERSION=0
+        fi
+    else
+        OMV_VERSION=0
+    fi
+}
+
+# Pick Snapraid config file for OMV7
+function pick_snapraid_conf_file() {
+search_conf_files "/etc/snapraid"
+result=$?
+if [ $result -eq 0 ]; then
+    # Only one SnapRAID config file found, proceeding
+    echo "Proceeding with the omv-snapraid-.conf file: $SNAPRAID_CONF"
+
+elif [ $result -eq 2 ]; then
+    # Multiple SnapRAID config files found, stopping the script
+    echo "Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings in the script-config file at ""$CONFIG_FILE"". SnapRAID config files to be chosen:"
+        for file in "${conf_files[@]}"; do
+            echo "$file"
+        done
+    mklog "WARN: Stopping the script due to multiple SnapRAID configuration files. Please pick up one config file and update your settings."
+	SUBJECT="[WARNING] - Multiple SnapRAID configuration files!"
+    FORMATTED_CONF="\`$SNAPRAID_CONF\`"
+	NOTIFY_OUTPUT="$SUBJECT Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings in the script-config file at ""$CONFIG_FILE""."
+    notify_warning
+    if [ "$EMAIL_ADDRESS" ]; then
+      trim_log < "$TMP_OUTPUT" | send_mail
+    fi
+	exit 1;	
+
+else
+	# No SnapRAID conf file found, stopping the script
+    echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file ""$SNAPRAID_CONF"" does not exist."
+    mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file ""$SNAPRAID_CONF"" does not exist."
+	SUBJECT="[WARNING] - SnapRAID configuration file not found!"
+    FORMATTED_CONF="\`$SNAPRAID_CONF\`"
+	NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
+    notify_warning
+    if [ "$EMAIL_ADDRESS" ]; then
+      trim_log < "$TMP_OUTPUT" | send_mail
+    fi
+	exit 1;
+fi
+}
+# Search SnapRAID config file for OMV7
+search_conf_files() {
+    folder="$1"
+
+    # Check if the directory exists
+    if [ ! -d "$folder" ]; then
+        echo "Directory $folder does not exist."
+        return 1
+    fi
+
+    conf_files=("$folder"/omv-snapraid-*.conf)
+
+    #echo "Searching in folder: $folder"
+    #echo "Found files matching pattern: ${conf_files[@]}"
+
+	# if no files are found 
+    if [ ${#conf_files[@]} -eq 0 ]; then
+        return 1
+	# if one file is found	
+    elif [ ${#conf_files[@]} -eq 1 ]; then
+		SNAPRAID_CONF="${conf_files[0]}"
+        return 0
+    # if multiple files are found 
+	else
+        return 2
+    fi
 }
 
 # Set TRAP
