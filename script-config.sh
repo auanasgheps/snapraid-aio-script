@@ -1,5 +1,5 @@
 #!/bin/bash
-CONFIG_VERSION="3.3" #DEV6
+CONFIG_VERSION="3.3" #DEV7
 ######################
 #   USER VARIABLES   #
 ######################
@@ -141,9 +141,9 @@ SNAP_STATUS_NOTIFY=0
 
 # SnapRAID configuration file location. The default path works on most 
 # installations, including OMV6.
-# If you're using OMV7, you must manually specify your config file, which is
-# located in /etc/snapraid/
-# SNAPRAID_CONF="/etc/snapraid/snapraid.conf"
+# If you're using OMV7, the script will try to pick the file automatically.
+# If you have multiple SnapRAID arrays, you must must manually specify the 
+# config file you want to use. On OMV7 the files are located at /etc/snapraid/
 SNAPRAID_CONF="/etc/snapraid.conf"
 
 ### DOCKER CONTAINERS MANAGEMENT ###
