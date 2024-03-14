@@ -1004,11 +1004,11 @@ if [ $result -eq 0 ]; then
 
 elif [ $result -eq 2 ]; then
     # Multiple SnapRAID config files found, stopping the script
-    echo "Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings in the script-config file at ""$CONFIG_FILE"". SnapRAID config files to be chosen:"
+    echo "Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings in the script-config file at ""$CONFIG_FILE"". Available SnapRAID config files:"
         for file in "${conf_files[@]}"; do
             echo "$file"
         done
-    mklog "WARN: Stopping the script due to multiple SnapRAID configuration files. Please pick up one config file and update your settings."
+    mklog "WARN: Stopping the script due to multiple SnapRAID configuration files. Please choose up one config file and update your settings."
 	SUBJECT="[WARNING] - Multiple SnapRAID configuration files!"
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
 	NOTIFY_OUTPUT="$SUBJECT Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings in the script-config file at ""$CONFIG_FILE""."
