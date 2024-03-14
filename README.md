@@ -301,8 +301,7 @@ It is tested on OMV6 and OMV7, but will work on other distros. In such case you 
 
 ### OMV7 USERS
 OMV7's SnapRAID plugins introduced support for multiple arrays. This means each SnapRAID config file does not have a predictable name, unlike what occurred with OMV6 or standard SnapRAID installs. 
-The AIO Script will display an error message if the default SnapRAID config file is not found, alerting you to any issues that need adjusting in your settings. 
-OMV7 SnapRAID config files are stored in /etc/snapraid/."
+If running on OMV7, the AIO Script will search for a SnapRAID configuration file in the new path `/etc/snapraid/`. If multiple arrays are found, it will inform you to adjust your configuration.
 
 
 ## First Run
