@@ -295,7 +295,7 @@ Dependencies that require manual installation:
 6. Schedule the script execution. 
    - I recommend running the script daily.
   
-**TIP**: You can create multiple schedules if you want to use a different config file for a specific need. Just append the config file path after the script, like `snapraid-aio-script.sh /home/alternate_config.sh`
+**TIP**: To use multiple config files, you can create different schedules. Just append the config file path after the script, like `snapraid-aio-script.sh /home/alternate_config.sh`
 
 It is tested on OMV6 and OMV7, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
 
