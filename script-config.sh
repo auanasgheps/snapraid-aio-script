@@ -1,5 +1,5 @@
 #!/bin/bash
-CONFIG_VERSION=3.2
+CONFIG_VERSION="3.3" #DEV7
 ######################
 #   USER VARIABLES   #
 ######################
@@ -9,15 +9,21 @@ CONFIG_VERSION=3.2
 ### NOTIFICATION SETTINGS ###
 
 # Address where the output will be emailed to.
-# If you do not want to receive emails and rely on other notification 
+# If you do not want to receive emails and rely on other notification
 # methods, leave these fields empty.
 EMAIL_ADDRESS="destination-email-goes-here"
 FROM_EMAIL_ADDRESS="sender-email-goes-here"
 
+# Check for script updates.
+# On each run, the script will check via GitHub if there's an update, and will
+# inform the user via the configured notification systems.
+# 1 to enable, 0 to disable.
+CHECK_UPDATES=1
+
 # Use Healthchecks.io to report script errors. Set to 1 to enable.
 # Please note that every "WARNING" will be reported as failure.
 # When enabled, enter your Healthchecks UUID (not the full URL).
-# If using a self-hosted instance, change the URL to your endpoint                                                                                                      
+# If using a self-hosted instance, change the URL to your endpoint
 # including the trailing slash.
 HEALTHCHECKS=0
 HEALTHCHECKS_ID="your-uuid-here"
@@ -30,17 +36,17 @@ TELEGRAM=0
 TELEGRAM_TOKEN="your-token-here"
 TELEGRAM_CHAT_ID="your-chat-id-here"
 
-# Use Discord to report script execution summary (not the whole report) 
-# Set 1 to enable. 
-# To get your Webhook URL go to the channel settings -> Integrations and 
+# Use Discord to report script execution summary (not the whole report)
+# Set 1 to enable.
+# To get your Webhook URL go to the channel settings -> Integrations and
 # create a web hook
 DISCORD=0
 DISCORD_WEBHOOK_URL="your-webhook-url"
 
 # Custom notification service
-# Set this to a script/service to be used instead of the default email 
-# notification. You may want to use a service not natively supported by this 
-# script or a mail service with custom formatting. 
+# Set this to a script/service to be used instead of the default email
+# notification. You may want to use a service not natively supported by this
+# script or a mail service with custom formatting.
 # If you don't want to use this option, don't make changes to this.
 # $CURRENT_DIR can be used to get the running directory of the script.
 # This script will pass the following parameters to HOOK_NOTIFICATION:
@@ -50,7 +56,7 @@ HOOK_NOTIFICATION=""
 
 ### SCRIPT AND SNAPRAID SETTINGS ###
 
-# Set the threshold of deleted and updated files to stop the sync job from running. 
+# Set the threshold of deleted and updated files to stop the sync job from running.
 # Note that depending on how active your filesystem is being used, a low number
 # here may result in your parity info being out of sync often and/or you having
 # to do lots of manual syncing.
@@ -58,10 +64,10 @@ DEL_THRESHOLD=500
 UP_THRESHOLD=500
 
 # Allow a sync that would otherwise violate the delete threshold, but only
-# if the ratio of added to deleted files is greater than the value set. 
+# if the ratio of added to deleted files is greater than the value set.
 # Set to 0 to disable this option.
-# Example: A senario with 5000 deleted files and 3800 added files would 
-# result in an ADD_DEL_THRESHOLD of 0.76 (3800/5000) 
+# Example: A senario with 5000 deleted files and 3800 added files would
+# result in an ADD_DEL_THRESHOLD of 0.76 (3800/5000)
 ADD_DEL_THRESHOLD=0
 
 # Set number of warnings before we force a sync job. This option comes in handy
@@ -93,9 +99,9 @@ SCRUB_DELAYED_RUN=0
 # allow to run a fix operation. 1 to enable, any other value to disable.
 PREHASH=1
 
-# Forces the operation of syncing a file with zero size that before was not. 
+# Forces the operation of syncing a file with zero size that before was not.
 # If SnapRAID detects a such condition, it stops proceeding unless you enable
-# this option. Useful when syncing system files which can genuinely get 
+# this option. Useful when syncing system files which can genuinely get
 # changed to zero.
 # Disabled by default, 1 to enable.
 FORCE_ZERO=0
@@ -105,29 +111,40 @@ FORCE_ZERO=0
 # hd-idle is required and must be already configured.
 SPINDOWN=0
 
-# Set the option to log SMART info collected by SnapRAID. 1 to enable and any
-# other value to disable.
-SMART_LOG=1
-
 # Increase verbosity of the email output. NOT RECOMMENDED!
-# If set to 1, TOUCH and DIFF outputs will be kept in the email, producing 
+# If set to 1, TOUCH and DIFF outputs will be kept in the email, producing
 # a mostly unreadable email. You can always check TOUCH and DIFF outputs
-# using the TMP file or use the feature KEEP_LOG.
+# using the TMP file or use the feature RETENTION_DAYS.
 # 1 to enable, any other value to disable.
 VERBOSITY=0
 
 # SnapRAID detailed output retention for each run.
-# Default behaviour is RETENTION_DAYS=0: every time your run SnapRAID, the 
+# Default behaviour is RETENTION_DAYS=0: every time your run SnapRAID, the
 # output is saved to "/tmp" and is overridden during every run.
-# To enable retention, set RETENTION_DAYS to the days of output you want to 
-# keep in your home folder. Files will have timestamps. 
+# To enable retention, set RETENTION_DAYS to the days of output you want to
+# keep in your home folder. Files will have timestamps.
 # SNAPRAID_LOG_DIR can be changed to any folder you like.
 RETENTION_DAYS=0
 SNAPRAID_LOG_DIR="$HOME"
 
+# Set the option to log SMART info collected by SnapRAID. 
+# Use SMART_LOG_NOTIFY to send the output to Telegram/Discord
+# 1 to enable, any other value to disable.
+SMART_LOG=1
+SMART_LOG_NOTIFY=0
+
 # Run 'snapraid status' command to show array general information.
+# Use SNAP_STATUS_NOTIFY to send the output to Telegram/Discord
 # 1 to enable, any other value to disable.
 SNAP_STATUS=0
+SNAP_STATUS_NOTIFY=0
+
+# SnapRAID configuration file location. The default path works on most 
+# installations, including OMV6.
+# If you're using OMV7, the script will try to pick the file automatically.
+# If you have multiple SnapRAID arrays, you must must manually specify the 
+# config file you want to use. On OMV7 the files are located at /etc/snapraid/
+SNAPRAID_CONF="/etc/snapraid.conf"
 
 ### DOCKER CONTAINERS MANAGEMENT ###
 
@@ -140,26 +157,31 @@ MANAGE_SERVICES=0
 # This option does not have any effect if MANAGE_SERVICES is set to 0
 DOCKER_MODE=1
 
-# Containers to manage (separated with spaces). Please ensure these containers
+# Manage Docker containers running on the same host. 
+# Set to 1 to enable, 0 to disable it.
+# Enter containers to be managed separated with spaces. Please ensure these containers
 # are always running before executing the script, otherwise an error will be logged.
-SERVICES='container1 container2 container3'
+# Example: 
+# SERVICES="syncthing kopia nextcloud $(docker container ls -q --filter name=immich*)"
 
-# Manage docker containers running on a remote machine. To use this feature,
+DOCKER_LOCAL=0
+SERVICES="container1 container2 container3"
+
+# Manage Docker containers running on a remote machine. To use this feature,
 # you must setup passwordless ssh access between snapRAID host and Docker host.
-# Set to 1 to enable, then enter Docker host SSH user and machine IP or hostname.
+# Set to 1 to enable management of Docker containers running eslewhere, then enter 
+# Docker host SSH user and machine IP or hostname.
 # You can manage multiple remote Docker hosts.
-# Please note: for this configuration DO NOT separate containers with spaces.
-# Use a comma instead.
 # Reference:
-# ('HOSTIP1:container1,container2,container3' 'HOSTIP2:container1,container2,container3,container4')
+# ('HOSTIP1:container1 container2 container3' 'HOSTIP2:container1 container2 container3 container4')
 # Example:
-# ('192.168.0.125:code-server,portainer,plex' '192.168.0.126:nextcloud,handbrake,transmission')
+# ('192.168.0.125:code-server portainer plex' '192.168.0.126:nextcloud handbrake transmission')
 # Delay is the number of seconds to wait before sending the next docker
 # command to avoid errors. Change it if you're experiencing errors.
 DOCKER_REMOTE=0
 DOCKER_USER="sshusernamegoeshere"
-DOCKER_HOST_SERVICES=('HOSTIP1:container1,container2,container3' 'HOSTIP2:container1,container2,container3,container4')
-DOCKER_DELAY=10
+DOCKER_HOST_SERVICES=('HOSTIP1:container1 container2 container3' 'HOSTIP2:container1 container2 container3 container4')
+DOCKER_DELAY=0
 
 ### CUSTOM HOOKS ###
 
@@ -206,7 +228,6 @@ SCRUB_COUNT_FILE="$CURRENT_DIR/snapRAID.scrubCount"
 TMP_OUTPUT="/tmp/snapRAID.out"
 SNAPRAID_LOG="/var/log/snapraid.log"
 SECONDS=0 #Capture time
-SNAPRAID_CONF="/etc/snapraid.conf"
 
 # Expand PATH for smartctl
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin

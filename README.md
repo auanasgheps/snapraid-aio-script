@@ -1,11 +1,11 @@
 # Snapraid AIO Script
-The definitive all-in-one [SnapRAID](https://github.com/amadvance/snapraid) script. I hope you'll agree :).
+The definitive all-in-one [SnapRAID](https://github.com/amadvance/snapraid) script on Linux. I hope you'll agree :).
 
 There are many SnapRAID scripts out there, but none has the features I want. So I made my own, inspired by existing solutions.
 
 It is meant to be run periodically (daily), do the heavy lifting and send an email you will actually read.
 
-Supports single and dual parity configurations. It is highly customizable and has been tested with Debian 10/11 and [OpenMediaVault 5/6](https://github.com/openmediavault/openmediavault).
+Supports single and dual parity configurations. It is highly customizable and has been tested with Debian 11/12 and [OpenMediaVault 6/7](https://github.com/openmediavault/openmediavault).
 
 Contributions are welcome!
 
@@ -20,7 +20,7 @@ Contributions are welcome!
 - [Requirements](#requirements)
 - [Installation](#installation)
   * [First Run](#first-run)
-  * [OMV5/6 and SnapRAID plugin](#omv56-and-snapraid-plugin)
+  * [OMV and SnapRAID plugin](#omv6-and-snapraid-plugin)
   * [Installing `hd-idle`](#installing-hd-idle-for-automatic-disk-spindown)
 - [Upgrade](#upgrade)
 - [Known Issues](#known-issues)
@@ -45,14 +45,17 @@ Contributions are welcome!
 ### Additional Information
 - Docker container management
 	- Manage containers before SnapRAID operations and restore them when finished. It avoids nasty errors aboud data being written during SnapRAID sync.
-	- Support for local or remote Docker instances. Also manage multiple remote Docker instances at once. 
+	- Support for local and remote Docker instances. Also manage multiple remote Docker instances at once. 
 		- **Note:** Remote Docker instances require SSH passwordless access.
 	- You can either choose to pause or stop your containers.
 - Custom Hooks 
 	- Define shell commands or scripts to run before and after SnapRAID operations.
+- Multiple configuration files
+  	- Use a different configuration file when running the script instead of the default config
 - 3rd Party notification support
 	- [Healthchecks.io](https://healthchecks.io), Telegram and Discord can be used to track script execution time, status and promptly alert about errors.
-	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or even another mail binary
+   	- You can also get notified with the `Snapraid SMART log` and `Snapraid Status`
+	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or another mail binary
 - Important messages are also sent to the system log.
 - Emails are still the best place to get detailed but readable information.
 
@@ -72,10 +75,12 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Delayed option, disabled by default. Run scrub only after a number of script executions, e.g. every 7 times. If you don't want to scrub your array every time, this one is for you.
 	- Data to be scrubbed - by default 5% older than 10 days.
 	- Scrub new data - scrub the data that was just added by the sync.
-- Pre-hashing - enabled by default. Mitigate the lack of ECC memory, reading data twice to avoid silent read errors.
+- Pre-hashing - enabled by default. Mitigates the lack of ECC memory, reading data twice to avoid silent read errors.
 - Force zero size sync -  disabled by default. Forces the operation of syncing a file with zero size that before was not. Use with caution!
-- Snapraid Status - shows the status of the array, disabled by default.
+- Snapraid Status - disabled by default. Shows the status of the array.
+	- This info can also be sent to Telegram or Discord
 - SMART Log - enabled by default. A SnapRAID report for disks health status.
+  	- This info can also be sent to Telegram or Discord
 - Verbosity option - disabled by default. When enabled, includes the TOUCH and DIFF commands output. Please note email will be huge and mostly unreadable.
 - SnapRAID Output (log) retention - disabled by default (log is overriden every run)
 	- Detailed output retention for each run
@@ -89,11 +94,16 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Made for external services or mail binaries with different commands than `mailx`.
 	- Configure the path of the script or the mail binary to be invoked.
 	- You can still use native services since it only replaces the standard email.
+- Update Check - enabled by default
+  	- The script will check via GitHub if there's an update and alert the user via the configured notification systems
+  	- If you don't like this, it can be disabled
 - Docker Container management
 	- A list of containers you want to be interrupted before running actions and restored when completed.
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
    	- Docker remote - if docker is running on a remote machine
-   	   - Docker remote action delay - Set by default to 10 seconds, reduces errors when using remote docker
+- Multiple Configuration files
+  	- By default the script will use the predefined config file `script-config.sh` that must be placed in the same folder
+  	- You can specify another file when running the script like `snapraid-aio-script.sh /home/alternate_config.sh`
 - Custom Hooks
 	- Commands or scripts to be run before and after SnapRAID operations.
 	- Option to display friendly name to in the email output
@@ -258,15 +268,22 @@ Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 1
 ```
 
 # Requirements
-- [`markdown`](https://packages.debian.org/buster/python3-markdown) to format emails - will be installed if not found
+
+If you are running a Debian based distro (with `apt` package manager) the script will automatically install these dependencies for you.
+- [`python3-markdown`](https://packages.debian.org/bullseye/python3-markdown) to format emails - will be installed if not found
 - `curl` to use Healhchecks - will be installed if not found
+- [`jq`](https://packages.debian.org/bullseye/jq) - used to send discord notifications, is a lightweight and flexible command-line JSON processor
+- [`bc`](https://packages.debian.org/bullseye/bc) - used for for floating-point comparisons
+
+
+Dependencies that require manual installation:
 - `hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle), installation instructions [below](#installing-hd-idle-for-automatic-disk-spindown)
 
 # Installation
 
-_Optional: install markdown `apt install python-markdown` and curl `apt install curl` . You can skip this step since the script will try to install missing packages for you._
 
-1. Download the latest version from [Releases](https://github.com/auanasgheps/snapraid-aio-script/releases) 
+1. Install the packages listed in the Requirements section if you're not running a distro with `apt` package manager
+2. Download the latest version from [Releases](https://github.com/auanasgheps/snapraid-aio-script/releases) 
 3. Extract the archive wherever you prefer 
    - e.g. `/usr/sbin/snapraid`
 4. Give executable rights to the main script 
@@ -276,16 +293,23 @@ _Optional: install markdown `apt install python-markdown` and curl `apt install 
    - When you see  `""` or `''` in some options, do not remove these characters but just fill in your data.
    - If you want to spindown your disks, you need to install [hd-idle](https://github.com/adelolmo/hd-idle)
 6. Schedule the script execution. 
-   - I recommend running the script daily. 
+   - I recommend running the script daily.
+  
+**TIP**: To use multiple config files, you can create different schedules. Just append the config file path after the script, like `snapraid-aio-script.sh /home/alternate_config.sh`
 
-It is tested on OMV5/6, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
+It is tested on OMV6 and OMV7, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
+
+### OMV7 USERS
+OMV7's SnapRAID plugins introduced support for multiple arrays. This means each SnapRAID config file does not have a predictable name, unlike what occurred with OMV6 or standard SnapRAID installs. 
+If running on OMV7, the AIO Script will search for a SnapRAID configuration file in the new path `/etc/snapraid/`. If multiple arrays are found, it will inform you to adjust your configuration.
+
 
 ## First Run
 If you start with empty disks, you cannot use (yet) this script, since it expects SnapRAID files which would not be found.
 
 First run `snapraid sync`. Once completed, the array will be ready to be used with this script.
 
-## OMV5/6 and SnapRAID plugin
+## OMV and SnapRAID plugin
 Ignore what you see at _OMV GUI > Services > SnapRAID > Diff Script Settings_, since it only applies to the plugin's built-in script. Also don't forget to remove the built-in `omv-snapraid-diff` job from _OMV GUI > System > Scheduled Tasks_, either by deleting the job, or simply disabling it.
 
 ## Installing `hd-idle` for Automatic Disk Spindown
