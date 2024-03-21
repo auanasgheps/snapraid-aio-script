@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.3" #DEV12
+SNAPSCRIPTVERSION="3.3"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -122,7 +122,7 @@ function main(){
 
   # check for script updates
   if [ "$CHECK_UPDATES" -eq 1 ]; then
-   remote_version=$(curl -fsS -m 5 --retry 3 https://raw.githubusercontent.com/auanasgheps/snapraid-aio-script/dev/version)
+   remote_version=$(curl -fsS -m 5 --retry 3 https://raw.githubusercontent.com/auanasgheps/snapraid-aio-script/master/version)
     if [[ "$remote_version" != "$SNAPSCRIPTVERSION" ]]; then
      update_message="A newer version ($remote_version) is available! You can find more information by visiting https://github.com/auanasgheps/snapraid-aio-script/releases"
      echo "$update_message"
