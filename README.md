@@ -20,7 +20,7 @@ Contributions are welcome!
 - [Requirements](#requirements)
 - [Installation](#installation)
   * [First Run](#first-run)
-  * [OMV and SnapRAID plugin](#omv6-and-snapraid-plugin)
+  * [OMV and SnapRAID plugin](#omv-and-snapraid-plugin)
   * [Installing `hd-idle`](#installing-hd-idle-for-automatic-disk-spindown)
 - [Upgrade](#upgrade)
 - [Known Issues](#known-issues)
@@ -36,13 +36,13 @@ Contributions are welcome!
     	- Instead of forcing a sync based on the number of deleted files, you may consider the `ADD_DEL_THRESHOLD` feature, by allowing a sync that would otherwise violate the delete threshold, if the ratio of added to deleted files is greater than the value set. 
     - If parity info is out of sync **but** the number of deleted or changed files did not exceed the threshold, it **executes a sync** to update the parity info.
 - When the parity info is in sync, either because nothing has changed or after a successfully sync, it runs the `snapraid scrub` command to validate the integrity of the data, both the files and the parity info. If sync was cancelled or other issues were found, scrub will not be run. 
-    - Note that each run of the scrub command will validate only a configurable portion of parity info to avoid having a long running job and affecting the performance of the server. 
+    - Note that each run of the scrub command will validate only a (configurable) portion of parity info to avoid having a long running job and affecting the performance of the server. 
     - Scrub frequency can also be customized in case you don't want to do it every time the script runs. 
     - It is still recommended to run scrub frequently. 
 - Extra information can be added, like SnapRAID's disk health report or SnapRAID array status.  
 - When the script is done sends an email with the results, both in case of error or success, and triggers any 3rd party notifications configured.
 
-### Additional Information
+### Additional Features
 - Docker container management
 	- Manage containers before SnapRAID operations and restore them when finished. It avoids nasty errors aboud data being written during SnapRAID sync.
 	- Support for local and remote Docker instances. Also manage multiple remote Docker instances at once. 
@@ -65,7 +65,7 @@ If you don't know what to do, I recommend using the default values and see how i
 
 ### Customizable features
 - Sync options
-	- Sync always (forced sync).
+	- Sync always (Forced Sync).
 	- Sync after a number of breached threshold warnings. 
 	- Sync only if thresholds warnings are not breached (enabled by default).
 	- Sync even if the delete threshold has been breached, but the ratio of added to deleted files is greater than the value set. 
