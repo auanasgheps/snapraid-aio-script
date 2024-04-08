@@ -74,7 +74,7 @@ function main(){
 
 
   # Initialize notification
-  if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ]; then
+  if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ] || [ "$CHECK_UPDATES" -eq 1 ]; then
   # Check for notification dependencies
   check_and_install curl
   check_and_install jq
