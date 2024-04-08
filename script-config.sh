@@ -70,11 +70,13 @@ UP_THRESHOLD=500
 # result in an ADD_DEL_THRESHOLD of 0.76 (3800/5000)
 ADD_DEL_THRESHOLD=0
 
-# Set number of warnings before we force a sync job. This option comes in handy
-# when you cannot be bothered to manually start a sync job when DEL_THRESHOLD
-# is breached due to false alarm. Set to 0 to ALWAYS force a sync (i.e. ignore
-# the delete threshold above) Set to -1 to NEVER force a sync (i.e. need to
-# manual sync if delete threshold is breached).
+# Set number of warnings before forcing a sync, or force the sync every time
+# ignoring thresholds (Forced Sync). This option comes in handy when you cannot be 
+# bothered to manually start a sync job when DEL_THRESHOLD or UP_TRESHOLD are 
+# breached due to false alarm. 
+# Set to 0 to ALWAYS force a sync (Forced Sync, ignoring the thresholds above) 
+# Set to -1 to NEVER force a sync, the default behaviour (need to manual sync if
+# thresholds are breached).
 SYNC_WARN_THRESHOLD=-1
 
 # Set percentage and age, in days, of blocks in array to scrub if it is in sync.
