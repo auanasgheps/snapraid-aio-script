@@ -13,7 +13,7 @@ Contributions are welcome!
 
 - [Highlights](#highlights)
   * [How it works](#how-it-works)
-    + [Additional Information](#additional-information)
+    + [Additional Features](#additional-features)
   * [Customization](#customization)
     + [Customizable features](#customizable-features)
   * [A nice email report](#a-nice-email-report)
@@ -335,6 +335,10 @@ If you are using a previous version of the script, do not use your config file. 
 
 # Known Issues
 - You tell me!
+
+# Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=auanasgheps/snapraid-aio-script&type=Date)](https://star-history.com/#auanasgheps/snapraid-aio-script&Date)
 
 # Credits
 All rights belong to the respective creators. 
