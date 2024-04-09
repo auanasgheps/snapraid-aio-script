@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.3"
+SNAPSCRIPTVERSION="3.3.1"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -74,7 +74,7 @@ function main(){
 
 
   # Initialize notification
-  if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ]; then
+  if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ] || [ "$CHECK_UPDATES" -eq 1 ]; then
   # Check for notification dependencies
   check_and_install curl
   check_and_install jq
@@ -564,7 +564,7 @@ function chk_sync_warn(){
 function chk_zero(){
   echo "### SnapRAID TOUCH [$(date)]"
   echo "Checking for zero sub-second files."
-  TIMESTATUS=$($SNAPRAID_BIN -c $SNAPRAID_CONF status | grep 'You have [1-9][0-9]* files with zero sub-second timestamp\.' | sed 's/^You have/Found/g')
+  TIMESTATUS=$($SNAPRAID_BIN -c $SNAPRAID_CONF status | grep -E 'You have [1-9][0-9]* files with( a)? zero sub-second timestamp\.' | sed 's/^You have/Found/g')
   if [ -n "$TIMESTATUS" ]; then
     echo "$TIMESTATUS"
     echo "Running TOUCH job to timestamp. [$(date)]"
