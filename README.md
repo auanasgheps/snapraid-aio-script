@@ -24,6 +24,7 @@ Contributions are welcome!
   * [Installing `hd-idle`](#installing-hd-idle-for-automatic-disk-spindown)
 - [Upgrade](#upgrade)
 - [Known Issues](#known-issues)
+- [Star History](#star-history)
 - [Credits](#credits)
 
 # Highlights
