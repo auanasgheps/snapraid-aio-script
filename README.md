@@ -311,7 +311,9 @@ If you start with empty disks, you cannot use (yet) this script, since it expect
 First run `snapraid sync`. Once completed, the array will be ready to be used with this script.
 
 ## OMV and SnapRAID plugin
-Ignore what you see at _OMV GUI > Services > SnapRAID > Diff Script Settings_, since it only applies to the plugin's built-in script. Also don't forget to remove the built-in `omv-snapraid-diff` job from _OMV GUI > System > Scheduled Tasks_, either by deleting the job, or simply disabling it.
+This script perfectly replaces the OMV built-in script. 
+In the OMV GUI, browse to _System > Scheduled Tasks_ and remove/disable the `omv-snapraid-diff` job. 
+Also, you can igore all the settings you find at _Services > SnapRAID > Diff Script Settings_, since they only apply to the plugin's built-in script. 
 
 ## Installing `hd-idle` for Automatic Disk Spindown
 If you would like to enable automatic disk spindown after the script job runs, then you will need to install `hd-idle`. The version included in default Debian and Ubuntu repositories is buggy and out of date - fortunately developer [adelolmo](https://github.com/adelolmo/hd-idle) has improved the project and released an updated version.
