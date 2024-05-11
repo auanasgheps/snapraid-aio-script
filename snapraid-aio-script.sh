@@ -78,7 +78,7 @@ function main(){
   # Check for notification dependencies
   check_and_install curl
   check_and_install jq
-   
+
     # invoke notification services if configured
     if [ "$HEALTHCHECKS" -eq 1 ]; then
       echo "Healthchecks.io notification is enabled. Notifications sent to $HEALTHCHECKS_URL."
@@ -132,14 +132,14 @@ function main(){
      notify_snapraid_info
     fi
   fi
-  
+
   # Check if Snapraid configuration file has been found, if not, notify and exit
   if [ ! -f "$SNAPRAID_CONF" ]; then
 	# if running on OMV7, try to find the SnapRAID conf file automatically
 	check_omv_version
 	if [ "$OMV_VERSION" -ge 7 ]; then
 	pick_snapraid_conf_file
-	else 
+	else
 	echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
     mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
 	SUBJECT="[WARNING] - SnapRAID configuration file not found!"
@@ -152,8 +152,8 @@ function main(){
     exit 1;
 	fi
 	fi
-	
-  
+
+
   # sanity check first to make sure we can access the content and parity files
   mklog "INFO: Checking SnapRAID disks"
   sanity_check
@@ -211,8 +211,13 @@ function main(){
     fi
     exit 1;
   fi
-  echo "**SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]**"
-  mklog "INFO: SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+  if [ $IGNORE_PATTERN ]; then
+    echo "**SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT] - Ignored [$IGNORE_COUNT]**"
+    mklog "INFO: SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT] - Ignored [$IGNORE_COUNT]"
+  else
+    echo "**SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]**"
+    mklog "INFO: SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+  fi
 
   # check if the conditions to run SYNC are met
   # CHK 1 - if files have changed
@@ -436,6 +441,7 @@ function get_counts() {
     UPDATE_COUNT=$(grep -c -P "^update (?!.*(?:$IGNORE_PATTERN).*$).*$" "$TMP_OUTPUT")
     DEL_COUNT=$(grep -c -P "^remove (?!.*(?:$IGNORE_PATTERN).*$).*$" "$TMP_OUTPUT")
     MOVE_COUNT=$(grep -c -P "^move (?!.*(?:$IGNORE_PATTERN).*$).*$" "$TMP_OUTPUT")
+    IGNORE_COUNT=$(grep -c -P ".*(?:$IGNORE_PATTERN).*" "$TMP_OUTPUT")
   else
     ADD_COUNT=$(grep -c -P '^add .+$' "$TMP_OUTPUT")
     UPDATE_COUNT=$(grep -c -P '^update .+$' "$TMP_OUTPUT")
@@ -769,12 +775,19 @@ This is a severe warning, check your logs immediately."
   elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
     # Scrub ran but did not complete successfully so lets warn the user
     SUBJECT="[SEVERE WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-    NOTIFY_OUTPUT="$SUBJECT
-	
+    if [ $IGNORE_PATTERN ]; then
+      NOTIFY_OUTPUT="$SUBJECT
+
+This is a severe warning, check your logs immediately.
+SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT] - Ignored [$IGNORE_COUNT]"
+    else
+      NOTIFY_OUTPUT="$SUBJECT
+
 This is a severe warning, check your logs immediately.
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+    fi
     notify_warning
-	
+
 # minor warnings, less critical
   elif [ "$CHK_FAIL" -eq 1 ]; then
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
@@ -822,8 +835,13 @@ SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [
 # else a good run, no warnings
   else
     SUBJECT="[COMPLETED] $JOBS_DONE Jobs $EMAIL_SUBJECT_PREFIX"
-    NOTIFY_OUTPUT="$SUBJECT
+    if [ $IGNORE_PATTERN ]; then
+      NOTIFY_OUTPUT="$SUBJECT
+SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT] - Ignored [$IGNORE_COUNT]"
+    else
+      NOTIFY_OUTPUT="$SUBJECT
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+    fi
     notify_success
   fi
 }
@@ -867,7 +885,7 @@ function notify_warning(){
     "$DISCORD_WEBHOOK_URL"
   fi
   }
-  
+
 function show_snapraid_info() {
   local command_output=$($1)
   echo "$2"
@@ -879,14 +897,14 @@ function show_snapraid_info() {
   INFO_MESSAGE="$2 - \`\`\`$command_output\`\`\`"
   INFO_MESSAGE_DISCORD="$2 - $command_output"
   }
-  
- function notify_snapraid_info() { 
+
+ function notify_snapraid_info() {
   if [ "$TELEGRAM" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
    -d chat_id="$TELEGRAM_CHAT_ID" \
    -d text="$INFO_MESSAGE" \
    -d parse_mode="markdown"
-  fi 
+  fi
   if [ "$DISCORD" -eq 1 ]; then
   INFO_MESSAGE_ESCAPED=$(echo "$INFO_MESSAGE_DISCORD" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
@@ -895,7 +913,7 @@ function show_snapraid_info() {
    "$DISCORD_WEBHOOK_URL"
   fi
 }
-  
+
 # Trim the log file read from stdin.
 function trim_log(){
   sed '
@@ -1026,7 +1044,7 @@ elif [ $result -eq 2 ]; then
     if [ "$EMAIL_ADDRESS" ]; then
       trim_log < "$TMP_OUTPUT" | send_mail
     fi
-	exit 1;	
+	exit 1;
 
 else
 	# No SnapRAID conf file found, stopping the script
@@ -1057,14 +1075,14 @@ search_conf_files() {
     #echo "Searching in folder: $folder"
     #echo "Found files matching pattern: ${conf_files[@]}"
 
-	# if no files are found 
+	# if no files are found
     if [ ${#conf_files[@]} -eq 0 ]; then
         return 1
-	# if one file is found	
+	# if one file is found
     elif [ ${#conf_files[@]} -eq 1 ]; then
 		SNAPRAID_CONF="${conf_files[0]}"
         return 0
-    # if multiple files are found 
+    # if multiple files are found
 	else
         return 2
     fi
