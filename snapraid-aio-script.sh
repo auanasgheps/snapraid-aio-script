@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.3.1"
+SNAPSCRIPTVERSION="3.3.2"
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -359,11 +359,12 @@ fi
   # if email or hook service are enabled, will be sent now
   if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ] || [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ]; then
     # Add a topline to email body and send a long mail
-    sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
-    if [ "$VERBOSITY" -eq 1 ]; then
+	sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
+    # send long mail if verbosity is set to 1
+	if [ "$VERBOSITY" -eq 1 ]; then
       send_mail < "$TMP_OUTPUT"
     else
-      # or send a short mail
+    # or send a short mail
       trim_log < "$TMP_OUTPUT" | send_mail
     fi
   fi
@@ -794,15 +795,17 @@ SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [
     fi
 
     if [ "$DEL_COUNT" -ge  "$DEL_THRESHOLD" ] && [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
+	  if [ "$(echo "$ADD_DEL_THRESHOLD" == 0 | bc -l)" -eq 1 ]; then
       MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
-		if [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
-		  MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+	    elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
+			  MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
 		fi
-    fi
+	fi
 
     if [ "$DEL_COUNT" -ge  "$DEL_THRESHOLD" ] && [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 1 ]; then
-      MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
-	    if [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
+	  if [ "$(echo "$ADD_DEL_THRESHOLD" == 0 | bc -l)" -eq 1 ]; then
+	  MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+	    elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
 		  MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
 		fi
     fi
@@ -917,7 +920,7 @@ function send_mail(){
   if [ -x "$HOOK_NOTIFICATION" ]; then
     echo -e "Notification user script is set. Calling it now [$(date)]"
     $HOOK_NOTIFICATION "$SUBJECT" "$body"
-  else
+  elif [ "$EMAIL_ADDRESS" ]; then
     echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
     $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
       < <(echo "$body")
