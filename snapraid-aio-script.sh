@@ -484,14 +484,12 @@ function chk_del(){
 }
 
 function chk_updated(){
-  if [ "$UPDATE_COUNT" -lt "$UP_THRESHOLD" ]; then
-    if [ "$UPDATE_COUNT" -eq 0 ]; then
-      echo "There are no updated files, that's fine."
-      DO_SYNC=1
-    else
+  if [ "$UPDATE_COUNT" -eq 0 ]; then
+    echo "There are no updated files, that's fine."
+    DO_SYNC=1
+  elif [ "$UPDATE_COUNT" -lt "$UP_THRESHOLD" ]; then
       echo "There are updated files. The number of updated files ($UPDATE_COUNT) is below the threshold of ($UP_THRESHOLD)."
       DO_SYNC=1
-    fi
   else
     if [ "$RETENTION_DAYS" -gt 0 ]; then
       echo "**WARNING!** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
