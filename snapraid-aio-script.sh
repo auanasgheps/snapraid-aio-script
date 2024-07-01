@@ -78,7 +78,7 @@ function main(){
   # Check for notification dependencies
   check_and_install curl
   check_and_install jq
-   
+
     # invoke notification services if configured
     if [ "$HEALTHCHECKS" -eq 1 ]; then
       echo "Healthchecks.io notification is enabled. Notifications sent to $HEALTHCHECKS_URL."
@@ -132,28 +132,28 @@ function main(){
      notify_snapraid_info
     fi
   fi
-  
+
   # Check if Snapraid configuration file has been found, if not, notify and exit
   if [ ! -f "$SNAPRAID_CONF" ]; then
-	# if running on OMV7, try to find the SnapRAID conf file automatically
-	check_omv_version
-	if [ "$OMV_VERSION" -ge 7 ]; then
-	pick_snapraid_conf_file
-	else 
-	echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
+  # if running on OMV7, try to find the SnapRAID conf file automatically
+  check_omv_version
+  if [ "$OMV_VERSION" -ge 7 ]; then
+  pick_snapraid_conf_file
+  else
+  echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
     mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
-	SUBJECT="[WARNING] - SnapRAID configuration file not found!"
+  SUBJECT="[WARNING] - SnapRAID configuration file not found!"
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
-	NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
+  NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
     notify_warning
     if [ "$EMAIL_ADDRESS" ]; then
       trim_log < "$TMP_OUTPUT" | send_mail
     fi
     exit 1;
-	fi
-	fi
-	
-  
+  fi
+  fi
+
+
   # sanity check first to make sure we can access the content and parity files
   mklog "INFO: Checking SnapRAID disks"
   sanity_check
@@ -288,7 +288,7 @@ function main(){
         mklog "WARN: Check output of SYNC job. Could not detect marker. Not running SCRUB job."
       else
         # Everything ok - ready to run the scrub job!
-        # The fuction will check if scrub delayed run is enabled and run scrub
+        # The function will check if scrub delayed run is enabled and run scrub
         # based on configured conditions
         chk_scrub_settings
       fi
@@ -359,9 +359,9 @@ fi
   # if email or hook service are enabled, will be sent now
   if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ] || [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ]; then
     # Add a topline to email body and send a long mail
-	sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
+  sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
     # send long mail if verbosity is set to 1
-	if [ "$VERBOSITY" -eq 1 ]; then
+  if [ "$VERBOSITY" -eq 1 ]; then
       send_mail < "$TMP_OUTPUT"
     else
     # or send a short mail
@@ -472,7 +472,7 @@ function chk_del(){
   else
     if [ "$RETENTION_DAYS" -gt 0 ]; then
       echo "**WARNING!** Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
-      echo "For more information, please check the DIFF ouput saved in $SNAPRAID_LOG_DIR."
+      echo "For more information, please check the DIFF output saved in $SNAPRAID_LOG_DIR."
       mklog "WARN: Deleted files ($DEL_COUNT) reached/exceeded threshold ($DEL_THRESHOLD)."
       CHK_FAIL=1
     else
@@ -495,7 +495,7 @@ function chk_updated(){
   else
     if [ "$RETENTION_DAYS" -gt 0 ]; then
       echo "**WARNING!** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
-      echo "For more information, please check the DIFF ouput saved in $SNAPRAID_LOG_DIR."
+      echo "For more information, please check the DIFF output saved in $SNAPRAID_LOG_DIR."
       mklog "WARN: Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
       CHK_FAIL=1
     else
@@ -763,16 +763,16 @@ This is a severe warning, check your logs immediately."
     # Scrub ran but did not complete successfully so lets warn the user
     SUBJECT="[SEVERE WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT
-	
+
 This is a severe warning, check your logs immediately.
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
     notify_warning
-	
+
 # minor warnings, less critical
   elif [ "$CHK_FAIL" -eq 1 ]; then
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
-	  if [ "$(echo "$ADD_DEL_THRESHOLD" == 0 | bc -l)" -eq 1 ]; then
-	  MSG="Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
+    if [ "$(echo "$ADD_DEL_THRESHOLD" == 0 | bc -l)" -eq 1 ]; then
+    MSG="Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
        elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
         MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD)"
       fi
@@ -781,9 +781,9 @@ SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 1 ]; then
       if [ "$(echo "$ADD_DEL_THRESHOLD" == 0 | bc -l)" -eq 1 ]; then
       MSG="Forced sync with deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
-	    elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
-		  MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD)"
-		fi
+      elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
+      MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD)"
+    fi
     fi
 
     if [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
@@ -795,19 +795,19 @@ SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [
     fi
 
     if [ "$DEL_COUNT" -ge  "$DEL_THRESHOLD" ] && [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
-	  if [ "$(echo "$ADD_DEL_THRESHOLD" == 0 | bc -l)" -eq 1 ]; then
+    if [ "$(echo "$ADD_DEL_THRESHOLD" == 0 | bc -l)" -eq 1 ]; then
       MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
-	    elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
-			  MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
-		fi
-	fi
+      elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
+        MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+    fi
+  fi
 
     if [ "$DEL_COUNT" -ge  "$DEL_THRESHOLD" ] && [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 1 ]; then
-	  if [ "$(echo "$ADD_DEL_THRESHOLD" == 0 | bc -l)" -eq 1 ]; then
-	  MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
-	    elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
-		  MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
-		fi
+    if [ "$(echo "$ADD_DEL_THRESHOLD" == 0 | bc -l)" -eq 1 ]; then
+    MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+      elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
+      MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+    fi
     fi
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
@@ -860,7 +860,7 @@ function notify_warning(){
     "$DISCORD_WEBHOOK_URL"
   fi
   }
-  
+
 function show_snapraid_info() {
   local command_output=$($1)
   echo "$2"
@@ -872,14 +872,14 @@ function show_snapraid_info() {
   INFO_MESSAGE="$2 - \`\`\`$command_output\`\`\`"
   INFO_MESSAGE_DISCORD="$2 - $command_output"
   }
-  
- function notify_snapraid_info() { 
+
+ function notify_snapraid_info() {
   if [ "$TELEGRAM" -eq 1 ]; then
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
    -d chat_id="$TELEGRAM_CHAT_ID" \
    -d text="$INFO_MESSAGE" \
    -d parse_mode="markdown"
-  fi 
+  fi
   if [ "$DISCORD" -eq 1 ]; then
   INFO_MESSAGE_ESCAPED=$(echo "$INFO_MESSAGE_DISCORD" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
@@ -888,7 +888,7 @@ function show_snapraid_info() {
    "$DISCORD_WEBHOOK_URL"
   fi
 }
-  
+
 # Trim the log file read from stdin.
 function trim_log(){
   sed '
@@ -907,7 +907,7 @@ function send_mail(){
   # Try to workaround py markdown 2.6.8 issues:
   # 1. Will not format code blocks with empty lines, so just remove
   #    them.
-  # 2. A dash line inside of code block brekas it, so remove it.
+  # 2. A dash line inside of code block breaks it, so remove it.
   # 3. Add trailing double-spaces ensures the line endings are
   #    maintained.
   # 4. The HTML code blocks need to be modified to use <pre></pre> to display
@@ -1012,27 +1012,27 @@ elif [ $result -eq 2 ]; then
             echo "$file"
         done
     mklog "WARN: Stopping the script due to multiple SnapRAID configuration files. Please choose up one config file and update your settings."
-	SUBJECT="[WARNING] - Multiple SnapRAID configuration files!"
+  SUBJECT="[WARNING] - Multiple SnapRAID configuration files!"
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
-	NOTIFY_OUTPUT="$SUBJECT Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings in the script-config file at ""$CONFIG_FILE""."
+  NOTIFY_OUTPUT="$SUBJECT Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings in the script-config file at ""$CONFIG_FILE""."
     notify_warning
     if [ "$EMAIL_ADDRESS" ]; then
       trim_log < "$TMP_OUTPUT" | send_mail
     fi
-	exit 1;	
+  exit 1;
 
 else
-	# No SnapRAID conf file found, stopping the script
+  # No SnapRAID conf file found, stopping the script
     echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file ""$SNAPRAID_CONF"" does not exist."
     mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file ""$SNAPRAID_CONF"" does not exist."
-	SUBJECT="[WARNING] - SnapRAID configuration file not found!"
+  SUBJECT="[WARNING] - SnapRAID configuration file not found!"
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
-	NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
+  NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
     notify_warning
     if [ "$EMAIL_ADDRESS" ]; then
       trim_log < "$TMP_OUTPUT" | send_mail
     fi
-	exit 1;
+  exit 1;
 fi
 }
 # Search SnapRAID config file for OMV7
@@ -1050,15 +1050,15 @@ search_conf_files() {
     #echo "Searching in folder: $folder"
     #echo "Found files matching pattern: ${conf_files[@]}"
 
-	# if no files are found 
+  # if no files are found
     if [ ${#conf_files[@]} -eq 0 ]; then
         return 1
-	# if one file is found	
+  # if one file is found
     elif [ ${#conf_files[@]} -eq 1 ]; then
-		SNAPRAID_CONF="${conf_files[0]}"
+    SNAPRAID_CONF="${conf_files[0]}"
         return 0
-    # if multiple files are found 
-	else
+    # if multiple files are found
+  else
         return 2
     fi
 }
