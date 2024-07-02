@@ -123,7 +123,7 @@ function main(){
   # check for script updates
   if [ "$CHECK_UPDATES" -eq 1 ]; then
    remote_version=$(curl -fsS -m 5 --retry 3 https://raw.githubusercontent.com/auanasgheps/snapraid-aio-script/master/version)
-    if [[ "$remote_version" != "$SNAPSCRIPTVERSION" ]]; then
+    if [[ "$(printf '%s\n' "$remote_version" "$SNAPSCRIPTVERSION" | sort -V | tail -n 1)" == "$remote_version" ]] && [[ "$remote_version" != "$SNAPSCRIPTVERSION" ]]; then
      update_message="A newer version ($remote_version) is available! You can find more information by visiting https://github.com/auanasgheps/snapraid-aio-script/releases"
      echo "$update_message"
      mklog "WARN: $update_message"
