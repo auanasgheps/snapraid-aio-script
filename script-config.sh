@@ -63,6 +63,22 @@ HOOK_NOTIFICATION=""
 DEL_THRESHOLD=500
 UP_THRESHOLD=500
 
+# Allows setting a pattern to ignore files for computing the counts of changed
+# files by snapraid diff.
+# The pattern are based around this regular expression:
+# ^(?!.*(?:$IGNORE_PATTERN).*$).*$
+# It will exclude any file which includes the pattern IGNORE_PATTERN.
+# Examples:
+# IGNORE_PATTERN="Hello" -> all files including Hello will be ignored
+# IGNORE_PATTERN="Backup/kopia" -> all files including Backup/kopia will be ignored
+#           in this case it will be all files containing any path with Backup/kopia
+# IGNORE_PATTERN="(Backup/kopia)|(Hello)" -> all files containing either Backup/kopia
+#        or Hello will be ignored
+# This is probably a rather strange approach to file filtering, please test
+# your pattern using https://regex101.com/r/Igs4kX/1 (the quotes used in the
+# configuration are not part of the pattern)
+IGNORE_PATTERN=""
+
 # Allow a sync that would otherwise violate the delete threshold, but only
 # if the ratio of added to deleted files is greater than the value set.
 # Set to 0 to disable this option.
@@ -129,7 +145,7 @@ VERBOSITY=0
 RETENTION_DAYS=0
 SNAPRAID_LOG_DIR="$HOME"
 
-# Set the option to log SMART info collected by SnapRAID. 
+# Set the option to log SMART info collected by SnapRAID.
 # Use SMART_LOG_NOTIFY to send the output to Telegram/Discord
 # 1 to enable, any other value to disable.
 SMART_LOG=1
@@ -240,7 +256,7 @@ SNAPRAID_CONF_LINES=$(grep -E '^[^#;]' $SNAPRAID_CONF)
 IFS=$'\n'
 # Build an array of content files
 CONTENT_FILES=(
-$(echo "$SNAPRAID_CONF_LINES" | grep snapraid.content | cut -d ' ' -f2)
+  $(echo "$SNAPRAID_CONF_LINES" | grep snapraid.content | cut -d ' ' -f2)
 )
 
 # Build an array of parity all files...

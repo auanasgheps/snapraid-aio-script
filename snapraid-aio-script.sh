@@ -211,8 +211,13 @@ function main(){
     fi
     exit 1;
   fi
-  echo "**SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]**"
-  mklog "INFO: SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+  if [ $IGNORE_PATTERN ]; then
+    echo "**SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT] - Ignored [$IGNORE_COUNT]**"
+    mklog "INFO: SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT] - Ignored [$IGNORE_COUNT]"
+  else
+    echo "**SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]**"
+    mklog "INFO: SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+  fi
 
   # check if the conditions to run SYNC are met
   # CHK 1 - if files have changed
@@ -431,10 +436,18 @@ function sanity_check() {
 
 function get_counts() {
   EQ_COUNT=$(grep -w '^ \{1,\}[0-9]* equal' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
-  ADD_COUNT=$(grep -w '^ \{1,\}[0-9]* added' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
-  DEL_COUNT=$(grep -w '^ \{1,\}[0-9]* removed' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
-  UPDATE_COUNT=$(grep -w '^ \{1,\}[0-9]* updated' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
-  MOVE_COUNT=$(grep -w '^ \{1,\}[0-9]* moved' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
+  if [ $IGNORE_PATTERN ]; then
+    ADD_COUNT=$(grep -c -P "^add (?!.*(?:$IGNORE_PATTERN).*$).*$" "$TMP_OUTPUT")
+    UPDATE_COUNT=$(grep -c -P "^update (?!.*(?:$IGNORE_PATTERN).*$).*$" "$TMP_OUTPUT")
+    DEL_COUNT=$(grep -c -P "^remove (?!.*(?:$IGNORE_PATTERN).*$).*$" "$TMP_OUTPUT")
+    MOVE_COUNT=$(grep -c -P "^move (?!.*(?:$IGNORE_PATTERN).*$).*$" "$TMP_OUTPUT")
+    IGNORE_COUNT=$(grep -c -P ".*(?:$IGNORE_PATTERN).*" "$TMP_OUTPUT")
+  else
+    ADD_COUNT=$(grep -c -P '^add .+$' "$TMP_OUTPUT")
+    UPDATE_COUNT=$(grep -c -P '^update .+$' "$TMP_OUTPUT")
+    DEL_COUNT=$(grep -c -P '^remove .+$' "$TMP_OUTPUT")
+    MOVE_COUNT=$(grep -c -P '^move .+$' "$TMP_OUTPUT")
+  fi
   COPY_COUNT=$(grep -w '^ \{1,\}[0-9]* copied' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
   # REST_COUNT=$(grep -w '^ \{1,\}[0-9]* restored' $TMP_OUTPUT | sed 's/^ *//g' | cut -d ' ' -f1)
 }
@@ -760,10 +773,17 @@ This is a severe warning, check your logs immediately."
   elif [ -z "${JOBS_DONE##*"SCRUB"*}" ] && ! grep -qw "$SCRUB_MARKER" "$TMP_OUTPUT"; then
     # Scrub ran but did not complete successfully so lets warn the user
     SUBJECT="[SEVERE WARNING] SCRUB job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
-    NOTIFY_OUTPUT="$SUBJECT
+    if [ $IGNORE_PATTERN ]; then
+      NOTIFY_OUTPUT="$SUBJECT
+
+This is a severe warning, check your logs immediately.
+SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT] - Ignored [$IGNORE_COUNT]"
+    else
+      NOTIFY_OUTPUT="$SUBJECT
 
 This is a severe warning, check your logs immediately.
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+    fi
     notify_warning
 
 # minor warnings, less critical
@@ -813,8 +833,13 @@ SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [
 # else a good run, no warnings
   else
     SUBJECT="[COMPLETED] $JOBS_DONE Jobs $EMAIL_SUBJECT_PREFIX"
-    NOTIFY_OUTPUT="$SUBJECT
+    if [ $IGNORE_PATTERN ]; then
+      NOTIFY_OUTPUT="$SUBJECT
+SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT] - Ignored [$IGNORE_COUNT]"
+    else
+      NOTIFY_OUTPUT="$SUBJECT
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
+    fi
     notify_success
   fi
 }
