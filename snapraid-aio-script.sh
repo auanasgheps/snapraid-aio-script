@@ -430,13 +430,13 @@ function sanity_check() {
 }
 
 function get_counts() {
-  EQ_COUNT=$(grep -w '^ \{1,\}[0-9]* equal' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
-  ADD_COUNT=$(grep -w '^ \{1,\}[0-9]* added' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
-  DEL_COUNT=$(grep -w '^ \{1,\}[0-9]* removed' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
-  UPDATE_COUNT=$(grep -w '^ \{1,\}[0-9]* updated' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
-  MOVE_COUNT=$(grep -w '^ \{1,\}[0-9]* moved' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
-  COPY_COUNT=$(grep -w '^ \{1,\}[0-9]* copied' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
-  # REST_COUNT=$(grep -w '^ \{1,\}[0-9]* restored' $TMP_OUTPUT | sed 's/^ *//g' | cut -d ' ' -f1)
+  EQ_COUNT=$(grep -wE '^ *[0-9]+ equal' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
+  ADD_COUNT=$(grep -wE '^ *[0-9]+ added' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
+  DEL_COUNT=$(grep -wE '^ *[0-9]+ removed' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
+  UPDATE_COUNT=$(grep -wE '^ *[0-9]+ updated' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
+  MOVE_COUNT=$(grep -wE '^ *[0-9]+ moved' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
+  COPY_COUNT=$(grep -wE '^ *[0-9]+ copied' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
+  # REST_COUNT=$(grep -wE '^ *[0-9]+ restored' $TMP_OUTPUT | sed 's/^ *//g' | cut -d ' ' -f1)
 }
 
 function sed_me(){
