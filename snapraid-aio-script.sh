@@ -895,7 +895,10 @@ function trim_log(){
     };
     /^### SnapRAID DIFF/,/^\DIFF finished/{
       /^### SnapRAID DIFF/!{/^DIFF finished/!d}
-    }'
+    };
+    /^Unexpected /d;
+    /^WARNING! You cannot modify files during a sync\./d;
+    /^Rerun the sync command when finished\./d'
   }
 
 # Process and mail the email body read from stdin.
