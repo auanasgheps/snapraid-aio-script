@@ -22,6 +22,7 @@ If applicable, add the error message to help explain your problem.
 **Please complete the following information:**
  - Distro: [e.g. Debian 12]
  - AIO Sceipt Version [e.g. 3.3.2]
+ - Have you tested the latest stable version or from dev branch? Yes/No
 
 **Additional context**
 Add any other context about the problem here.
