@@ -971,7 +971,7 @@ function mklog_noconfig() {
 check_and_install() {
   PACKAGE_NAME=$1
   if [ $(dpkg --version 2>/dev/null | grep -c "Debian") -eq 0 ]; then
-    if [ -z $dpkg_notification ]; then echo "dpkg not found, cannot check for dependencies."; fi
+    if [ -z $dpkg_notification ]; then echo "dpkg not found, cannot check for dependencies. Please ensure they are installed, otherwise the script will not work."; fi
     dpkg_notification=1
   elif [ "$(dpkg-query -W -f='${Status}' $PACKAGE_NAME 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
     echo "$PACKAGE_NAME has not been found and will be installed..."
