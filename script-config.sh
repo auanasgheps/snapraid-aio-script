@@ -1,5 +1,5 @@
 #!/bin/bash
-CONFIG_VERSION="3.3.2"
+CONFIG_VERSION="3.4" #DEV VERSION
 ######################
 #   USER VARIABLES   #
 ######################
@@ -63,20 +63,23 @@ HOOK_NOTIFICATION=""
 DEL_THRESHOLD=500
 UP_THRESHOLD=500
 
-# Allows setting a pattern to ignore files for computing the counts of changed
-# files by snapraid diff.
-# The pattern are based around this regular expression:
-# ^(?!.*(?:$IGNORE_PATTERN).*$).*$
-# It will exclude any file which includes the pattern IGNORE_PATTERN.
+# This setting allows you to specify a pattern to exclude certain files when 
+# computing the counts of changed files using 'snapraid diff'.
+# The patterns are based on the following regular expression:
+# ^(?!.*(?:$IGNORE_PATTERN).*$).*$ 
+# This regex will exclude any file that matches the IGNORE_PATTERN.
+# CAUTION: this is an advanced feature: pattern creation is not easy.
+# You can test your pattern using this example: https://regex101.com/r/Igs4kX/1 
+# Do not include the quotes used in the configuration as part of the pattern.
+# The amount of "matches" shown by this example are the strings NOT captured 
+# by this rule. 
+# 
 # Examples:
-# IGNORE_PATTERN="Hello" -> all files including Hello will be ignored
-# IGNORE_PATTERN="Backup/kopia" -> all files including Backup/kopia will be ignored
-#           in this case it will be all files containing any path with Backup/kopia
-# IGNORE_PATTERN="(Backup/kopia)|(Hello)" -> all files containing either Backup/kopia
-#        or Hello will be ignored
-# This is probably a rather strange approach to file filtering, please test
-# your pattern using https://regex101.com/r/Igs4kX/1 (the quotes used in the
-# configuration are not part of the pattern)
+# IGNORE_PATTERN="Hello" -> All files containing "Hello" will be ignored.
+# IGNORE_PATTERN="Backup/kopia" -> All files containing "Backup/kopia" in their 
+# path will be ignored.
+# IGNORE_PATTERN="(Backup/kopia)|(Hello)" -> All files containing either 
+# "Backup/kopia" or "Hello" will be ignored.
 IGNORE_PATTERN=""
 
 # Allow a sync that would otherwise violate the delete threshold, but only
