@@ -49,6 +49,8 @@ Contributions are welcome!
 	- Support for local and remote Docker instances. Also manage multiple remote Docker instances at once. 
 		- **Note:** Remote Docker instances require SSH passwordless access.
 	- You can either choose to pause or stop your containers.
+- Ignore Files for thresholds warnings
+ 	- If you have many files that change but you want to ignore them (e.g related to frequent backup rotation) you can do so to decrease counts for your thresholds.   
 - Custom Hooks 
 	- Define shell commands or scripts to run before and after SnapRAID operations.
 - Multiple configuration files
@@ -78,6 +80,11 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Scrub new data - scrub the data that was just added by the sync.
 - Pre-hashing - enabled by default. Mitigates the lack of ECC memory, reading data twice to avoid silent read errors.
 - Force zero size sync -  disabled by default. Forces the operation of syncing a file with zero size that before was not. Use with caution!
+- Ignore Files for thresholds warnings - disabled by default
+  	- It is called `IGNORE_PATTERN` in the config file.
+  	- Ignore unwanted updated/changed/deleted files defined on their path(s), that would otherwise increase counts and breach your tresholds.
+  	- This is an advanced feature as it requires the use of regular expressions.  Use with caution!
+  	- More information can be found in the config file.
 - Snapraid Status - disabled by default. Shows the status of the array.
 	- This info can also be sent to Telegram or Discord
 - SMART Log - enabled by default. A SnapRAID report for disks health status.
