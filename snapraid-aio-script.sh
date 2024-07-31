@@ -945,8 +945,22 @@ function send_mail(){
     $HOOK_NOTIFICATION "$SUBJECT" "$body"
   elif [ "$EMAIL_ADDRESS" ]; then
     echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
-    $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
-      < <(echo "$body")
+    if [ -z "$MAIL_BIN" ]; then
+      echo -e "No mail program set in MAIL_BIN, you must set it to send email."
+    elif [ $(mailx -V | grep -c "12.5 7/5/10") -eq 1 ]; then
+      echo -e "Incompatible version of mailx found, using sendmail instead."
+      (
+        echo To: "$EMAIL_ADDRESS"
+        echo From: "$FROM_EMAIL_ADDRESS"
+        echo "Content-Type: text/html;"
+        echo Subject: "$SUBJECT"
+        echo
+        echo "$body"
+      ) | sendmail -t
+    else
+      $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
+        < <(echo "$body")
+    fi
   fi
 }
 
