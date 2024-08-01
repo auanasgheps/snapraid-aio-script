@@ -943,28 +943,39 @@ function send_mail(){
       python3 -m markdown |
       sed 's/<code>/<pre>/;s%</code>%</pre>%')
 
-  if [ -x "$HOOK_NOTIFICATION" ]; then
-    echo -e "Notification user script is set. Calling it now [$(date)]"
-    $HOOK_NOTIFICATION "$SUBJECT" "$body"
-  elif [ "$EMAIL_ADDRESS" ]; then
-    echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
-    if [ -z "$MAIL_BIN" ]; then
-      echo -e "No mail program set in MAIL_BIN, you must set it to send email."
-    elif [ $(mailx -V | grep -c "12.5 7/5/10") -eq 1 ]; then
-      echo -e "Incompatible version of mailx found, using sendmail instead."
-      (
-        echo To: "$EMAIL_ADDRESS"
-        echo From: "$FROM_EMAIL_ADDRESS"
-        echo "Content-Type: text/html;"
-        echo Subject: "$SUBJECT"
-        echo
-        echo "$body"
-      ) | sendmail -t
+if [ -x "$HOOK_NOTIFICATION" ]; then
+  echo -e "Notification user script is set. Calling it now [$(date)]"
+  $HOOK_NOTIFICATION "$SUBJECT" "$body"
+elif [ "$EMAIL_ADDRESS" ]; then
+  echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
+  if [ -z "$MAIL_BIN" ]; then
+    echo -e "No mail program set in MAIL_BIN, you must set it to send email."
+  else
+    # Check if mailx is executable
+    if ! command -v "$MAIL_BIN" &> /dev/null; then
+      echo -e "$MAIL_BIN not found, you must install it to send email."
     else
-      $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
-        < <(echo "$body")
+      # Try to determine if the mailx version is the incompatible one
+      MAILX_VERSION=$($MAIL_BIN -V 2>/dev/null || echo "unknown")
+
+      if [[ "$MAILX_VERSION" == *"12.5 7/5/10"* ]]; then
+        echo "Incompatible version of mailx found, using sendmail instead."
+        (
+          echo To: "$EMAIL_ADDRESS"
+          echo From: "$FROM_EMAIL_ADDRESS"
+          echo "Content-Type: text/html;"
+          echo Subject: "$SUBJECT"
+          echo
+          echo "$body"
+        ) | sendmail -t
+      else
+        $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
+          < <(echo "$body")
+      fi
     fi
   fi
+fi
+
 }
 
 # Due to how process substitution and newer bash versions work, this function
