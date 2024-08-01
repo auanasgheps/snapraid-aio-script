@@ -33,9 +33,6 @@ source "$CONFIG_FILE"
     SUBJECT="[WARNING] - Configuration Error $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
     exit 1;
   fi
 
@@ -107,9 +104,6 @@ function main(){
       SUBJECT="[WARNING] - SnapRAID already running $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
       notify_warning
-      if [ "$EMAIL_ADDRESS" ]; then
-        trim_log < "$TMP_OUTPUT" | send_mail
-      fi
       exit 1;
   else
       echo "SnapRAID is not running, proceeding."
@@ -146,10 +140,6 @@ function main(){
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
   NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
     notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
-    exit 1;
   fi
   fi
 
@@ -206,9 +196,6 @@ function main(){
     SUBJECT="[WARNING] - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
     exit 1;
   fi
   if [ $IGNORE_PATTERN ]; then
@@ -403,9 +390,6 @@ function sanity_check() {
     SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
     exit 1;
   fi
   done
@@ -424,9 +408,6 @@ function sanity_check() {
       SUBJECT="[WARNING] - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
       notify_warning
-      if [ "$EMAIL_ADDRESS" ]; then
-        trim_log < "$TMP_OUTPUT" | send_mail
-      fi
     exit 1;
     fi
   done
@@ -882,6 +863,9 @@ function notify_warning(){
     -d '{"content": "'"$DISCORD_SUBJECT"'"}' \
     "$DISCORD_WEBHOOK_URL"
   fi
+  if [ "$EMAIL_ADDRESS" ]; then
+    trim_log < "$TMP_OUTPUT" | send_mail
+  fi
   }
 
 function show_snapraid_info() {
@@ -1070,9 +1054,6 @@ elif [ $result -eq 2 ]; then
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
   NOTIFY_OUTPUT="$SUBJECT Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings in the script-config file at ""$CONFIG_FILE""."
     notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
   exit 1;
 
 else
@@ -1083,9 +1064,6 @@ else
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
   NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
     notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
   exit 1;
 fi
 }
