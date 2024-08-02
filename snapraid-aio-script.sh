@@ -311,6 +311,12 @@ if [ "$SNAP_STATUS" -eq 1 ]; then
    fi
 fi
 
+# Custom Hook - After (if executed before drive spin down)
+if [ "$CUSTOM_HOOK" -eq 1 ] && [ "$EXECUTE_BEFORE_SPINDOWN" -eq 1 ]; then
+	echo "### Custom Hook - [$AFTER_HOOK_NAME]";
+	bash -c "$AFTER_HOOK_CMD"
+fi
+
 # Spin down disks (Method hd-idle - spins down all rotational devices)
 # NOTE: Uses hd-idle rewrite
 
@@ -332,7 +338,7 @@ fi
   fi
 
   # Custom Hook - After
-  if [ "$CUSTOM_HOOK" -eq 1 ]; then
+  if [ "$CUSTOM_HOOK" -eq 1 ] && [ "$EXECUTE_BEFORE_SPINDOWN" -ne 1 ]; then
     echo "### Custom Hook - [$AFTER_HOOK_NAME]";
     bash -c "$AFTER_HOOK_CMD"
   fi
