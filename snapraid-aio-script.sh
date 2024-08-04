@@ -33,9 +33,6 @@ source "$CONFIG_FILE"
     SUBJECT="[WARNING] - Configuration Error $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
     exit 1;
   fi
 
@@ -107,9 +104,6 @@ function main(){
       SUBJECT="[WARNING] - SnapRAID already running $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
       notify_warning
-      if [ "$EMAIL_ADDRESS" ]; then
-        trim_log < "$TMP_OUTPUT" | send_mail
-      fi
       exit 1;
   else
       echo "SnapRAID is not running, proceeding."
@@ -137,20 +131,16 @@ function main(){
   if [ ! -f "$SNAPRAID_CONF" ]; then
   # if running on OMV7, try to find the SnapRAID conf file automatically
   check_omv_version
-    if [ "$OMV_VERSION" -ge 7 ]; then
-	  pick_snapraid_conf_file
-    else
-      echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
-      mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
-      SUBJECT="[WARNING] - SnapRAID configuration file not found!"
-      FORMATTED_CONF="\`$SNAPRAID_CONF\`"
-      NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
-      notify_warning
-      if [ "$EMAIL_ADDRESS" ]; then
-        trim_log < "$TMP_OUTPUT" | send_mail
-      fi
-      exit 1;
-      fi
+  if [ "$OMV_VERSION" -ge 7 ]; then
+  pick_snapraid_conf_file
+  else
+  echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
+    mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
+  SUBJECT="[WARNING] - SnapRAID configuration file not found!"
+    FORMATTED_CONF="\`$SNAPRAID_CONF\`"
+  NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
+    notify_warning
+  fi
   fi
 
 
@@ -234,9 +224,6 @@ function main(){
     SUBJECT="[WARNING] - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
     exit 1;
   fi
   if [ $IGNORE_PATTERN ]; then
@@ -352,6 +339,12 @@ if [ "$SNAP_STATUS" -eq 1 ]; then
    fi
 fi
 
+# Custom Hook - After (if executed before drive spin down)
+if [ "$CUSTOM_HOOK" -eq 1 ] && [ "$EXECUTE_BEFORE_SPINDOWN" -eq 1 ]; then
+	echo "### Custom Hook - [$AFTER_HOOK_NAME]";
+	bash -c "$AFTER_HOOK_CMD"
+fi
+
 # Spin down disks (Method hd-idle - spins down all rotational devices)
 # NOTE: Uses hd-idle rewrite
 
@@ -373,7 +366,7 @@ fi
   fi
 
   # Custom Hook - After
-  if [ "$CUSTOM_HOOK" -eq 1 ]; then
+  if [ "$CUSTOM_HOOK" -eq 1 ] && [ "$EXECUTE_BEFORE_SPINDOWN" -ne 1 ]; then
     echo "### Custom Hook - [$AFTER_HOOK_NAME]";
     bash -c "$AFTER_HOOK_CMD"
   fi
@@ -431,9 +424,6 @@ function sanity_check() {
     SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
     exit 1;
   fi
   done
@@ -452,9 +442,6 @@ function sanity_check() {
       SUBJECT="[WARNING] - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
       notify_warning
-      if [ "$EMAIL_ADDRESS" ]; then
-        trim_log < "$TMP_OUTPUT" | send_mail
-      fi
     exit 1;
     fi
   done
@@ -910,6 +897,9 @@ function notify_warning(){
     -d '{"content": "'"$DISCORD_SUBJECT"'"}' \
     "$DISCORD_WEBHOOK_URL"
   fi
+  if [ "$EMAIL_ADDRESS" ]; then
+    trim_log < "$TMP_OUTPUT" | send_mail
+  fi
   }
 
 function show_snapraid_info() {
@@ -971,28 +961,39 @@ function send_mail(){
       python3 -m markdown |
       sed 's/<code>/<pre>/;s%</code>%</pre>%')
 
-  if [ -x "$HOOK_NOTIFICATION" ]; then
-    echo -e "Notification user script is set. Calling it now [$(date)]"
-    $HOOK_NOTIFICATION "$SUBJECT" "$body"
-  elif [ "$EMAIL_ADDRESS" ]; then
-    echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
-    if [ -z "$MAIL_BIN" ]; then
-      echo -e "No mail program set in MAIL_BIN, you must set it to send email."
-    elif [ $(mailx -V | grep -c "12.5 7/5/10") -eq 1 ]; then
-      echo -e "Incompatible version of mailx found, using sendmail instead."
-      (
-        echo To: "$EMAIL_ADDRESS"
-        echo From: "$FROM_EMAIL_ADDRESS"
-        echo "Content-Type: text/html;"
-        echo Subject: "$SUBJECT"
-        echo
-        echo "$body"
-      ) | sendmail -t
+if [ -x "$HOOK_NOTIFICATION" ]; then
+  echo -e "Notification user script is set. Calling it now [$(date)]"
+  $HOOK_NOTIFICATION "$SUBJECT" "$body"
+elif [ "$EMAIL_ADDRESS" ]; then
+  echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
+  if [ -z "$MAIL_BIN" ]; then
+    echo -e "No mail program set in MAIL_BIN, you must set it to send email."
+  else
+    # Check if mailx is executable
+    if ! command -v "$MAIL_BIN" &> /dev/null; then
+      echo -e "$MAIL_BIN not found, you must install it to send email."
     else
-      $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
-        < <(echo "$body")
+      # Try to determine if the mailx version is the incompatible one
+      MAILX_VERSION=$($MAIL_BIN -V 2>/dev/null || echo "unknown")
+
+      if [[ "$MAILX_VERSION" == *"12.5 7/5/10"* ]]; then
+        echo "Incompatible version of mailx found, using sendmail instead."
+        (
+          echo To: "$EMAIL_ADDRESS"
+          echo From: "$FROM_EMAIL_ADDRESS"
+          echo "Content-Type: text/html;"
+          echo Subject: "$SUBJECT"
+          echo
+          echo "$body"
+        ) | sendmail -t
+      else
+        $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
+          < <(echo "$body")
+      fi
     fi
   fi
+fi
+
 }
 
 # Due to how process substitution and newer bash versions work, this function
@@ -1087,9 +1088,6 @@ elif [ $result -eq 2 ]; then
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
   NOTIFY_OUTPUT="$SUBJECT Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings in the script-config file at ""$CONFIG_FILE""."
     notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
   exit 1;
 
 else
@@ -1100,9 +1098,6 @@ else
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
   NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
     notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
   exit 1;
 fi
 }
