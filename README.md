@@ -66,7 +66,7 @@ Contributions are welcome!
 Many options can be changed to your taste, their behavior is documented in the config file.
 If you don't know what to do, I recommend using the default values and see how it performs.
 
-### Customizable features
+### Available options
 - Sync options
 	- Sync always (Forced Sync).
 	- Sync after a number of breached threshold warnings. 
@@ -102,6 +102,7 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Made for external services or mail binaries with different commands than `mailx`.
 	- Configure the path of the script or the mail binary to be invoked.
 	- You can still use native services since it only replaces the standard email.
+ 	- You can choose to run the final hook before or after the spindown command, if configured. 
 - Update Check - enabled by default
   	- The script will check via GitHub if there's an update and alert the user via the configured notification systems
   	- If you don't like this, it can be disabled
