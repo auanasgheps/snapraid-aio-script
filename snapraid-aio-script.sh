@@ -361,6 +361,10 @@ fi
     # send long mail if verbosity is set to 1
   if [ "$VERBOSITY" -eq 1 ]; then
       send_mail < "$TMP_OUTPUT"
+		# send a long mail if the sync did not run due to failed checks (deleted or updated files threshold reached or exceeded)
+		# and verbosity is set to 2
+		elif [ "$VERBOSITY" -eq 2 ] && [ "$CHK_FAIL" -eq 1 ] && [ "$DO_SYNC" -eq 0 ]; then
+			send_mail < "$TMP_OUTPUT"
     else
     # or send a short mail
       trim_log < "$TMP_OUTPUT" | send_mail
