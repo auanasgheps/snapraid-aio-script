@@ -963,7 +963,7 @@ elif [ "$EMAIL_ADDRESS" ]; then
           echo "$body"
         ) | sendmail -t
       else
-        $MAIL_BIN -a 'Content-Type: text/html charset=UTF-8' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
+        $MAIL_BIN -a 'Content-Type: text/html' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
           < <(echo "$body")
       fi
     fi
