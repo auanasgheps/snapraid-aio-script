@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV
+SNAPSCRIPTVERSION="3.4" #DEV2
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -147,6 +147,34 @@ function main(){
   # sanity check first to make sure we can access the content and parity files
   mklog "INFO: Checking SnapRAID disks"
   sanity_check
+  
+# Check if previous sync was completed before running a new sync 
+# If the status is ok (exit code 0) the script will proceed, otherwise will stop 
+
+  mklog "INFO: Checking SnapRAID Status"
+  check_snapraid_status
+  if [ $SNAPRAID_STATUS -eq 1 ]; then
+    # Stop the script due to warning
+    echo "Stopping the script because the previous SnapRAID sync did not complete correctly."
+    SUBJECT="[WARNING] - Previous SnapRAID sync did not complete correctly."
+    NOTIFY_OUTPUT="$SUBJECT"
+    notify_warning
+      if [ "$EMAIL_ADDRESS" ]; then
+        trim_log < "$TMP_OUTPUT" | send_mail
+      fi
+    exit 1;
+	
+  elif [ $SNAPRAID_STATUS -eq 2 ]; then
+    # Handle unknown status
+    echo "Stopping the script due to unknown SnapRAID status. Please run 'snapraid status' on your host for more information."
+      SUBJECT="[WARNING] - SnapRAID unknown status"
+      NOTIFY_OUTPUT="$SUBJECT"
+      notify_warning
+      if [ "$EMAIL_ADDRESS" ]; then
+       trim_log < "$TMP_OUTPUT" | send_mail
+      fi
+    exit 1;
+  fi  
 
   # pause configured containers
   if [ "$MANAGE_SERVICES" -eq 1 ]; then
@@ -1099,6 +1127,28 @@ search_conf_files() {
   else
         return 2
     fi
+}
+
+# Run SnapRAID status to check for the previous sync
+check_snapraid_status() {
+  # Run snapraid status command and capture the output
+  local snapraid_status_output=$($SNAPRAID_BIN status)
+
+  # Check for the "No sync is in progress" message
+  if echo "$snapraid_status_output" | grep -q "No sync is in progress"; then
+	echo "Previous sync completed successfully, proceeding."
+	mklog "Previous sync completed successfully, proceeding."
+    SNAPRAID_STATUS=0
+		
+    # Check for the "NOT fully synced" warning message
+  elif echo "$snapraid_status_output" | grep -q "WARNING! The array is NOT fully synced."; then
+	mklog "Warning: The array is NOT fully synced. Stopping the script."
+    SNAPRAID_STATUS=1
+  else 
+    # If neither message is found, handle the unknown state
+	mklog "Warning: The array status is unknown. Stopping the script."
+    SNAPRAID_STATUS=2
+  fi
 }
 
 # Set TRAP
