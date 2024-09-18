@@ -132,11 +132,16 @@ FORCE_ZERO=0
 # hd-idle is required and must be already configured.
 SPINDOWN=0
 
-# Increase verbosity of the email output. NOT RECOMMENDED!
-# If set to 1, TOUCH and DIFF outputs will be kept in the email, producing
-# a mostly unreadable email. You can always check TOUCH and DIFF outputs
-# using the TMP file or use the feature RETENTION_DAYS.
-# 1 to enable, any other value to disable.
+# Increase verbosity of the email output.
+# If set to 2, TOUCH and DIFF outputs will be kept in the email, when the
+# threshold for deleted or updated files has been reached or exceeded and 
+# no sync was run because of that. In all other cases there will be a shorter,
+# more readable email.
+# NOT RECOMMENDED: If set to 1, TOUCH and DIFF outputs will always be kept
+# in the email, producing a mostly unreadable email.
+# You can always check TOUCH and DIFF outputs using the TMP file or use the feature
+# RETENTION_DAYS.
+# Set to any other value than 1 or 2 to disable increased verbosity completely (default)
 VERBOSITY=0
 
 # SnapRAID detailed output retention for each run.
