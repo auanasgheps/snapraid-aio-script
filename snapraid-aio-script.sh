@@ -878,6 +878,7 @@ function notify_success(){
     -d '{"content": "'"$DISCORD_SUBJECT"'"}' \
     "$DISCORD_WEBHOOK_URL"
   fi
+  mklog "INFO: "$SUBJECT""
   }
 
 function notify_warning(){
@@ -900,6 +901,7 @@ function notify_warning(){
   if [ "$EMAIL_ADDRESS" ]; then
     trim_log < "$TMP_OUTPUT" | send_mail
   fi
+  mklog "WARN: "$SUBJECT""
   }
 
 function show_snapraid_info() {
@@ -1137,16 +1139,16 @@ check_snapraid_status() {
   # Check for the "No sync is in progress" message
   if echo "$snapraid_status_output" | grep -q "No sync is in progress"; then
 	echo "Previous sync completed successfully, proceeding."
-	mklog "Previous sync completed successfully, proceeding."
+	mklog "WARN: Previous sync completed successfully, proceeding."
     SNAPRAID_STATUS=0
 		
     # Check for the "NOT fully synced" warning message
   elif echo "$snapraid_status_output" | grep -q "WARNING! The array is NOT fully synced."; then
-	mklog "Warning: The array is NOT fully synced. Stopping the script."
+	mklog "WARN: The array is NOT fully synced. Stopping the script."
     SNAPRAID_STATUS=1
   else 
     # If neither message is found, handle the unknown state
-	mklog "Warning: The array status is unknown. Stopping the script."
+	mklog "WARN: The array status is unknown. Stopping the script."
     SNAPRAID_STATUS=2
   fi
 }
