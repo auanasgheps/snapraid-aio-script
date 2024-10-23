@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV2
+SNAPSCRIPTVERSION="3.4" #DEV3
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -96,6 +96,16 @@ function main(){
       "$DISCORD_WEBHOOK_URL"
     fi
   fi
+
+  ### Check if SnapRAID is found
+  if [ -z "$SNAPRAID_BIN" ]; then
+  echo "**ERROR**: SnapRAID binary not found in PATH. Please check if SnapRAID is installed correctly and found in the PATH environment values of your system."
+    mklog "WARN: SnapRAID binary not found in PATH. Please check if SnapRAID is installed correctly and found in the PATH environment values of your system."
+    SUBJECT="[WARNING] - SnapRAID binary not found in PATH $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT"
+    notify_warning
+    exit 1
+fi
 
   ### Check if SnapRAID is already running
   if pgrep -x snapraid >/dev/null; then
