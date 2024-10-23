@@ -238,8 +238,8 @@ EXECUTE_BEFORE_SPINDOWN=0
 ####################### SYSTEM CONFIGURATION #######################
 # Please make changes only if you know what you're doing
 
-# location of the snapraid binary
-SNAPRAID_BIN="/usr/bin/snapraid"
+# locate snapraid using path
+SNAPRAID_BIN="$(command -v snapraid)"
 # location of the mail program binary
 MAIL_BIN="/usr/bin/mailx"
 
