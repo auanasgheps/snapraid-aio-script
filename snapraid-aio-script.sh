@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ########################################################################
 #                                                                      #
 #   Project page: https://github.com/auanasgheps/snapraid-aio-script   #
@@ -6,9 +6,33 @@
 ########################################################################
 
 ######################
+# One‑time, centralized elevation 
+######################
+
+# Identify the *original* caller BEFORE elevation 
+: "${AIO_CALLER_USER:=$(id -un 2>/dev/null || whoami)}"
+
+# One-time elevation
+SCRIPT_PATH="$(readlink -f -- "${BASH_SOURCE[0]:-$0}")"
+
+if [ "${EUID:-$(id -u)}" -ne 0 ]; then
+  if command -v sudo >/dev/null 2>&1; then
+    # Preserve only what we need. If your sudoers has env_reset (default on Debian),
+    # --preserve-env=... ensures these are still visible after elevation.
+    exec sudo -n \
+      --preserve-env=PATH,LANG,AIO_CALLER_USER \
+      -- "$SCRIPT_PATH" "$@"
+  else
+    echo "Error: root privileges required and 'sudo' not available."
+    exit 1
+  fi
+fi
+
+
+######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV17
+SNAPSCRIPTVERSION="3.4" #DEV18
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -1171,7 +1195,7 @@ command_exists() {
     echo "$PACKAGE_NAME not found. Attempting to install..."
     mklog "INFO: Attempting to install missing package: $PACKAGE_NAME"
 
-    if ! sudo apt-get -qq install -y "$PACKAGE_NAME" > /dev/null 2>&1; then
+    if ! apt-get -qq install -y "$PACKAGE_NAME" > /dev/null 2>&1; then
       echo "ERROR: Failed to install $PACKAGE_NAME"
       mklog "ERROR: apt-get failed to install $PACKAGE_NAME"
       return 1
@@ -1189,74 +1213,94 @@ command_exists() {
   fi
 }
 
-check_and_install_apprise() {
-# Check if apt-get exists
-if ! command_exists apt-get; then
-    echo "Error: This script requires apt-get package manager. Cannot proceed."
-    return 1
-fi
+# Built-in command check (avoid external 'which')
+command_exists() { command -v "$1" >/dev/null 2>&1; }
 
-# Ensure the home directory exists and is writable
-USER_TO_RUN="${SUDO_USER:-$USER}"
-USER_HOME=$(eval echo "~$USER_TO_RUN")
-if [ ! -d "$USER_HOME" ] || [ ! -w "$USER_HOME" ]; then
-    echo "Error: Home directory for user '$USER_TO_RUN' is missing or not writable."
-    exit 1
-fi
+# Get a user's HOME via passwd DB (no eval/tilde)
+user_home() { getent passwd "$1" | awk -F: '{print $6}'; }
 
-# Check if pipx is installed
-if ! sudo -u "$USER_TO_RUN" which pipx >/dev/null2>&1; then
-  echo "pipx is not installed. Installing pipx..."
-
-  # Install pipx via apt
-  sudo apt-get -qq update && sudo apt-get -qq install -y pipx
-  
-  # Check again if pipx is now available
-  if ! sudo -u "$USER_TO_RUN" which pipx >/dev/null 2>&1; then
-    echo "Error: pipx installation failed."
-    exit 1
+# Run a one-liner as a login shell for user (prefer runuser, fallback to su)
+as_user_login() {
+  local u="$1" ; shift
+  if command_exists runuser; then
+    runuser -l "$u" -c "$*" 2>/dev/null
+  else
+    su - "$u" -c "$*" 2>/dev/null
   fi
-
-  # Run pipx ensurepath (not global if run as sudo)
-  sudo -u "$USER_TO_RUN" -H bash -c "pipx ensurepath"
-  
-  # notify user that the script needs to be run again
-  echo -e "\nPipx has been successfully installed!"
-  echo -e "\n⚠️  Important: You need to restart your shell session to install and use Apprise."
-  echo "Please restart your terminal and/or run your script again."
-  mklog "Important: You need to restart your shell session to install and use Apprise. Please restart your terminal and/or run your script again."
-  exit 0
-fi
-
-# Check if apprise is installed via pipx
-APPRISE_BIN=$(resolve_apprise_bin "$USER_TO_RUN")
-
-if [ ! -x "$APPRISE_BIN" ]; then
-  echo "Apprise is not installed. Installing apprise using pipx..."
-    if ! sudo -u "$USER_TO_RUN" pipx install apprise; then
-    echo "Error: Failed to install apprise."
-    return 1
-    fi
-    hash -r
-    APPRISE_BIN=$(resolve_apprise_bin "$USER_TO_RUN")
-fi
 }
 
-resolve_apprise_bin() {
-    local user="${1:-$USER}"
-    local home
-    home=$(eval echo "~$user")
-    sudo -H -u "$user" env HOME="$home" \
-        PATH="$home/.local/bin:$PATH:/usr/local/bin:/usr/bin:/bin" \
-        which -a apprise | head -n1
+check_and_install_apprise() {
+  # Decide owner: original caller if available, else root
+  local USER_TO_RUN="${AIO_CALLER_USER:-root}"
+  local HOME_TO_RUN
+  HOME_TO_RUN="$(user_home "$USER_TO_RUN")"
+  [ -z "$HOME_TO_RUN" ] && HOME_TO_RUN="/root"
+
+  # Ensure pipx exists (system-wide)
+  if ! command_exists pipx; then
+    if ! command_exists apt-get; then
+      echo "Error: apt-get not found and /usr/bin/apprise missing."
+      return 1
+    fi
+    echo "Installing pipx..."
+    apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y pipx \
+      || { echo "Error: pipx installation failed."; return 1; }
+  fi
+
+  # Resolve user's current pipx bin dir and look for apprise there
+  #    (fast path if user already has it)
+  local PIPX_BIN_DIR_USER
+  PIPX_BIN_DIR_USER="$(as_user_login "$USER_TO_RUN" 'pipx environment 2>/dev/null | sed -n "s/^PIPX_BIN_DIR=//p"')"
+  if [ -n "$PIPX_BIN_DIR_USER" ] && [ -x "$PIPX_BIN_DIR_USER/apprise" ]; then
+    APPRISE_BIN="$PIPX_BIN_DIR_USER/apprise"
+    export APPRISE_BIN
+    return 0
+  fi
+
+  # Also check common default shim path
+  if [ -x "$HOME_TO_RUN/.local/bin/apprise" ]; then
+    APPRISE_BIN="$HOME_TO_RUN/.local/bin/apprise"
+    export APPRISE_BIN
+    return 0
+  fi
+
+  # Install Apprise with pipx (for the owner), then resolve again
+  echo "Apprise not found; installing with pipx for '$USER_TO_RUN'..."
+  if [ "$USER_TO_RUN" != "root" ]; then
+    as_user_login "$USER_TO_RUN" 'pipx install apprise' \
+      || { echo "WARN: pipx install for $USER_TO_RUN failed."; }
+  else
+    pipx install apprise || { echo "WARN: pipx install for root failed."; }
+  fi
+  # Recompute user’s pipx bin dir and shim
+  PIPX_BIN_DIR_USER="$(as_user_login "$USER_TO_RUN" 'pipx environment 2>/dev/null | sed -n "s/^PIPX_BIN_DIR=//p"')"
+  if [ -n "$PIPX_BIN_DIR_USER" ] && [ -x "$PIPX_BIN_DIR_USER/apprise" ]; then
+    APPRISE_BIN="$PIPX_BIN_DIR_USER/apprise"
+  elif [ -x "$HOME_TO_RUN/.local/bin/apprise" ]; then
+    APPRISE_BIN="$HOME_TO_RUN/.local/bin/apprise"
+  fi
+
+  # Final check & export
+  if [ -z "${APPRISE_BIN:-}" ] || [ ! -x "$APPRISE_BIN" ]; then
+    echo "Error: could not resolve apprise binary."
+    echo "Debug:"
+    echo "  USER_TO_RUN=$USER_TO_RUN"
+    echo "  HOME_TO_RUN=$HOME_TO_RUN"
+    echo "  PIPX_BIN_DIR_USER=$PIPX_BIN_DIR_USER"
+    return 1
+  fi
+
+  export APPRISE_BIN
+  return 0
 }
 
 # Check OMV Version
 check_omv_version() {
-    if dpkg -l | grep -q "openmediavault"; then
+    if dpkg-query -W -f='${Status}' openmediavault 2>/dev/null | grep -q "install ok installed"; then
         version=$(dpkg-query -W -f='${Version}' openmediavault)
-        if [[ $version ]]; then
-            if dpkg --compare-versions "$version" "ge" "7"; then
+        if [[ -n "$version" ]]; then
+            major_version=$(echo "$version" | cut -d. -f1)
+            if [[ "$major_version" -ge 7 ]]; then
                 OMV_VERSION=7
             else
                 OMV_VERSION=6
