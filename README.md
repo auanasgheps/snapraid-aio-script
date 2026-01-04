@@ -60,7 +60,6 @@ Contributions are welcome!
 	- Supports [Healthchecks.io](https://healthchecks.io), and 100+ services via Apprise (Telegram, Discord, Slack, etc) 
     - You can also get notified with the `Snapraid SMART log` and `Snapraid Status`
     - You can get the full email report if a warning is issued (breached threshold)
-	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or another mail binary **[deprecated, use Apprise]**
 - Important messages are also sent to the system log.
 - Emails reports are still the best way to get detailed but readable information.
 
