@@ -507,12 +507,11 @@ function sanity_check() {
 
 function get_counts() {
   EQ_COUNT=$(grep -wE '^ *[0-9]+ equal' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
-  if [ $IGNORE_PATTERN ]; then
-    ADD_COUNT=$(grep -c -P "^add (?!.*(?:$IGNORE_PATTERN).*$).*$" "$TMP_OUTPUT")
-    UPDATE_COUNT=$(grep -c -P "^update (?!.*(?:$IGNORE_PATTERN).*$).*$" "$TMP_OUTPUT")
-    DEL_COUNT=$(grep -c -P "^remove (?!.*(?:$IGNORE_PATTERN).*$).*$" "$TMP_OUTPUT")
-    MOVE_COUNT=$(grep -c -P "^move (?!.*(?:$IGNORE_PATTERN).*$).*$" "$TMP_OUTPUT")
-    IGNORE_COUNT=$(grep -c -P ".*(?:$IGNORE_PATTERN).*" "$TMP_OUTPUT")
+  if [ ${#IGNORE_PATTERN[@]} -gt 0 ]; then
+    ADD_COUNT=$(count_actions_with_ignore add)
+    UPDATE_COUNT=$(count_actions_with_ignore update)
+    DEL_COUNT=$(count_actions_with_ignore remove)
+    MOVE_COUNT=$(count_actions_with_ignore move)
   else
     ADD_COUNT=$(grep -c -P '^add .+$' "$TMP_OUTPUT")
     UPDATE_COUNT=$(grep -c -P '^update .+$' "$TMP_OUTPUT")
@@ -521,6 +520,25 @@ function get_counts() {
   fi
   COPY_COUNT=$(grep -wE '^ *[0-9]+ copied' "$TMP_OUTPUT" | sed 's/^ *//g' | cut -d ' ' -f1)
   # REST_COUNT=$(grep -wE '^ *[0-9]+ restored' $TMP_OUTPUT | sed 's/^ *//g' | cut -d ' ' -f1)
+}
+
+function count_actions_with_ignore() {
+  local action=$1
+  local count=0
+
+  while read -r act path; do
+      [[ $act == "$action" ]] || continue
+
+      # check ignore globs
+      for glob in "${IGNORE_PATTERN[@]}"; do
+          # shellcheck disable=SC2053 # glob matching is wanted here
+          [[ $path == $glob ]] && continue 2
+      done
+
+      ((count++))
+  done < "$TMP_OUTPUT"
+
+  echo "$count"
 }
 
 function sed_me(){
