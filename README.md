@@ -353,4 +353,5 @@ This script would not exist without:
 - [Caedis](https://github.com/Caedis)
 - [Pushpender](https://github.com/ranapushpender)
 - [Phidauex](https://github.com/phidauex)
-
+- [Wastus](https://github.com/Wastus)
+- [Jeff47](https://github.com/jeff47)
