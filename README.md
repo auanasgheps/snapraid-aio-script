@@ -18,8 +18,9 @@ Contributions are welcome!
     + [Available options](#available-options)
   * [A nice email report](#a-nice-email-report)
 - [Requirements](#requirements)
-- [Installation](#installation)
+- [Installation and usage](#installation-and-usage)
   * [First Run](#first-run)
+  * [Command Line Arguments](#command-line-arguments)
   * [OMV and SnapRAID plugin](#omv-and-snapraid-plugin)
   * [Installing `hd-idle`](#installing-hd-idle-for-automatic-disk-spindown)
 - [Upgrade](#upgrade)
@@ -64,7 +65,7 @@ Contributions are welcome!
 - Emails reports are still the best way to get detailed but readable information.
 
 ## Customization
-Many options can be changed to your taste, their behavior is documented in the config file.
+Many options can be changed to your liking, their behavior is documented in the config file.
 If you don't know what to do, I recommend using the default values and see how it performs.
 
 ### Available options
@@ -84,12 +85,12 @@ If you don't know what to do, I recommend using the default values and see how i
 - Ignore Files for thresholds warnings - disabled by default
   	- It is called `IGNORE_PATTERN` in the config file.
   	- Ignore unwanted updated/changed/deleted files defined on their path(s), that would otherwise increase counts and breach your tresholds.
-  	- This is an advanced feature as it requires the use of regular expressions.  Use with caution!
+  	- This is an advanced feature as it requires the use of bash pathname expansions. Use with caution!
   	- More information can be found in the config file.
 - Snapraid Status - disabled by default. Shows the status of the array.
-	- This info can also be sent to Telegram or Discord
+	- This info can also be sent via notification services
 - SMART Log - enabled by default. A SnapRAID report for disks health status.
-  	- This info can also be sent to Telegram or Discord
+  	- This info can also be sent via notification services
 - Verbosity option - disabled by default. When enabled, includes the TOUCH and DIFF commands output. Please note email will be huge and mostly unreadable.
 - SnapRAID Output (log) retention - disabled by default (log is overriden every run)
 	- Detailed output retention for each run
@@ -105,7 +106,7 @@ If you don't know what to do, I recommend using the default values and see how i
   	- You can choose to get the output attached if there's a warning (only supported by some services, check Apprise docs)
 - Email report via [Apprise](https://github.com/caronc/apprise)
   	- If your distro doesn't have `mailx` or `sendmail`, you can use Apprise to deliver your email reports
-   - You can choose to get the output attached if there's a warning
+    - You can choose to get the output attached if there's a warning
 - Notification Hook **[deprecated, use Apprise]**
 	- Made for external services or mail binaries with different commands than `mailx`.
 	- Configure the path of the script or the mail binary to be invoked.
@@ -113,11 +114,12 @@ If you don't know what to do, I recommend using the default values and see how i
  	- You can choose to run the final hook before or after the spindown command, if configured.
 - Update Check - enabled by default
   	- The script will check via GitHub if there's an update and alert the user via the configured notification systems
-  	- If you don't like this, it can be disabled
+  	- It can be disabled
 - Docker Container management
-	- A list of containers you want to be interrupted before running actions and restored when completed.
+	- A list of containers you want to manage when running SnapRAID actions.
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
-   	- Docker remote - if docker is running on a remote machine
+   	- Docker remote - if docker is running on a remote machine, you can manage those containers as well.
+   	  - NOTE: You need to set up passwordless SSH authentication to your docker remote host.
 - Command line arguments
   	- Can be used to override the default behaviour.
   	- You can force a sync by adding  `--force-sync`
@@ -127,8 +129,7 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Option to display friendly name to in the email output
 - Spindown - spindown disks after the script has completed operations. Uses a rewritten version of [hd-idle](https://github.com/adelolmo/hd-idle).
 
- 
-You can also change more advanced options such SnapRAID binary location, log file location and mail binary.
+You can also change more advanced options such SnapRAID binary location, log file location and mail binary, but make these changes only if you know what you're doing.
 
 ## A nice email report
 This script produces emails that don't contain a list of changed files to improve clarity.
@@ -139,150 +140,118 @@ Here's an example email report.
 
 
 ```markdown
-## [COMPLETED] DIFF + SYNC + SCRUB Jobs (SnapRAID on omv-test.local)
-SnapRAID Script Job started [Tue 20 Apr 11:43:37 CEST 2021]
-Running SnapRAID version 11.5
-SnapRAID AIO Script version X.YZ
+[COMPLETED] DIFF + SYNC + SCRUB Jobs (SnapRAID on omv-test)
 
-----------
+SnapRAID Script Job started [Sun Jan 4 12:58:25 CET 2026]
+Running SnapRAID version none
+SnapRAID AIO Script version 3.4
+Using configuration file: /usr/sbin/snapraid/script-config.conf
+Preprocessing
 
-## Preprocessing
-Healthchecks.io integration is enabled.
-Configuration file found.
+Apprise service notification is enabled.
+SnapRAID is not running, proceeding.
+SnapRAID output retention is enabled. Detailed logs will be kept in /root for 3 days.
+Proceeding with the omv-snapraid-.conf file: /etc/snapraid/omv-snapraid-0859ab15-e1d1-4574-9f5d-cf65f63c962d.conf
 Checking if all parity and content files are present.
 All parity files found.
 All content files found.
-Docker containers management is enabled.
+Previous sync completed successfully, proceeding.
+Processing
+SnapRAID TOUCH [Sun Jan 4 12:58:25 CET 2026]
 
-### Stopping Containers [Tue 20 Apr 11:43:37 CEST 2021]
-Stopping Container - Code-server
-code-server
-Stopping Container - Portainer
-portainer
-
-----------
-
-## Processing
-### SnapRAID TOUCH [Tue 20 Apr 11:43:37 CEST 2021]
 Checking for zero sub-second files.
 No zero sub-second timestamp files found.
-TOUCH finished [Tue 20 Apr 11:43:38 CEST 2021]
+TOUCH finished [Sun Jan 4 12:58:25 CET 2026]
+SnapRAID DIFF [Sun Jan 4 12:58:25 CET 2026]
 
-### SnapRAID DIFF [Tue 20 Apr 11:43:38 CEST 2021]
-DIFF finished [Tue 20 Apr 11:43:38 CEST 2021]
-**SUMMARY of changes - Added [0] - Deleted [0] - Moved [0] - Copied [0] - Updated [1]**
-There are no deleted files, that's fine.
-There are updated files. The number of updated files (1) is below the threshold of (500).
-SYNC is authorized. [Tue 20 Apr 11:43:38 CEST 2021]
+DIFF finished [Sun Jan 4 12:58:25 CET 2026]
+SUMMARY: Equal [2641] - Added [1] - Deleted [1] - Moved [0] - Copied [0] - Updated [0]
+There are deleted files. The number of deleted files (1) is below the threshold of (2).
+There are no updated files, that's fine.
+SYNC is authorized. [Sun Jan 4 12:58:25 CET 2026]
+SnapRAID SYNC [Sun Jan 4 12:58:25 CET 2026]
 
-### SnapRAID SYNC [Tue 20 Apr 11:43:38 CEST 2021]
 Self test...  
-Loading state from /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Scanning disk DATA1...  
-Scanning disk DATA2...  
-Using 0 MiB of memory for the file-system.  
+Loading state from /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content...  
+Scanning...   
+Scanned DATA in 0 seconds  
+Using 1 MiB of memory for the file-system.  
 Initializing...  
 Hashing...  
 SYNC - Everything OK  
 Resizing...  
-Saving state to /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK2/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK3/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK4/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK2/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK3/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK4/snapraid.content...  
-Verified /srv/dev-disk-by-label-DISK4/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK3/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK2/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK1/snapraid.content in 0 seconds  
+Saving state to /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content...  
+Saving state to /srv/dev-disk-by-uuid-3b2a06c9-5f46-4648-9d45-135e393c6efe/snapraid.content...  
+Verifying...  
+Verified /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content in 0 seconds  
+Verified /srv/dev-disk-by-uuid-3b2a06c9-5f46-4648-9d45-135e393c6efe/snapraid.content in 0 seconds  
+Using 32 MiB of memory for 64 cached blocks.  
+Selecting...  
 Syncing...  
-Using 32 MiB of memory for 32 cached blocks.  
-    DATA1 12% | *******  
-    DATA2 82% | ************************************************  
-   parity  0% |   
- 2-parity  0% |   
-     raid  1% | *  
-     hash  1% |   
-    sched 11% | ******  
-     misc  0% |   
-              |____________________________________________________________  
-                            wait time (total, less is better)  
+   DATA 47% | *****************************  
+ parity  0% |   
+   raid  1% |   
+   hash  3% | **  
+  sched 45% | ***************************  
+   misc  2% | *  
+            |______________________________________________________________  
+                           wait time (total, less is better)  
 SYNC - Everything OK  
-Saving state to /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK2/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK3/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK4/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK2/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK3/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK4/snapraid.content...  
-Verified /srv/dev-disk-by-label-DISK4/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK3/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK2/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK1/snapraid.content in 0 seconds
+Saving state to /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content...  
+Saving state to /srv/dev-disk-by-uuid-3b2a06c9-5f46-4648-9d45-135e393c6efe/snapraid.content...  
+Verifying...  
+Verified /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content in 0 seconds  
+Verified /srv/dev-disk-by-uuid-3b2a06c9-5f46-4648-9d45-135e393c6efe/snapraid.content in 0 seconds
 
-SYNC finished [Tue 20 Apr 11:43:40 CEST 2021]
 
-### SnapRAID SCRUB [Tue 20 Apr 11:43:40 CEST 2021]
+SYNC finished [Sun Jan 4 12:58:27 CET 2026]
+
+SnapRAID SCRUB [Sun Jan 4 12:58:27 CET 2026]
+
+SCRUB Previous Blocks [Sun Jan 4 12:58:27 CET 2026]
+
 Self test...  
-Loading state from /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Using 0 MiB of memory for the file-system.  
+Loading state from /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content...  
+Using 1 MiB of memory for the file-system.  
 Initializing...  
+Using 48 MiB of memory for 64 cached blocks.  
+Selecting...  
 Scrubbing...  
-Using 48 MiB of memory for 32 cached blocks.  
-    DATA1  2% | *  
-    DATA2 18% | **********  
-   parity  0% |   
- 2-parity  0% |   
-     raid 21% | ************  
-     hash  7% | ****  
-    sched 51% | ******************************  
-     misc  0% |   
-              |____________________________________________________________  
-                            wait time (total, less is better)  
+   DATA 82% | **************************************************  
+ parity  1% | *  
+   raid 10% | ******  
+   hash  4% | **  
+  sched  0% |   
+   misc  0% |   
+            |______________________________________________________________  
+                           wait time (total, less is better)  
 SCRUB - Everything OK  
-Saving state to /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK2/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK3/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK4/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK2/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK3/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK4/snapraid.content...  
-Verified /srv/dev-disk-by-label-DISK4/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK3/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK2/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK1/snapraid.content in 0 seconds
+Saving state to /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content...  
+Saving state to /srv/dev-disk-by-uuid-3b2a06c9-5f46-4648-9d45-135e393c6efe/snapraid.content...  
+Verifying...  
+Verified /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content in 0 seconds  
+Verified /srv/dev-disk-by-uuid-3b2a06c9-5f46-4648-9d45-135e393c6efe/snapraid.content in 0 seconds
 
-SCRUB finished [Tue 20 Apr 11:43:41 CEST 2021]
 
-----------
+SCRUB finished [Sun Jan 4 12:58:28 CET 2026]
 
-## Postprocessing
+Postprocessing
 SnapRAID Smart
+
 SnapRAID SMART report:  
    Temp  Power   Error   FP Size  
-      C OnDays   Count        TB  Serial                Device    Disk  
-      -      -       -  SSD  0.0  00000000000000000001  /dev/sdb  DATA1  
-      -      -       -  SSD  0.0  01000000000000000001  /dev/sdc  DATA2  
-      -      -       -    -  0.0  02000000000000000001  /dev/sdd  parity  
-      -      -       -  SSD  0.0  03000000000000000001  /dev/sde  2-parity  
-      -      -       -  n/a    -  -                     /dev/sr0  -  
-      0      -       -    -  0.0  -                     /dev/sda  -  
+      C OnDays   Count        TB  Serial  Device    Disk  
+      0      -       -  SSD  0.0  -  /dev/sdb  DATA  
+      0      -       -  SSD  0.0  -  /dev/sdc  parity  
+      -      -       -  n/a    -  -  /dev/sr0  -  
+      0      -       -  SSD  0.0  -  /dev/sda  -  
 The FP column is the estimated probability (in percentage) that the disk  
 is going to fail in the next year.  
 Probability that at least one disk is going to fail in the next year is 0%.
 
-## Restarting Containers [Tue 20 Apr 11:43:41 CEST 2021]
+All jobs ended. [Sun Jan 4 12:58:28 CET 2026]
 
-Restarting Container - Code-server
-code-server
-Restarting Container - Portainer
-portainer
-All jobs ended. [Tue 20 Apr 11:43:41 CEST 2021]
-Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 11:43:41 CEST 2021]
+Total time elapsed for SnapRAID: 0hrs 0min 3sec
 ```
 
 # Requirements
@@ -295,7 +264,6 @@ If you are running a Debian based distro (with `apt` package manager) the script
 - [`Apprise`](https://github.com/caronc/apprise) - used to send notifications to 100+ services
    - To install Apprise, the script will use [`pipx`](https://github.com/pypa/pipx). The whole process is managed by the script
    - When Apprise is installed the first time, the script will exit and you'll have to restart it manually. This is needed because of pipx instalation, othwerise Apprise would not be found.
-
 
 Dependencies that require manual installation:
 - `hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle), installation instructions [below](#installing-hd-idle-for-automatic-disk-spindown)
@@ -327,7 +295,7 @@ The script supports two command line arguments to override the default behaviour
   - Override sync protection: execute a forced sync, useful after a warning. Add `--force-sync`. It can be used along with `--config`.
 	- You can schedule this as a task but keep it disabled, to execute it manually to pass a WARNING.
 
-It is tested on OMV6 and OMV7, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
+It is tested on OMV7 (Debian 12), but will work on other distros. In such case you may have to change the mail binary or SnapRAID location. If your distro doesn't have apt, you'll need to manually install the dependencies.
 
 ### OMV7 USERS
 OMV7's SnapRAID plugins introduced support for multiple arrays. This means each SnapRAID config file does not have a predictable name, unlike what occurred with OMV6 or standard SnapRAID installs. 
@@ -336,7 +304,7 @@ When running on OMV7, the AIO Script will search for a single SnapRAID configura
 ## First Run
 If you start with empty disks, you cannot use (yet) this script, since it expects SnapRAID files which would not be found.
 
-First run `snapraid sync`. Once completed, the array will be ready to be used with this script.
+First, manually run `snapraid sync`. Once completed, the array will be ready to be used with this script.
 
 ## OMV and SnapRAID plugin
 This script perfectly replaces the OMV built-in script. 
