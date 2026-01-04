@@ -5,7 +5,7 @@ There are many SnapRAID scripts out there, but none had the features I wanted. S
 
 It is meant to be run periodically (daily), do the heavy lifting and send an email you will actually read.
 
-Supports single and dual parity configurations. It is highly customizable and has been tested with Debian 11/12 and [OpenMediaVault 6/7](https://github.com/openmediavault/openmediavault).
+Supports single and dual parity configurations. It is highly customizable and has been tested with Debian 12 and [OpenMediaVault 7](https://github.com/openmediavault/openmediavault).
 
 Contributions are welcome!
 
