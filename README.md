@@ -291,7 +291,7 @@ Dependencies that require manual installation:
 ### Command Line arguments
 
 The script supports two command line arguments to override the default behaviour:
-  - Script config file path: provides an alternative script config file path. Add `--config <path>`. Example `snapraid-aio-script.sh --config /home/alternate_config.sh`
+  - Script config file path: provides an alternative script config file path. Add `--config <path>`. Example `snapraid-aio-script.sh --config /home/alternate_config.conf`
   - Override sync protection: execute a forced sync, useful after a warning. Add `--force-sync`. It can be used along with `--config`.
 	- You can schedule this as a task but keep it disabled, to execute it manually to pass a WARNING.
 
