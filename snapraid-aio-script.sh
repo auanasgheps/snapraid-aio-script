@@ -20,7 +20,7 @@ if [ "${EUID:-$(id -u)}" -ne 0 ]; then
     # Preserve only what we need. If your sudoers has env_reset (default on Debian),
     # --preserve-env=... ensures these are still visible after elevation.
     exec sudo -n \
-      --preserve-env=PATH,LANG,AIO_CALLER_USER \
+      --preserve-env=LANG,AIO_CALLER_USER \
       -- "$SCRIPT_PATH" "$@"
   else
     echo "Error: root privileges required and 'sudo' not available."
@@ -32,10 +32,7 @@ fi
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV20
-
-# Read SnapRAID version
-SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
+SNAPSCRIPTVERSION="3.4" #DEV21
 
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
@@ -90,6 +87,9 @@ main(){
 
   # Check if the script is running as root
   check_root
+  
+  # Read SnapRAID version
+  SNAPRAIDVERSION="$("$SNAPRAID_BIN" -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
   
   # Begin user output
   
