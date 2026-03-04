@@ -263,7 +263,7 @@ If you are running a Debian based distro (with `apt` package manager) the script
 - [`bc`](https://packages.debian.org/bullseye/bc) - used for for floating-point comparisons
 - [`Apprise`](https://github.com/caronc/apprise) - used to send notifications to 100+ services
    - To install Apprise, the script will use [`pipx`](https://github.com/pypa/pipx). The whole process is managed by the script
-   - When Apprise is installed the first time, the script will exit and you'll have to restart it manually. This is needed because of pipx instalation, othwerise Apprise would not be found.
+   - When Apprise is installed the first time, the script will exit and you'll have to restart it manually. This is needed because of pipx installation, otherwise Apprise would not be found.
 
 Dependencies that require manual installation:
 - `hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle), installation instructions [below](#installing-hd-idle-for-automatic-disk-spindown)
