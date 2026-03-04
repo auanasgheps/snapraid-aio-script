@@ -283,7 +283,7 @@ Dependencies that require manual installation:
 6. Schedule a daily execution. If you're running OMV, browse to System > Scheduled Tasks to create a new one.
    - If you're not running OMV, open the crontab editor `crontab -e`
    - Add the following line to run the script every day at midnight: `0 0 * * * /usr/sbin/snapraid-aio-script.sh`
-     - Use [Contab Guru](https://crontab.guru/) to easily pick your preferred time
+     - Use [Crontab Guru](https://crontab.guru/) to easily pick your preferred time
      - Add Command Line arguments if needed (see below).
 	   
   
