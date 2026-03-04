@@ -32,7 +32,7 @@ fi
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV21
+SNAPSCRIPTVERSION="3.4" #DEV22
 
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
@@ -1123,8 +1123,12 @@ send_mail(){
       sed 's/<code>/<pre>/;s%</code>%</pre>%')
 
 if [ -x "$HOOK_NOTIFICATION" ]; then
-  echo -e "Notification user script is set. Calling it now [$(date)]"
-  $HOOK_NOTIFICATION "$SUBJECT" "$body"
+  echo -e "Notification user script is set. Calling it as user ${AIO_CALLER_USER:-nobody} [$(date)]"
+  if command_exists runuser; then
+    runuser -u "${AIO_CALLER_USER:-nobody}" -- "$HOOK_NOTIFICATION" "$SUBJECT" "$body"
+  else
+    sudo -u "${AIO_CALLER_USER:-nobody}" "$HOOK_NOTIFICATION" "$SUBJECT" "$body"
+  fi
 elif [ "$APPRISE_EMAIL" -eq 1 ]; then
   echo "Sending email report using Apprise service."
   if [ "$APPRISE_EMAIL_ATTACH" -eq 1 ] && [ "$APPRISE_EMAIL_ATTACH_DO" -eq 1 ]; then
