@@ -277,7 +277,7 @@ Dependencies that require manual installation:
 4. Give executable rights to the main script 
    - `chmod +x snapraid-aio-script.sh`
 5. Open the config file and make changes to the config file as required. 
-   - Every config is documented but defaults are pretty resonable, so don't make changes if you're not sure.
+   - Every config is documented but defaults are pretty reasonable, so don't make changes if you're not sure.
    - When you see  `""` or `''` in some options, do not remove these characters but just fill in your data.
    - If you want to spindown your disks, you need to install [hd-idle](https://github.com/adelolmo/hd-idle)
 6. Schedule a daily execution. If you're running OMV, browse to System > Scheduled Tasks to create a new one.
