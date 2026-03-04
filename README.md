@@ -84,7 +84,7 @@ If you don't know what to do, I recommend using the default values and see how i
 - Force zero size sync -  disabled by default. Forces the operation of syncing a file with zero size that before was not. Use with caution!
 - Ignore Files for thresholds warnings - disabled by default
   	- It is called `IGNORE_PATTERN` in the config file.
-  	- Ignore unwanted updated/changed/deleted files defined on their path(s), that would otherwise increase counts and breach your tresholds.
+  	- Ignore unwanted updated/changed/deleted files defined on their path(s), that would otherwise increase counts and breach your thresholds.
   	- This is an advanced feature as it requires the use of bash pathname expansions. Use with caution!
   	- More information can be found in the config file.
 - Snapraid Status - disabled by default. Shows the status of the array.
