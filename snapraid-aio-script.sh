@@ -32,7 +32,7 @@ fi
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV22
+SNAPSCRIPTVERSION="3.4" #DEV23
 
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
@@ -258,7 +258,7 @@ fi
   echo "### SnapRAID DIFF [$(date)]"
   mklog "INFO: SnapRAID DIFF started"
   echo "\`\`\`"
-  $SNAPRAID_BIN -c $SNAPRAID_CONF diff
+  "$SNAPRAID_BIN" -c "$SNAPRAID_CONF" diff
   close_output_and_wait
   output_to_file_screen
   echo "\`\`\`"
@@ -315,13 +315,13 @@ fi
     mklog "INFO: SnapRAID SYNC Job started"
     echo "\`\`\`"
     if [ "$PREHASH" -eq 1 ] && [ "$FORCE_ZERO" -eq 1 ]; then
-      $SNAPRAID_BIN -c $SNAPRAID_CONF -h --force-zero -q sync
+      "$SNAPRAID_BIN" -c "$SNAPRAID_CONF" -h --force-zero -q sync
     elif [ "$PREHASH" -eq 1 ]; then
-      $SNAPRAID_BIN -c $SNAPRAID_CONF -h -q sync
+      "$SNAPRAID_BIN" -c "$SNAPRAID_CONF" -h -q sync
     elif [ "$FORCE_ZERO" -eq 1 ]; then
-      $SNAPRAID_BIN -c $SNAPRAID_CONF --force-zero -q sync
+      "$SNAPRAID_BIN" -c "$SNAPRAID_CONF" --force-zero -q sync
     else
-      $SNAPRAID_BIN -c $SNAPRAID_CONF -q sync
+      "$SNAPRAID_BIN" -c "$SNAPRAID_CONF" -q sync
     fi
     close_output_and_wait
     output_to_file_screen
@@ -675,7 +675,7 @@ chk_zero(){
     echo "$TIMESTATUS"
     echo "Running TOUCH job to timestamp. [$(date)]"
     echo "\`\`\`"
-    $SNAPRAID_BIN -c $SNAPRAID_CONF touch
+    "$SNAPRAID_BIN" -c "$SNAPRAID_CONF" touch
     close_output_and_wait
     output_to_file_screen
     echo "\`\`\`"
@@ -729,14 +729,14 @@ run_scrub(){
   if [ "$SCRUB_NEW" -eq 1 ]; then
   echo "SCRUB New Blocks [$(date)]"
     echo "\`\`\`"
-    $SNAPRAID_BIN -c $SNAPRAID_CONF -p new -q scrub
+    "$SNAPRAID_BIN" -c "$SNAPRAID_CONF" -p new -q scrub
     close_output_and_wait
     output_to_file_screen
     echo "\`\`\`"
   fi
   echo "SCRUB Previous Blocks [$(date)]"
   echo "\`\`\`"
-  $SNAPRAID_BIN -c $SNAPRAID_CONF -p "$SCRUB_PERCENT" -o "$SCRUB_AGE" -q scrub
+  "$SNAPRAID_BIN" -c "$SNAPRAID_CONF" -p "$SCRUB_PERCENT" -o "$SCRUB_AGE" -q scrub
   close_output_and_wait
   output_to_file_screen
   echo "\`\`\`"
@@ -1435,7 +1435,7 @@ extract_snapraid_info() {
 # Run SnapRAID status to check for the previous sync
 check_snapraid_status() {
   # Run snapraid status command and capture the output
-  local snapraid_status_output=$($SNAPRAID_BIN status -c "$SNAPRAID_CONF")
+  local snapraid_status_output=$("$SNAPRAID_BIN" status -c "$SNAPRAID_CONF")
 
   # Check for the "No sync is in progress" message
   if echo "$snapraid_status_output" | grep -q "No sync is in progress"; then
