@@ -258,7 +258,7 @@ Total time elapsed for SnapRAID: 0hrs 0min 3sec
 
 If you are running a Debian based distro (with `apt` package manager) the script will automatically install these dependencies for you.
 - [`python3-markdown`](https://packages.debian.org/bullseye/python3-markdown) to format emails
-- `curl` to use Healhchecks
+- `curl` to use Healthchecks
 - [`jq`](https://packages.debian.org/bullseye/jq) - used to send discord notifications, is a lightweight and flexible command-line JSON processor
 - [`bc`](https://packages.debian.org/bullseye/bc) - used for for floating-point comparisons
 - [`Apprise`](https://github.com/caronc/apprise) - used to send notifications to 100+ services
