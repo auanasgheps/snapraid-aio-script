@@ -122,8 +122,8 @@ If you don't know what to do, I recommend using the default values and see how i
    	  - NOTE: You need to set up passwordless SSH authentication to your docker remote host.
 - Command line arguments
   	- Can be used to override the default behaviour.
-  	- You can force a sync by adding  `--force-sync`
-  	- You can specify another config file when running the script by adding  `--config /home/alternate_config.conf`
+  	- You can force a sync by adding `--force-sync`
+  	- You can specify another config file when running the script by adding `--config /home/alternate_config.conf`
 - Custom Hooks
 	- Commands or scripts to be run before and after SnapRAID operations.
 	- Option to display friendly name to in the email output
