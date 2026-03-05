@@ -51,7 +51,7 @@ Contributions are welcome!
 		- **Note:** Remote Docker instances require SSH passwordless access.
 	- You can either choose to pause or stop your containers.
 - Ignore Files for thresholds warnings
- 	- If you have many files that change but you want to ignore them (e.g related to frequent backup rotation) you can do so to decrease counts for your thresholds.   
+ 	- If you have many files that change but you want to ignore them (e.g related to frequent backup rotation) you can do so to decrease counts for your thresholds.
 - Custom Hooks 
 	- Define shell commands or scripts to run before and after SnapRAID operations.
 - Multiple configuration files
