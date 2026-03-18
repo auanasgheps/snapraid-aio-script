@@ -9,18 +9,16 @@
 # One‑time, centralized elevation 
 ######################
 
-# Identify the *original* caller BEFORE elevation 
-: "${AIO_CALLER_USER:=$(id -un 2>/dev/null || whoami)}"
+# Built-in command check (avoid external 'which')
+command_exists() { command -v "$1" >/dev/null 2>&1; }
 
 # One-time elevation
 SCRIPT_PATH="$(readlink -f -- "${BASH_SOURCE[0]:-$0}")"
 
 if [ "${EUID:-$(id -u)}" -ne 0 ]; then
   if command_exists sudo; then
-    # Preserve only what we need. If your sudoers has env_reset (default on Debian),
-    # --preserve-env=... ensures these are still visible after elevation.
     exec sudo -n \
-      --preserve-env=LANG,AIO_CALLER_USER \
+      --preserve-env=LANG \
       -- "$SCRIPT_PATH" "$@"
   else
     echo "Error: root privileges required and 'sudo' not available."
@@ -28,11 +26,15 @@ if [ "${EUID:-$(id -u)}" -ne 0 ]; then
   fi
 fi
 
+# Identify the *original* caller safely AFTER elevation
+# If SUDO_USER is empty (es. script launched by root), use current user
+AIO_CALLER_USER="${SUDO_USER:-$(id -un 2>/dev/null || whoami)}"
+
 
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV23
+SNAPSCRIPTVERSION="3.4" #DEV24
 
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
@@ -96,7 +98,7 @@ main(){
   echo "SnapRAID Script Job started [$(date)]"
   echo "Running SnapRAID version $SNAPRAIDVERSION"
   echo "SnapRAID AIO Script version $SNAPSCRIPTVERSION"
-  echo "Using configuration file: $CONFIG_FILE"
+  echo "Using Script configuration file: $CONFIG_FILE"
   echo "----------------------------------------"
   mklog "INFO: ----------------------------------------"
   mklog "INFO: SnapRAID Script Job started"
@@ -468,8 +470,8 @@ fi
 #######################
 
 sanity_check() {
-  echo "Checking if all parity and content files are present."
-  mklog "INFO: Checking if all parity and content files are present."
+  echo "Checking if all parity and content files are present..."
+  mklog "INFO: Checking if all parity and content files are present..."
   for i in "${PARITY_FILES[@]}"; do
     if [ ! -e "$i" ]; then
     echo "[$(date)] ERROR - Parity file ($i) not found!"
@@ -666,7 +668,7 @@ chk_sync_warn(){
 
 chk_zero(){
   echo "### SnapRAID TOUCH [$(date)]"
-  echo "Checking for zero sub-second files."
+  echo "Checking for zero sub-second files..."
   TIMESTATUS=$($SNAPRAID_BIN -c $SNAPRAID_CONF status | grep -E 'You have [1-9][0-9]* files with( a)? zero sub-second timestamp\.' | sed 's/^You have/Found/g')
   if [ -n "$TIMESTATUS" ]; then
     echo "$TIMESTATUS"
@@ -677,7 +679,7 @@ chk_zero(){
     output_to_file_screen
     echo "\`\`\`"
   else
-    echo "No zero sub-second timestamp files found."
+    echo "No zero sub-second timestamp file found."
   fi
   echo "TOUCH finished [$(date)]"
 }
@@ -1227,9 +1229,6 @@ check_and_install() {
     mklog "INFO: $PACKAGE_NAME installed successfully."
   fi
 }
-
-# Built-in command check (avoid external 'which')
-command_exists() { command -v "$1" >/dev/null 2>&1; }
 
 # Get a user's HOME via passwd DB (no eval/tilde)
 user_home() { getent passwd "$1" | awk -F: '{print $6}'; }
