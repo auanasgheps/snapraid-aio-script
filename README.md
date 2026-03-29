@@ -1,11 +1,11 @@
 # Snapraid AIO Script
 The definitive all-in-one [SnapRAID](https://github.com/amadvance/snapraid) script on Linux. I hope you'll agree :).
 
-There are many SnapRAID scripts out there, but none has the features I want. So I made my own, inspired by existing solutions.
+There are many SnapRAID scripts out there, but none had the features I wanted. So I made my own, inspired by existing solutions.
 
 It is meant to be run periodically (daily), do the heavy lifting and send an email you will actually read.
 
-Supports single and dual parity configurations. It is highly customizable and has been tested with Debian 11/12 and [OpenMediaVault 6/7](https://github.com/openmediavault/openmediavault).
+Supports single and dual parity configurations. It is highly customizable and has been tested with Debian 12 and [OpenMediaVault 7](https://github.com/openmediavault/openmediavault).
 
 Contributions are welcome!
 
@@ -15,11 +15,12 @@ Contributions are welcome!
   * [How it works](#how-it-works)
     + [Additional Features](#additional-features)
   * [Customization](#customization)
-    + [Customizable features](#customizable-features)
+    + [Available options](#available-options)
   * [A nice email report](#a-nice-email-report)
 - [Requirements](#requirements)
-- [Installation](#installation)
+- [Installation and usage](#installation-and-usage)
   * [First Run](#first-run)
+  * [Command Line Arguments](#command-line-arguments)
   * [OMV and SnapRAID plugin](#omv-and-snapraid-plugin)
   * [Installing `hd-idle`](#installing-hd-idle-for-automatic-disk-spindown)
 - [Upgrade](#upgrade)
@@ -49,22 +50,25 @@ Contributions are welcome!
 	- Support for local and remote Docker instances. Also manage multiple remote Docker instances at once. 
 		- **Note:** Remote Docker instances require SSH passwordless access.
 	- You can either choose to pause or stop your containers.
+- Ignore Files for thresholds warnings
+ 	- If you have many files that change but you want to ignore them (e.g related to frequent backup rotation) you can do so to decrease counts for your thresholds.
 - Custom Hooks 
 	- Define shell commands or scripts to run before and after SnapRAID operations.
 - Multiple configuration files
   	- Use a different configuration file when running the script instead of the default config
 - 3rd Party notification support
-	- [Healthchecks.io](https://healthchecks.io), Telegram and Discord can be used to track script execution time, status and promptly alert about errors.
-   	- You can also get notified with the `Snapraid SMART log` and `Snapraid Status`
-	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or another mail binary
+	- Can be used to track script execution time, status and promptly alert about errors.
+	- Supports [Healthchecks.io](https://healthchecks.io), and 100+ services via Apprise (Telegram, Discord, Slack, etc) 
+    - You can also get notified with the `Snapraid SMART log` and `Snapraid Status`
+    - You can get the full email report if a warning is issued (breached threshold)
 - Important messages are also sent to the system log.
-- Emails are still the best place to get detailed but readable information.
+- Emails reports are still the best way to get detailed but readable information.
 
 ## Customization
-Many options can be changed to your taste, their behavior is documented in the config file.
+Many options can be changed to your liking, their behavior is documented in the config file.
 If you don't know what to do, I recommend using the default values and see how it performs.
 
-### Customizable features
+### Available options
 - Sync options
 	- Sync always (Forced Sync).
 	- Sync after a number of breached threshold warnings. 
@@ -78,40 +82,54 @@ If you don't know what to do, I recommend using the default values and see how i
 	- Scrub new data - scrub the data that was just added by the sync.
 - Pre-hashing - enabled by default. Mitigates the lack of ECC memory, reading data twice to avoid silent read errors.
 - Force zero size sync -  disabled by default. Forces the operation of syncing a file with zero size that before was not. Use with caution!
+- Ignore Files for thresholds warnings - disabled by default
+  	- It is called `IGNORE_PATTERN` in the config file.
+  	- Ignore unwanted updated/changed/deleted files defined on their path(s), that would otherwise increase counts and breach your thresholds.
+  	- This is an advanced feature as it requires the use of bash pathname expansions. Use with caution!
+  	- More information can be found in the config file.
 - Snapraid Status - disabled by default. Shows the status of the array.
-	- This info can also be sent to Telegram or Discord
+	- This info can also be sent via notification services
 - SMART Log - enabled by default. A SnapRAID report for disks health status.
-  	- This info can also be sent to Telegram or Discord
+  	- This info can also be sent via notification services
 - Verbosity option - disabled by default. When enabled, includes the TOUCH and DIFF commands output. Please note email will be huge and mostly unreadable.
 - SnapRAID Output (log) retention - disabled by default (log is overriden every run)
 	- Detailed output retention for each run
 	- You can choose the amount of days and the path, by default set to the user home 
-- Healthchecks.io, Telegram and Discord integration
+- Healthchecks.io integration
+   - The script will report to Healthchecks.io when is started and when is completed. If there's a failure it's included as well.
+   -  This service will also show how much time the script takes to complete.
+  	- If the script ends with a **_WARNING_** message, it will report **_DOWN_** to Healthchecks.io, if the message is **_COMPLETED_** it will report **_UP_**. 
+- Notifications services via [Apprise](https://github.com/caronc/apprise)
+	- Send notifications to Telegram, Discord, Slack... you name it! Apprise supports 100+ services! Configuration is simple, instructions [are here](https://github.com/caronc/apprise/wiki).
 	- If you don't read your emails every day, this is a great one for you, since you can be quickly informed if things go wrong. 
-  	- The script will report to Healthchecks.io, Telegram and Discord when is started and when is completed. If there's a failure it's included as well.
-  	- **Healthchecks.io only:** If the script ends with a **_WARNING_** message, it will report **_DOWN_** to Healthchecks.io, if the message is **_COMPLETED_** it will report **_UP_**. 
-  	- **Healthchecks.io only:** This service will also show how much time the script takes to complete.
-- Notification Hook
+  	- The script will report when it's started and when it's completed. If there's a failure, it's notified as well.
+  	- You can choose to get the output attached if there's a warning (only supported by some services, check Apprise docs)
+- Email report via [Apprise](https://github.com/caronc/apprise)
+  	- If your distro doesn't have `mailx` or `sendmail`, you can use Apprise to deliver your email reports
+    - You can choose to get the output attached if there's a warning
+- Notification Hook **[deprecated, use Apprise]**
 	- Made for external services or mail binaries with different commands than `mailx`.
 	- Configure the path of the script or the mail binary to be invoked.
 	- You can still use native services since it only replaces the standard email.
+  	- You can choose to run the final hook before or after the spindown command, if configured.
 - Update Check - enabled by default
   	- The script will check via GitHub if there's an update and alert the user via the configured notification systems
-  	- If you don't like this, it can be disabled
+  	- It can be disabled
 - Docker Container management
-	- A list of containers you want to be interrupted before running actions and restored when completed.
+	- A list of containers you want to manage when running SnapRAID actions.
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
-   	- Docker remote - if docker is running on a remote machine
-- Multiple Configuration files
-  	- By default the script will use the predefined config file `script-config.sh` that must be placed in the same folder
-  	- You can specify another file when running the script like `snapraid-aio-script.sh /home/alternate_config.sh`
+   	- Docker remote - if docker is running on a remote machine, you can manage those containers as well.
+   	  - NOTE: You need to set up passwordless SSH authentication to your docker remote host.
+- Command line arguments
+  	- Can be used to override the default behaviour.
+  	- You can force a sync by adding `--force-sync`
+  	- You can specify another config file when running the script by adding `--config /home/alternate_config.conf`
 - Custom Hooks
 	- Commands or scripts to be run before and after SnapRAID operations.
 	- Option to display friendly name to in the email output
 - Spindown - spindown disks after the script has completed operations. Uses a rewritten version of [hd-idle](https://github.com/adelolmo/hd-idle).
 
- 
-You can also change more advanced options such SnapRAID binary location, log file location and mail binary. If your mail binary uses different commands than `mailx`, use the Notification Hook feature.
+You can also change more advanced options such SnapRAID binary location, log file location and mail binary, but make these changes only if you know what you're doing.
 
 ## A nice email report
 This script produces emails that don't contain a list of changed files to improve clarity.
@@ -122,166 +140,135 @@ Here's an example email report.
 
 
 ```markdown
-## [COMPLETED] DIFF + SYNC + SCRUB Jobs (SnapRAID on omv-test.local)
-SnapRAID Script Job started [Tue 20 Apr 11:43:37 CEST 2021]
-Running SnapRAID version 11.5
-SnapRAID AIO Script version X.YZ
+[COMPLETED] DIFF + SYNC + SCRUB Jobs (SnapRAID on omv-test)
 
-----------
+SnapRAID Script Job started [Sun Jan 4 12:58:25 CET 2026]
+Running SnapRAID version none
+SnapRAID AIO Script version 3.4
+Using configuration file: /usr/sbin/snapraid/script-config.conf
+Preprocessing
 
-## Preprocessing
-Healthchecks.io integration is enabled.
-Configuration file found.
+Apprise service notification is enabled.
+SnapRAID is not running, proceeding.
+SnapRAID output retention is enabled. Detailed logs will be kept in /root for 3 days.
+Proceeding with the omv-snapraid-.conf file: /etc/snapraid/omv-snapraid-0859ab15-e1d1-4574-9f5d-cf65f63c962d.conf
 Checking if all parity and content files are present.
 All parity files found.
 All content files found.
-Docker containers management is enabled.
+Previous sync completed successfully, proceeding.
+Processing
+SnapRAID TOUCH [Sun Jan 4 12:58:25 CET 2026]
 
-### Stopping Containers [Tue 20 Apr 11:43:37 CEST 2021]
-Stopping Container - Code-server
-code-server
-Stopping Container - Portainer
-portainer
-
-----------
-
-## Processing
-### SnapRAID TOUCH [Tue 20 Apr 11:43:37 CEST 2021]
 Checking for zero sub-second files.
 No zero sub-second timestamp files found.
-TOUCH finished [Tue 20 Apr 11:43:38 CEST 2021]
+TOUCH finished [Sun Jan 4 12:58:25 CET 2026]
+SnapRAID DIFF [Sun Jan 4 12:58:25 CET 2026]
 
-### SnapRAID DIFF [Tue 20 Apr 11:43:38 CEST 2021]
-DIFF finished [Tue 20 Apr 11:43:38 CEST 2021]
-**SUMMARY of changes - Added [0] - Deleted [0] - Moved [0] - Copied [0] - Updated [1]**
-There are no deleted files, that's fine.
-There are updated files. The number of updated files (1) is below the threshold of (500).
-SYNC is authorized. [Tue 20 Apr 11:43:38 CEST 2021]
+DIFF finished [Sun Jan 4 12:58:25 CET 2026]
+SUMMARY: Equal [2641] - Added [1] - Deleted [1] - Moved [0] - Copied [0] - Updated [0]
+There are deleted files. The number of deleted files (1) is below the threshold of (2).
+There are no updated files, that's fine.
+SYNC is authorized. [Sun Jan 4 12:58:25 CET 2026]
+SnapRAID SYNC [Sun Jan 4 12:58:25 CET 2026]
 
-### SnapRAID SYNC [Tue 20 Apr 11:43:38 CEST 2021]
 Self test...  
-Loading state from /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Scanning disk DATA1...  
-Scanning disk DATA2...  
-Using 0 MiB of memory for the file-system.  
+Loading state from /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content...  
+Scanning...   
+Scanned DATA in 0 seconds  
+Using 1 MiB of memory for the file-system.  
 Initializing...  
 Hashing...  
 SYNC - Everything OK  
 Resizing...  
-Saving state to /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK2/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK3/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK4/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK2/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK3/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK4/snapraid.content...  
-Verified /srv/dev-disk-by-label-DISK4/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK3/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK2/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK1/snapraid.content in 0 seconds  
+Saving state to /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content...  
+Saving state to /srv/dev-disk-by-uuid-3b2a06c9-5f46-4648-9d45-135e393c6efe/snapraid.content...  
+Verifying...  
+Verified /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content in 0 seconds  
+Verified /srv/dev-disk-by-uuid-3b2a06c9-5f46-4648-9d45-135e393c6efe/snapraid.content in 0 seconds  
+Using 32 MiB of memory for 64 cached blocks.  
+Selecting...  
 Syncing...  
-Using 32 MiB of memory for 32 cached blocks.  
-    DATA1 12% | *******  
-    DATA2 82% | ************************************************  
-   parity  0% |   
- 2-parity  0% |   
-     raid  1% | *  
-     hash  1% |   
-    sched 11% | ******  
-     misc  0% |   
-              |____________________________________________________________  
-                            wait time (total, less is better)  
+   DATA 47% | *****************************  
+ parity  0% |   
+   raid  1% |   
+   hash  3% | **  
+  sched 45% | ***************************  
+   misc  2% | *  
+            |______________________________________________________________  
+                           wait time (total, less is better)  
 SYNC - Everything OK  
-Saving state to /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK2/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK3/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK4/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK2/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK3/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK4/snapraid.content...  
-Verified /srv/dev-disk-by-label-DISK4/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK3/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK2/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK1/snapraid.content in 0 seconds
+Saving state to /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content...  
+Saving state to /srv/dev-disk-by-uuid-3b2a06c9-5f46-4648-9d45-135e393c6efe/snapraid.content...  
+Verifying...  
+Verified /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content in 0 seconds  
+Verified /srv/dev-disk-by-uuid-3b2a06c9-5f46-4648-9d45-135e393c6efe/snapraid.content in 0 seconds
 
-SYNC finished [Tue 20 Apr 11:43:40 CEST 2021]
 
-### SnapRAID SCRUB [Tue 20 Apr 11:43:40 CEST 2021]
+SYNC finished [Sun Jan 4 12:58:27 CET 2026]
+
+SnapRAID SCRUB [Sun Jan 4 12:58:27 CET 2026]
+
+SCRUB Previous Blocks [Sun Jan 4 12:58:27 CET 2026]
+
 Self test...  
-Loading state from /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Using 0 MiB of memory for the file-system.  
+Loading state from /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content...  
+Using 1 MiB of memory for the file-system.  
 Initializing...  
+Using 48 MiB of memory for 64 cached blocks.  
+Selecting...  
 Scrubbing...  
-Using 48 MiB of memory for 32 cached blocks.  
-    DATA1  2% | *  
-    DATA2 18% | **********  
-   parity  0% |   
- 2-parity  0% |   
-     raid 21% | ************  
-     hash  7% | ****  
-    sched 51% | ******************************  
-     misc  0% |   
-              |____________________________________________________________  
-                            wait time (total, less is better)  
+   DATA 82% | **************************************************  
+ parity  1% | *  
+   raid 10% | ******  
+   hash  4% | **  
+  sched  0% |   
+   misc  0% |   
+            |______________________________________________________________  
+                           wait time (total, less is better)  
 SCRUB - Everything OK  
-Saving state to /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK2/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK3/snapraid.content...  
-Saving state to /srv/dev-disk-by-label-DISK4/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK1/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK2/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK3/snapraid.content...  
-Verifying /srv/dev-disk-by-label-DISK4/snapraid.content...  
-Verified /srv/dev-disk-by-label-DISK4/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK3/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK2/snapraid.content in 0 seconds  
-Verified /srv/dev-disk-by-label-DISK1/snapraid.content in 0 seconds
+Saving state to /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content...  
+Saving state to /srv/dev-disk-by-uuid-3b2a06c9-5f46-4648-9d45-135e393c6efe/snapraid.content...  
+Verifying...  
+Verified /srv/dev-disk-by-uuid-1b5e3b98-4dd5-4690-9f40-a9570d4b379f/snapraid.content in 0 seconds  
+Verified /srv/dev-disk-by-uuid-3b2a06c9-5f46-4648-9d45-135e393c6efe/snapraid.content in 0 seconds
 
-SCRUB finished [Tue 20 Apr 11:43:41 CEST 2021]
 
-----------
+SCRUB finished [Sun Jan 4 12:58:28 CET 2026]
 
-## Postprocessing
+Postprocessing
 SnapRAID Smart
+
 SnapRAID SMART report:  
    Temp  Power   Error   FP Size  
-      C OnDays   Count        TB  Serial                Device    Disk  
-      -      -       -  SSD  0.0  00000000000000000001  /dev/sdb  DATA1  
-      -      -       -  SSD  0.0  01000000000000000001  /dev/sdc  DATA2  
-      -      -       -    -  0.0  02000000000000000001  /dev/sdd  parity  
-      -      -       -  SSD  0.0  03000000000000000001  /dev/sde  2-parity  
-      -      -       -  n/a    -  -                     /dev/sr0  -  
-      0      -       -    -  0.0  -                     /dev/sda  -  
+      C OnDays   Count        TB  Serial  Device    Disk  
+      0      -       -  SSD  0.0  -  /dev/sdb  DATA  
+      0      -       -  SSD  0.0  -  /dev/sdc  parity  
+      -      -       -  n/a    -  -  /dev/sr0  -  
+      0      -       -  SSD  0.0  -  /dev/sda  -  
 The FP column is the estimated probability (in percentage) that the disk  
 is going to fail in the next year.  
 Probability that at least one disk is going to fail in the next year is 0%.
 
-## Restarting Containers [Tue 20 Apr 11:43:41 CEST 2021]
+All jobs ended. [Sun Jan 4 12:58:28 CET 2026]
 
-Restarting Container - Code-server
-code-server
-Restarting Container - Portainer
-portainer
-All jobs ended. [Tue 20 Apr 11:43:41 CEST 2021]
-Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 11:43:41 CEST 2021]
+Total time elapsed for SnapRAID: 0hrs 0min 3sec
 ```
 
 # Requirements
 
 If you are running a Debian based distro (with `apt` package manager) the script will automatically install these dependencies for you.
-- [`python3-markdown`](https://packages.debian.org/bullseye/python3-markdown) to format emails - will be installed if not found
-- `curl` to use Healhchecks - will be installed if not found
+- [`python3-markdown`](https://packages.debian.org/bullseye/python3-markdown) to format emails
+- `curl` to use Healthchecks
 - [`jq`](https://packages.debian.org/bullseye/jq) - used to send discord notifications, is a lightweight and flexible command-line JSON processor
 - [`bc`](https://packages.debian.org/bullseye/bc) - used for for floating-point comparisons
-
+- [`Apprise`](https://github.com/caronc/apprise) - used to send notifications to 100+ services
+   - To install Apprise, the script will use [`pipx`](https://github.com/pypa/pipx). The whole process is managed by the script
+   - When Apprise is installed the first time, the script will exit and you'll have to restart it manually. This is needed because of pipx installation, otherwise Apprise would not be found.
 
 Dependencies that require manual installation:
 - `hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle), installation instructions [below](#installing-hd-idle-for-automatic-disk-spindown)
 
-# Installation
-
+# Installation and usage
 
 1. Install the packages listed in the Requirements section if you're not running a distro with `apt` package manager
 2. Download the latest version from [Releases](https://github.com/auanasgheps/snapraid-aio-script/releases) 
@@ -290,25 +277,34 @@ Dependencies that require manual installation:
 4. Give executable rights to the main script 
    - `chmod +x snapraid-aio-script.sh`
 5. Open the config file and make changes to the config file as required. 
-   - Every config is documented but defaults are pretty resonable, so don't make changes if you're not sure.
+   - Every config is documented but defaults are pretty reasonable, so don't make changes if you're not sure.
    - When you see  `""` or `''` in some options, do not remove these characters but just fill in your data.
    - If you want to spindown your disks, you need to install [hd-idle](https://github.com/adelolmo/hd-idle)
-6. Schedule the script execution. 
-   - I recommend running the script daily.
+6. Schedule a daily execution. If you're running OMV, browse to System > Scheduled Tasks to create a new one.
+   - If you're not running OMV, open the crontab editor `crontab -e`
+   - Add the following line to run the script every day at midnight: `0 0 * * * /usr/sbin/snapraid-aio-script.sh`
+     - Use [Crontab Guru](https://crontab.guru/) to easily pick your preferred time
+     - Add Command Line arguments if needed (see below).
+	   
   
-**TIP**: To use multiple config files, you can create different schedules. Just append the config file path after the script, like `snapraid-aio-script.sh /home/alternate_config.sh`
 
-It is tested on OMV6 and OMV7, but will work on other distros. In such case you may have to change the mail binary or SnapRAID location.
+### Command Line arguments
+
+The script supports two command line arguments to override the default behaviour:
+  - Script config file path: provides an alternative script config file path. Add `--config <path>`. Example `snapraid-aio-script.sh --config /home/alternate_config.conf`
+  - Override sync protection: execute a forced sync, useful after a warning. Add `--force-sync`. It can be used along with `--config`.
+	- You can schedule this as a task but keep it disabled, to execute it manually to pass a WARNING.
+
+It is tested on OMV7 (Debian 12), but will work on other distros. In such case you may have to change the mail binary or SnapRAID location. If your distro doesn't have apt, you'll need to manually install the dependencies.
 
 ### OMV7 USERS
 OMV7's SnapRAID plugins introduced support for multiple arrays. This means each SnapRAID config file does not have a predictable name, unlike what occurred with OMV6 or standard SnapRAID installs. 
-If running on OMV7, the AIO Script will search for a SnapRAID configuration file in the new path `/etc/snapraid/`. If multiple arrays are found, it will inform you to adjust your configuration.
-
+When running on OMV7, the AIO Script will search for a single SnapRAID configuration file in the new path `/etc/snapraid/`. If multiple arrays are found, it will inform you to adjust your configuration.
 
 ## First Run
 If you start with empty disks, you cannot use (yet) this script, since it expects SnapRAID files which would not be found.
 
-First run `snapraid sync`. Once completed, the array will be ready to be used with this script.
+First, manually run `snapraid sync`. Once completed, the array will be ready to be used with this script.
 
 ## OMV and SnapRAID plugin
 This script perfectly replaces the OMV built-in script. 
@@ -330,18 +326,18 @@ echo "deb http://adelolmo.github.io/$(lsb_release -cs) $(lsb_release -cs) main" 
 ```
 
 3. Run `apt update`, and `apt install hd-idle` to install the updated version. You do not need to specify the respository, apt will automatically install the newset version from the new repository.
-4. In your `script-config.sh` file, change `SPINDOWN=0` to `SPINDOWN=1` to enable spindown.
+4. In your `script-config.conf` file, change `SPINDOWN=0` to `SPINDOWN=1` to enable spindown.
 5. If you wish to use `hd-idle` as a service to manage your disks outside of the scope of the Snapraid AIO Script, refer to these [additional instructions](https://forum.openmediavault.org/index.php?thread/37438-how-to-spin-down-hard-drives-with-hd-idle/) on the OpenMediaVault forum.
 
 # Upgrade 
-If you are using a previous version of the script, do not use your config file. Please move your preferences to the new `script-config.sh` found in the archive. 
+If you are using a previous version of the script, do not use your config file. Please move your preferences to the new `script-config.conf` found in the archive. 
 
 # Known Issues
 - You tell me!
 
 # Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=auanasgheps/snapraid-aio-script&type=Date)](https://star-history.com/#auanasgheps/snapraid-aio-script&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=auanasgheps/snapraid-aio-script&type=Date)](https://www.star-history.com/#auanasgheps/snapraid-aio-script&Date)
 
 # Credits
 All rights belong to the respective creators. 
@@ -357,3 +353,5 @@ This script would not exist without:
 - [Caedis](https://github.com/Caedis)
 - [Pushpender](https://github.com/ranapushpender)
 - [Phidauex](https://github.com/phidauex)
+- [Wastus](https://github.com/Wastus)
+- [Jeff47](https://github.com/jeff47)
