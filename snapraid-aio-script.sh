@@ -1419,22 +1419,21 @@ extract_snapraid_info() {
 # Run SnapRAID status to check for the previous sync
 check_snapraid_status() {
   # Run snapraid status command and capture the output
-  local snapraid_status_output=$("$SNAPRAID_BIN" status -c "$SNAPRAID_CONF")
+  local snapraid_status_output
+  if ! snapraid_status_output=$("$SNAPRAID_BIN" status -c "$SNAPRAID_CONF" 2>&1); then
+    mklog "WARN: Unable to read SnapRAID status. Stopping the script."
+    SNAPRAID_STATUS=2
+    return
+  fi
 
-  # Check for the "No sync is in progress" message
-  if echo "$snapraid_status_output" | grep -q "No sync is in progress"; then
+  # Check for the "NOT fully synced" warning message
+  if echo "$snapraid_status_output" | grep -q "WARNING! The array is NOT fully synced."; then
+    mklog "WARN: The array is NOT fully synced. Stopping the script."
+    SNAPRAID_STATUS=1
+  else
     echo "Previous sync completed successfully, proceeding."
     mklog "INFO: Previous sync completed successfully, proceeding."
     SNAPRAID_STATUS=0
-        
-    # Check for the "NOT fully synced" warning message
-  elif echo "$snapraid_status_output" | grep -q "WARNING! The array is NOT fully synced."; then
-    mklog "WARN: The array is NOT fully synced. Stopping the script."
-    SNAPRAID_STATUS=1
-  else 
-    # If neither message is found, handle the unknown state
-    mklog "WARN: The array status is unknown. Stopping the script."
-    SNAPRAID_STATUS=2
   fi
 }
 
