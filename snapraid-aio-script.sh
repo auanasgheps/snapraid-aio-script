@@ -75,7 +75,14 @@ main(){
     notify_warning "fatal"
     exit 1;
   fi
-  
+
+  # Validate EMAIL_ADDRESS if set
+  if [ -n "${EMAIL_ADDRESS:-}" ] && ! is_valid_email "$EMAIL_ADDRESS"; then
+    echo "WARNING: EMAIL_ADDRESS is set but invalid: '$EMAIL_ADDRESS'. Email notifications will be disabled."
+    mklog "WARN: EMAIL_ADDRESS is set but invalid. Disabling email notifications."
+	EMAIL_ADDRESS=""
+  fi
+
   # check if sync has been forced by a command argument
   if [ "$FORCE_SYNC" = true ]; then
     SYNC_WARN_THRESHOLD=0
@@ -1479,6 +1486,14 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+}
+
+# Basic email sanity check
+is_valid_email() {
+  local email="$1"
+  [[ -n "$email" ]] || return 1
+  [[ "$email" =~ [[:space:]] ]] && return 1
+  [[ "$email" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]]
 }
 
 # Set TRAP
