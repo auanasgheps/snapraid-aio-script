@@ -279,11 +279,11 @@ Dependencies that require manual installation:
 4. Give executable rights to the main script
    NOTE: The script can be executed by a non-root user, if it's allowed for sudo elevation. 
    - `chmod +x snapraid-aio-script.sh`
-6. Open the config file and make changes to the config file as required. 
+5. Open the config file and make changes to the config file as required. 
    - Every config is documented but defaults are pretty reasonable, so don't make changes if you're not sure.
    - When you see  `""` or `''` in some options, do not remove these characters but just fill in your data.
    - If you want to spindown your disks, you need to install [hd-idle](https://github.com/adelolmo/hd-idle)
-7. Schedule a daily execution. If you're running OMV, browse to System > Scheduled Tasks to create a new one.
+6. Schedule a daily execution. If you're running OMV, browse to System > Scheduled Tasks to create a new one.
    - If you're not running OMV, open the crontab editor `crontab -e`
    - Add the following line to run the script every day at midnight: `0 0 * * * /usr/sbin/snapraid-aio-script.sh`
      - Use [Crontab Guru](https://crontab.guru/) to easily pick your preferred time
