@@ -24,6 +24,7 @@ Contributions are welcome!
   * [OMV and SnapRAID plugin](#omv-and-snapraid-plugin)
   * [Installing `hd-idle`](#installing-hd-idle-for-automatic-disk-spindown)
 - [Upgrade](#upgrade)
+- [Troubleshooting](#troubleshooting)
 - [Known Issues](#known-issues)
 - [Star History](#star-history)
 - [Credits](#credits)
@@ -143,7 +144,7 @@ Here's an example email report.
 [COMPLETED] DIFF + SYNC + SCRUB Jobs (SnapRAID on omv-test)
 
 SnapRAID Script Job started [Sun Jan 4 12:58:25 CET 2026]
-Running SnapRAID version none
+Running SnapRAID version 12.3
 SnapRAID AIO Script version 3.4
 Using configuration file: /usr/sbin/snapraid/script-config.conf
 Preprocessing
@@ -267,6 +268,7 @@ If you are running a Debian based distro (with `apt` package manager) the script
 
 Dependencies that require manual installation:
 - `hd-idle` to spin down disks - [Link](https://github.com/adelolmo/hd-idle), installation instructions [below](#installing-hd-idle-for-automatic-disk-spindown)
+- `smartmontools` for the logic to spin down disks -  available in the default repositories of most Linux distributions [Link](https://smartmontools.com) 
 
 # Installation and usage
 
@@ -274,32 +276,31 @@ Dependencies that require manual installation:
 2. Download the latest version from [Releases](https://github.com/auanasgheps/snapraid-aio-script/releases) 
 3. Extract the archive wherever you prefer 
    - e.g. `/usr/sbin/snapraid`
-4. Give executable rights to the main script 
+4. Give executable rights to the main script
+   NOTE: The script can be executed by a non-root user, if it's allowed for sudo elevation. 
    - `chmod +x snapraid-aio-script.sh`
-5. Open the config file and make changes to the config file as required. 
+6. Open the config file and make changes to the config file as required. 
    - Every config is documented but defaults are pretty reasonable, so don't make changes if you're not sure.
    - When you see  `""` or `''` in some options, do not remove these characters but just fill in your data.
    - If you want to spindown your disks, you need to install [hd-idle](https://github.com/adelolmo/hd-idle)
-6. Schedule a daily execution. If you're running OMV, browse to System > Scheduled Tasks to create a new one.
+7. Schedule a daily execution. If you're running OMV, browse to System > Scheduled Tasks to create a new one.
    - If you're not running OMV, open the crontab editor `crontab -e`
    - Add the following line to run the script every day at midnight: `0 0 * * * /usr/sbin/snapraid-aio-script.sh`
      - Use [Crontab Guru](https://crontab.guru/) to easily pick your preferred time
      - Add Command Line arguments if needed (see below).
 	   
-  
+It is tested on OMV7 (Debian 12), but will work on other distros. In such case you may have to change the mail binary or SnapRAID location. 
+If your distro doesn't have apt or is not Debian-based, you'll need to manually install the dependencies.  
 
 ### Command Line arguments
 
-The script supports two command line arguments to override the default behaviour:
-  - Script config file path: provides an alternative script config file path. Add `--config <path>`. Example `snapraid-aio-script.sh --config /home/alternate_config.conf`
-  - Override sync protection: execute a forced sync, useful after a warning. Add `--force-sync`. It can be used along with `--config`.
-	- You can schedule this as a task but keep it disabled, to execute it manually to pass a WARNING.
+The script supports command line arguments to override the default behaviour:
 
-It is tested on OMV7 (Debian 12), but will work on other distros. In such case you may have to change the mail binary or SnapRAID location. If your distro doesn't have apt, you'll need to manually install the dependencies.
-
-### OMV7 USERS
-OMV7's SnapRAID plugins introduced support for multiple arrays. This means each SnapRAID config file does not have a predictable name, unlike what occurred with OMV6 or standard SnapRAID installs. 
-When running on OMV7, the AIO Script will search for a single SnapRAID configuration file in the new path `/etc/snapraid/`. If multiple arrays are found, it will inform you to adjust your configuration.
+| Argument  | Description |
+| ------------- | ------------- |
+| --config <path>  | Specifies an alternative path for the script configuration file (e.g., `script-config.conf`).  |
+| --force-sync  | Forces a SYNC job by ignoring the deleted and updated file thresholds (`DEL_THRESHOLD` and `UP_THRESHOLD`).  |
+| --help  | Displays a brief usage summary and exits. |
 
 ## First Run
 If you start with empty disks, you cannot use (yet) this script, since it expects SnapRAID files which would not be found.
@@ -310,6 +311,10 @@ First, manually run `snapraid sync`. Once completed, the array will be ready to 
 This script perfectly replaces the OMV built-in script. 
 In the OMV GUI, browse to _System > Scheduled Tasks_ and remove/disable the `omv-snapraid-diff` job. 
 Also, you can igore all the settings you find at _Services > SnapRAID > Diff Script Settings_, since they only apply to the plugin's built-in script. 
+
+### Running on OMV7 and later 
+Since OMV7, SnapRAID plugins introduced support for multiple arrays. This means each SnapRAID config file does not have a predictable name, unlike what occurred with OMV6 or standard SnapRAID installs. 
+When running on OMV7, the AIO Script will search for a single SnapRAID configuration file in the new path `/etc/snapraid/`. If multiple arrays are found, it will inform you to adjust your configuration.
 
 ## Installing `hd-idle` for Automatic Disk Spindown
 If you would like to enable automatic disk spindown after the script job runs, then you will need to install `hd-idle`. The version included in default Debian and Ubuntu repositories is buggy and out of date - fortunately developer [adelolmo](https://github.com/adelolmo/hd-idle) has improved the project and released an updated version.
@@ -328,6 +333,28 @@ echo "deb http://adelolmo.github.io/$(lsb_release -cs) $(lsb_release -cs) main" 
 3. Run `apt update`, and `apt install hd-idle` to install the updated version. You do not need to specify the respository, apt will automatically install the newset version from the new repository.
 4. In your `script-config.conf` file, change `SPINDOWN=0` to `SPINDOWN=1` to enable spindown.
 5. If you wish to use `hd-idle` as a service to manage your disks outside of the scope of the Snapraid AIO Script, refer to these [additional instructions](https://forum.openmediavault.org/index.php?thread/37438-how-to-spin-down-hard-drives-with-hd-idle/) on the OpenMediaVault forum.
+
+# Troubleshooting 
+
+If the script stops unexpectedly, check the log for these common error messages:
+
+-   **Script configuration file not found!**: The configuration file (either the default or the one specified via `--config`) is missing.
+    
+-   **Please update your config file...**: The `CONFIG_VERSION` in your config file is incompatible with the current script version (3.4).
+    
+-   **SnapRAID binary not found in PATH**: The `snapraid` executable is not installed or is not reachable in the system's PATH.
+    
+-   **The script has detected SnapRAID is already running**: Another SnapRAID process is active; the script stops to prevent data corruption or conflicts.
+    
+-   **Stopping the script because the previous SnapRAID sync did not complete correctly**: The array is not fully synced. You must resolve the issue manually or use the `--force-sync` argument if you are certain the data is safe.
+    
+-   **Parity/Content file (...) not found!**: A required parity or content file is missing, often because a disk is not mounted.
+    
+-   **This script must be run as root**: Root/sudo privileges are required to manage disks and Docker services.
+    
+-   **Stopping the script due to multiple SnapRAID configuration files (OMV7 and later)**: Multiple `.conf` files were detected in `/etc/snapraid/`. You must manually specify which one to use in your script configuration.
+
+
 
 # Upgrade 
 If you are using a previous version of the script, do not use your config file. Please move your preferences to the new `script-config.conf` found in the archive. 
