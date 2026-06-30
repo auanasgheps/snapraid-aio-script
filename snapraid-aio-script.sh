@@ -202,8 +202,8 @@ fi
   if [ "$OMV_VERSION" -ge 7 ]; then
   pick_snapraid_conf_file
   else
-  echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
-    mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file "$SNAPRAID_CONF" does not exist."
+  echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file \"$SNAPRAID_CONF\" does not exist."
+    mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file \"$SNAPRAID_CONF\" does not exist."
   SUBJECT="[WARNING] - SnapRAID configuration file not found!"
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
   NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
@@ -465,7 +465,7 @@ fi
   # Save and rotate logs if enabled
   if [ "$RETENTION_DAYS" -gt 0 ]; then
     find "$SNAPRAID_LOG_DIR"/SnapRAID-* -mtime +"$RETENTION_DAYS" -delete  # delete old logs
-    cp $TMP_OUTPUT "$SNAPRAID_LOG_DIR"/SnapRAID-"$(date +"%Y_%m_%d-%H%M")".txt
+    cp "$TMP_OUTPUT" "$SNAPRAID_LOG_DIR"/SnapRAID-"$(date +"%Y_%m_%d-%H%M")".txt
   fi
 
   # exit with success, letting the trap handle cleanup of file descriptors
@@ -557,6 +557,7 @@ sed_me(){
   # process and redirect output. We close stream because of the calls to new
   # wait function in between sed_me calls. If we do not do this we try to close
   # Processes which are not parents of the shell.
+  # shellcheck disable=SC2261
   exec >& "$OUT" 2>& "$ERROR"
   sed -i "$1" "$2"
 
@@ -676,7 +677,7 @@ chk_sync_warn(){
 chk_zero(){
   echo "### SnapRAID TOUCH [$(date)]"
   echo "Checking for zero sub-second files..."
-  TIMESTATUS=$($SNAPRAID_BIN -c $SNAPRAID_CONF status | grep -E 'You have [1-9][0-9]* files with( a)? zero sub-second timestamp\.' | sed 's/^You have/Found/g')
+  TIMESTATUS=$($SNAPRAID_BIN -c "$SNAPRAID_CONF" status | grep -E 'You have [1-9][0-9]* files with( a)? zero sub-second timestamp\.' | sed 's/^You have/Found/g')
   if [ -n "$TIMESTATUS" ]; then
     echo "$TIMESTATUS"
     echo "Running TOUCH job to timestamp. [$(date)]"
@@ -970,7 +971,7 @@ if [ "$APPRISE" -eq 1 ]; then
     APPRISE_EMAIL_ATTACH_DO=0
   fi
   
-  mklog "INFO: "$SUBJECT""
+  mklog "INFO: $SUBJECT"
   }
 
 notify_warning(){
@@ -1023,6 +1024,7 @@ if [ "$APPRISE_EMAIL" -eq 1 ]; then
 
 
 show_snapraid_info() {
+  # shellcheck disable=SC2155
   local command_output=$($1)
   echo "$2"
   echo "\`\`\`"
@@ -1168,6 +1170,7 @@ fi
 # finish. Probably not the best way of 'fixing' this issue. Someone with more
 # knowledge can provide better insight.
 close_output_and_wait(){
+  # shellcheck disable=SC2261
   exec >& "$OUT" 2>& "$ERROR"
   CHILD_PID=$(pgrep -P $$)
   if [ -n "$CHILD_PID" ]; then
@@ -1426,7 +1429,8 @@ extract_snapraid_info() {
 # Run SnapRAID status to check for the previous sync
 check_snapraid_status() {
   # Run snapraid status command and capture the output
-  local snapraid_status_output=$("$SNAPRAID_BIN" status -c "$SNAPRAID_CONF")
+  local snapraid_status_output
+  snapraid_status_output=$("$SNAPRAID_BIN" status -c "$SNAPRAID_CONF")
 
   # Check for the "No sync is in progress" message
   if echo "$snapraid_status_output" | grep -q "No sync is in progress"; then
