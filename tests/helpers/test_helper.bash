@@ -14,8 +14,11 @@ close_output_and_wait() { :; }
 notify_success()        { :; }
 notify_warning()        { :; }
 
-# Sentinel for chk_scrub_settings tests: did it try to run a scrub?
-run_scrub() { RUN_SCRUB_CALLED=1; }
+# Sentinel for chk_scrub_settings tests: mirrors real run_scrub which deletes the counter file.
+run_scrub() {
+  RUN_SCRUB_CALLED=1
+  rm -f "$SCRUB_COUNT_FILE"
+}
 
 # ---- Per-test setup ----
 setup() {

@@ -15,6 +15,14 @@ source "$(realpath "$(dirname "$BATS_TEST_FILENAME")")/helpers/test_helper.bash"
   [ "$DO_SYNC" -eq 1 ]
 }
 
+@test "chk_del: deletes one below threshold sets DO_SYNC=1" {
+  DEL_COUNT=499
+  DEL_THRESHOLD=500
+  chk_del
+  [ "$DO_SYNC" -eq 1 ]
+  [ "$CHK_FAIL" -eq 0 ]
+}
+
 @test "chk_del: deletes at threshold with ADD_DEL_THRESHOLD=0 sets CHK_FAIL=1" {
   DEL_COUNT=500
   DEL_THRESHOLD=500
@@ -28,6 +36,16 @@ source "$(realpath "$(dirname "$BATS_TEST_FILENAME")")/helpers/test_helper.bash"
   DEL_COUNT=600
   DEL_THRESHOLD=500
   ADD_COUNT=550
+  ADD_DEL_THRESHOLD=0.5
+  chk_del
+  [ "$DO_SYNC" -eq 1 ]
+}
+
+@test "chk_del: deletes above threshold and ratio exactly at ADD_DEL_THRESHOLD sets DO_SYNC=1" {
+  # ratio = 300/600 = 0.50 exactly >= 0.50 threshold
+  DEL_COUNT=600
+  DEL_THRESHOLD=500
+  ADD_COUNT=300
   ADD_DEL_THRESHOLD=0.5
   chk_del
   [ "$DO_SYNC" -eq 1 ]
