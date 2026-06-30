@@ -1,0 +1,7 @@
+add /data/d1/newfile1.mkv
+add /data/d1/newfile2.mkv
+add /data/d1/newfile3.mkv
+add /data/d1/newfile4.mkv
+add /data/d1/newfile5.mkv
+   5 equal
+   0 copied

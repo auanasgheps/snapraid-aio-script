@@ -1,0 +1,5 @@
+update /data/d1/file001.mkv
+update /data/d1/file002.mkv
+update /data/d1/file003.mkv
+   100 equal
+   0 copied

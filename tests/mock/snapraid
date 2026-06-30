@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Mock snapraid binary for tests.
+# Controlled by MOCK_SCENARIO env var (defaults to status_synced).
+# Ignores flags like -c <conf> and only acts on the subcommand.
+
+SUBCOMMAND=""
+for arg in "$@"; do
+  case "$arg" in
+    -c) ;;          # skip -c flag
+    -*) ;;          # skip other flags
+    *)  [ -z "$SUBCOMMAND" ] && SUBCOMMAND="$arg" ;;
+  esac
+done
+
+FIXTURES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../fixtures" && pwd)"
+SCENARIO="${MOCK_SCENARIO:-status_synced}"
+
+case "$SUBCOMMAND" in
+  status)
+    cat "$FIXTURES_DIR/${SCENARIO}.txt"
+    exit 0
+    ;;
+  diff)
+    cat "$FIXTURES_DIR/${SCENARIO}.txt"
+    exit 0
+    ;;
+  *)
+    exit 0
+    ;;
+esac

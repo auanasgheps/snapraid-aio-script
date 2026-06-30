@@ -1,0 +1,5 @@
+remove /data/d1/old1.mkv
+remove /data/d1/old2.mkv
+remove /data/d1/old3.mkv
+   97 equal
+   0 copied
