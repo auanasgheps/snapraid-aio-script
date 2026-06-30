@@ -300,6 +300,7 @@ The script supports command line arguments to override the default behaviour:
 | ------------- | ------------- |
 | --config <path>  | Specifies an alternative path for the script configuration file (e.g., `script-config.conf`).  |
 | --force-sync  | Forces a SYNC job by ignoring the deleted and updated file thresholds (`DEL_THRESHOLD` and `UP_THRESHOLD`).  |
+| --bypass-sync-error  | Allows the script to proceed even if the SnapRAID array was not fully synced. **Use with caution!**  |
 | --help  | Displays a brief usage summary and exits. |
 
 ## First Run

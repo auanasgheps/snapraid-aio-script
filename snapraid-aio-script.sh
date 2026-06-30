@@ -42,6 +42,7 @@ CURRENT_DIR=$(dirname "${0}")
 # Default argument values
 CONFIG_FILE="$CURRENT_DIR/script-config.conf"
 FORCE_SYNC=false
+BYPASS_SYNC_ERROR=false
 
 SYNC_MARKER="SYNC -"
 SCRUB_MARKER="SCRUB -"
@@ -1440,8 +1441,14 @@ check_snapraid_status() {
         
     # Check for the "NOT fully synced" warning message
   elif echo "$snapraid_status_output" | grep -q "WARNING! The array is NOT fully synced."; then
-    mklog "WARN: The array is NOT fully synced. Stopping the script."
-    SNAPRAID_STATUS=1
+    if [ "$BYPASS_SYNC_ERROR" = true ]; then
+      echo "Previous sync did not complete successfully, proceeding anyway (bypass enabled)."
+      mklog "WARN: Previous sync did not complete successfully, proceeding anyway (bypass enabled)."
+      SNAPRAID_STATUS=0
+    else
+      mklog "WARN: The array is NOT fully synced. Stopping the script."
+      SNAPRAID_STATUS=1
+    fi
   else 
     # If neither message is found, handle the unknown state
     mklog "WARN: The array status is unknown. Stopping the script."
@@ -1479,8 +1486,12 @@ while [[ $# -gt 0 ]]; do
       SYNC_WARN_THRESHOLD=0
       shift
       ;;
+    --bypass-sync-error)
+      BYPASS_SYNC_ERROR=true
+      shift
+      ;;
     --help)
-      echo "Usage: $0 [--config <path>] [--force-sync]"
+      echo "Usage: $0 [--config <path>] [--force-sync] [--bypass-sync-error]"
       exit 0
       ;;
     *)
