@@ -34,7 +34,7 @@ AIO_CALLER_USER="${SUDO_USER:-$(id -un 2>/dev/null || whoami)}"
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV24
+SNAPSCRIPTVERSION="3.5" #DEV
 
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
