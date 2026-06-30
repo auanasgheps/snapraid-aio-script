@@ -148,7 +148,7 @@ main(){
     if [ "$APPRISE" -eq 1 ] || [ "$APPRISE_EMAIL" -eq 1 ] ; then
       echo "Apprise service notification is enabled."
       check_and_install_apprise
-      if [ "$APPRISE" -eq 1 ] ; then
+      if [ "$APPRISE" -eq 1 ] && [ "${APPRISE_ON_ERROR_ONLY:-0}" -ne 1 ]; then
       for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
       "$APPRISE_BIN" -b "SnapRAID Script Job started" "$APPRISE_URL_U"
       done
@@ -957,9 +957,9 @@ notify_success(){
     "$DISCORD_WEBHOOK_URL"
   fi
   
-if [ "$APPRISE" -eq 1 ]; then
+if [ "$APPRISE" -eq 1 ] && [ "${APPRISE_ON_ERROR_ONLY:-0}" -ne 1 ]; then
     echo "Sending notification using Apprise service(s)."
-    
+
     # Convert new line commands "\n" in true new lines
     APPRISE_BODY="${NOTIFY_OUTPUT//\\n/$'\n'}"
 
@@ -971,7 +971,7 @@ if [ "$APPRISE" -eq 1 ]; then
   if [ "$APPRISE_EMAIL" -eq 1 ]; then
     APPRISE_EMAIL_ATTACH_DO=0
   fi
-  
+
   mklog "INFO: $SUBJECT"
   }
 
