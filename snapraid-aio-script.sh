@@ -98,8 +98,12 @@ main(){
   # Check if the script is running as root
   check_root
   
-  # Read SnapRAID version
-  SNAPRAIDVERSION="$("$SNAPRAID_BIN" -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
+  # Read SnapRAID version (dpkg-query preferred on Debian/Ubuntu; fallback to binary)
+  if command_exists dpkg-query && dpkg-query -W snapraid &>/dev/null 2>&1; then
+    SNAPRAIDVERSION="$(dpkg-query -W -f='${Version}' snapraid | cut -d- -f1)"
+  else
+    SNAPRAIDVERSION="$("$SNAPRAID_BIN" -V 2>/dev/null | sed -e 's/snapraid v\(.*\)by.*/\1/')"
+  fi
   
   # Begin user output
   
