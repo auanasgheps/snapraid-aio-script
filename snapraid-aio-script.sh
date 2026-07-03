@@ -239,7 +239,7 @@ fi
     
   elif [ $SNAPRAID_STATUS -eq 2 ]; then
     # Handle unknown status
-    echo "Stopping the script due to unknown SnapRAID status. Please run 'snapraid status' on your host for more information."
+    echo "Stopping the script due to unknown SnapRAID status. If this is a new array that has never been synced, run 'snapraid sync' manually first to initialize it. Otherwise, run 'snapraid status' on your host for more information."
       SUBJECT="[WARNING] - SnapRAID unknown status"
       NOTIFY_OUTPUT="$SUBJECT"
       notify_warning "fatal"
@@ -488,9 +488,9 @@ sanity_check() {
     if [ ! -e "$i" ]; then
     echo "[$(date)] ERROR - Parity file ($i) not found!"
     echo "ERROR - Parity file ($i) not found!" >> "$TMP_OUTPUT"
-    echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
+    echo "**ERROR**: File not found. If this is a new array that has never been synced, run 'snapraid sync' manually first to initialize it. Otherwise, check the status of your disks."
     mklog "WARN: Parity file ($i) not found!"
-    mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
+    mklog "WARN: File not found. If this is a new array, run 'snapraid sync' manually first to initialize it."
 
     # Add a topline to email body
     SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
@@ -506,9 +506,9 @@ sanity_check() {
     if [ ! -e "$i" ]; then
       echo "[$(date)] ERROR - Content file ($i) not found!"
       echo "ERROR - Content file ($i) not found!" >> "$TMP_OUTPUT"
-      echo "**ERROR**: Please check the status of your disks! The script exits here due to missing file or disk."
+      echo "**ERROR**: File not found. If this is a new array that has never been synced, run 'snapraid sync' manually first to initialize it. Otherwise, check the status of your disks."
       mklog "WARN: Content file ($i) not found!"
-      mklog "WARN: Please check the status of your disks! The script exits here due to missing file or disk."
+      mklog "WARN: File not found. If this is a new array, run 'snapraid sync' manually first to initialize it."
 
       # Add a topline to email body
       SUBJECT="[WARNING] - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
@@ -1455,7 +1455,7 @@ check_snapraid_status() {
     fi
   else 
     # If neither message is found, handle the unknown state
-    mklog "WARN: The array status is unknown. Stopping the script."
+    mklog "WARN: The array status is unknown. If this is a new array that has never been synced, run 'snapraid sync' manually first to initialize it. Stopping the script."
     SNAPRAID_STATUS=2
   fi
 }
