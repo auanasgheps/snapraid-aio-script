@@ -11,6 +11,19 @@ on:
       - '**.md'
 
 jobs:
+  shfmt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install shfmt
+        uses: mfinelli/setup-shfmt@v3
+
+      - name: Check formatting
+        run: shfmt -i 2 -ci -bn --diff snapraid-aio-script.sh
+
   bats:
     runs-on: ubuntu-latest
 

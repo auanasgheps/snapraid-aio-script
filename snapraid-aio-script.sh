@@ -6,7 +6,7 @@
 ########################################################################
 
 ######################
-# One‑time, centralized elevation 
+# One‑time, centralized elevation
 ######################
 
 # Built-in command check (avoid external 'which')
@@ -30,7 +30,6 @@ fi
 # If SUDO_USER is empty (es. script launched by root), use current user
 AIO_CALLER_USER="${SUDO_USER:-$(id -un 2>/dev/null || whoami)}"
 
-
 ######################
 #  SCRIPT VARIABLES  #
 ######################
@@ -51,7 +50,7 @@ SCRUB_MARKER="SCRUB -"
 #   MAIN SCRIPT    #
 ####################
 
-main(){
+main() {
 
   # parse commands from arguments
   parse_cmd_arguments "$@"
@@ -63,8 +62,9 @@ main(){
     mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
     exit 1
   fi
-  
+
   # Source config file
+  # shellcheck source=/dev/null
   source "$CONFIG_FILE"
 
   # check if the config file has the correct version
@@ -74,14 +74,14 @@ main(){
     SUBJECT="[WARNING] - Configuration Error $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning "fatal"
-    exit 1;
+    exit 1
   fi
 
   # Validate EMAIL_ADDRESS if set
   if [ -n "${EMAIL_ADDRESS:-}" ] && ! is_valid_email "$EMAIL_ADDRESS"; then
     echo "WARNING: EMAIL_ADDRESS is set but invalid: '$EMAIL_ADDRESS'. Email notifications will be disabled."
     mklog "WARN: EMAIL_ADDRESS is set but invalid. Disabling email notifications."
-	EMAIL_ADDRESS=""
+    EMAIL_ADDRESS=""
   fi
 
   # check if sync has been forced by a command argument
@@ -90,23 +90,23 @@ main(){
   fi
 
   # create tmp file for output
-  true > "$TMP_OUTPUT"
+  true >"$TMP_OUTPUT"
 
   # Redirect all output to file and screen. Starts a tee process
   output_to_file_screen
 
   # Check if the script is running as root
   check_root
-  
+
   # Read SnapRAID version (dpkg-query preferred on Debian/Ubuntu; fallback to binary)
   if command_exists dpkg-query && dpkg-query -W snapraid &>/dev/null 2>&1; then
     SNAPRAIDVERSION="$(dpkg-query -W -f='${Version}' snapraid | cut -d- -f1)"
   else
     SNAPRAIDVERSION="$("$SNAPRAID_BIN" -V 2>/dev/null | sed -e 's/snapraid v\(.*\)by.*/\1/')"
   fi
-  
+
   # Begin user output
-  
+
   echo "SnapRAID Script Job started [$(date)]"
   echo "Running SnapRAID version $SNAPRAIDVERSION"
   echo "SnapRAID AIO Script version $SNAPSCRIPTVERSION"
@@ -123,12 +123,11 @@ main(){
   check_and_install python3-markdown
   check_and_install bc
 
-
   # Initialize notification
   if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ] || [ "$CHECK_UPDATES" -eq 1 ]; then
-  # Check for notification dependencies
-  check_and_install curl
-  check_and_install jq
+    # Check for notification dependencies
+    check_and_install curl
+    check_and_install jq
 
     # invoke notification services if configured
     if [ "$HEALTHCHECKS" -eq 1 ]; then
@@ -138,48 +137,48 @@ main(){
     if [ "$TELEGRAM" -eq 1 ]; then
       echo "Telegram notification is enabled."
       curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-      -H 'Content-Type: application/json' \
-      -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "SnapRAID Script Job started"}' \
-      https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
+        -H 'Content-Type: application/json' \
+        -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "SnapRAID Script Job started"}' \
+        https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
     fi
     if [ "$DISCORD" -eq 1 ]; then
       echo "Discord notification is enabled."
       curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-      -H 'Content-Type: application/json' \
-      -d '{"content": "SnapRAID Script Job started"}' \
-      "$DISCORD_WEBHOOK_URL"
+        -H 'Content-Type: application/json' \
+        -d '{"content": "SnapRAID Script Job started"}' \
+        "$DISCORD_WEBHOOK_URL"
     fi
-    if [ "$APPRISE" -eq 1 ] || [ "$APPRISE_EMAIL" -eq 1 ] ; then
+    if [ "$APPRISE" -eq 1 ] || [ "$APPRISE_EMAIL" -eq 1 ]; then
       echo "Apprise service notification is enabled."
       check_and_install_apprise
       if [ "$APPRISE" -eq 1 ] && [ "${APPRISE_ON_ERROR_ONLY:-0}" -ne 1 ]; then
-      for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
-      "$APPRISE_BIN" -b "SnapRAID Script Job started" "$APPRISE_URL_U"
-      done
+        for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
+          "$APPRISE_BIN" -b "SnapRAID Script Job started" "$APPRISE_URL_U"
+        done
       fi
-    fi  
+    fi
   fi
 
   ### Check if SnapRAID is found
   if [ -z "$SNAPRAID_BIN" ]; then
-  echo "**ERROR**: SnapRAID binary not found in PATH. Please check if SnapRAID is installed correctly and found in the PATH environment values of your system."
+    echo "**ERROR**: SnapRAID binary not found in PATH. Please check if SnapRAID is installed correctly and found in the PATH environment values of your system."
     mklog "WARN: SnapRAID binary not found in PATH. Please check if SnapRAID is installed correctly and found in the PATH environment values of your system."
     SUBJECT="[WARNING] - SnapRAID binary not found in PATH $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning "fatal"
     exit 1
-fi
+  fi
 
   ### Check if SnapRAID is already running
   if pgrep -x snapraid >/dev/null; then
     echo "The script has detected SnapRAID is already running. Please check the status of the previous SnapRAID job before running this script again."
-      mklog "WARN: The script has detected SnapRAID is already running. Please check the status of the previous SnapRAID job before running this script again."
-      SUBJECT="[WARNING] - SnapRAID already running $EMAIL_SUBJECT_PREFIX"
-      NOTIFY_OUTPUT="$SUBJECT"
-      notify_warning "fatal"
-      exit 1;
+    mklog "WARN: The script has detected SnapRAID is already running. Please check the status of the previous SnapRAID job before running this script again."
+    SUBJECT="[WARNING] - SnapRAID already running $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT"
+    notify_warning "fatal"
+    exit 1
   else
-      echo "SnapRAID is not running, proceeding."
+    echo "SnapRAID is not running, proceeding."
     mklog "INFO: SnapRAID is not running, proceeding."
   fi
 
@@ -189,32 +188,32 @@ fi
 
   # check for script updates
   if [ "$CHECK_UPDATES" -eq 1 ]; then
-   remote_version=$(curl -fsS -m 5 --retry 3 https://raw.githubusercontent.com/auanasgheps/snapraid-aio-script/master/version)
+    remote_version=$(curl -fsS -m 5 --retry 3 https://raw.githubusercontent.com/auanasgheps/snapraid-aio-script/master/version)
     if [[ "$(printf '%s\n' "$remote_version" "$SNAPSCRIPTVERSION" | sort -V | tail -n 1)" == "$remote_version" ]] && [[ "$remote_version" != "$SNAPSCRIPTVERSION" ]]; then
-     update_message="A newer version ($remote_version) is available! You can find more information by visiting https://github.com/auanasgheps/snapraid-aio-script/releases"
-     echo "$update_message"
-     mklog "WARN: $update_message"
-     INFO_MESSAGE="$update_message"
-     INFO_MESSAGE_DISCORD="$update_message"
-     notify_snapraid_info
+      update_message="A newer version ($remote_version) is available! You can find more information by visiting https://github.com/auanasgheps/snapraid-aio-script/releases"
+      echo "$update_message"
+      mklog "WARN: $update_message"
+      INFO_MESSAGE="$update_message"
+      INFO_MESSAGE_DISCORD="$update_message"
+      notify_snapraid_info
     fi
   fi
 
   # Check if Snapraid configuration file has been found, if not, notify and exit
   if [ ! -f "$SNAPRAID_CONF" ]; then
-  # if running on OMV7, try to find the SnapRAID conf file automatically
-  check_omv_version
-  if [ "$OMV_VERSION" -ge 7 ]; then
-  pick_snapraid_conf_file
-  else
-  echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file \"$SNAPRAID_CONF\" does not exist."
-    mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file \"$SNAPRAID_CONF\" does not exist."
-  SUBJECT="[WARNING] - SnapRAID configuration file not found!"
-    FORMATTED_CONF="\`$SNAPRAID_CONF\`"
-  NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
-    notify_warning "fatal"
-    exit 1;
-  fi
+    # if running on OMV7, try to find the SnapRAID conf file automatically
+    check_omv_version
+    if [ "$OMV_VERSION" -ge 7 ]; then
+      pick_snapraid_conf_file
+    else
+      echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file \"$SNAPRAID_CONF\" does not exist."
+      mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file \"$SNAPRAID_CONF\" does not exist."
+      SUBJECT="[WARNING] - SnapRAID configuration file not found!"
+      FORMATTED_CONF="\`$SNAPRAID_CONF\`"
+      NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
+      notify_warning "fatal"
+      exit 1
+    fi
   fi
 
   # Extract SnapRAID info (content and parity files) from the config file
@@ -223,9 +222,9 @@ fi
   # sanity check first to make sure we can access the content and parity files
   mklog "INFO: Checking SnapRAID disks"
   sanity_check
-  
-# Check if previous sync was completed before running a new sync 
-# If the status is ok (exit code 0) the script will proceed, otherwise will stop 
+
+  # Check if previous sync was completed before running a new sync
+  # If the status is ok (exit code 0) the script will proceed, otherwise will stop
 
   mklog "INFO: Checking SnapRAID Status"
   check_snapraid_status
@@ -235,16 +234,16 @@ fi
     SUBJECT="[WARNING] - Previous SnapRAID sync did not complete correctly."
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning "fatal"
-    exit 1;
-    
+    exit 1
+
   elif [ $SNAPRAID_STATUS -eq 2 ]; then
     # Handle unknown status
     echo "Stopping the script due to unknown SnapRAID status. If this is a new array that has never been synced, run 'snapraid sync' manually first to initialize it. Otherwise, run 'snapraid status' on your host for more information."
-      SUBJECT="[WARNING] - SnapRAID unknown status"
-      NOTIFY_OUTPUT="$SUBJECT"
-      notify_warning "fatal"
-    exit 1;
-  fi  
+    SUBJECT="[WARNING] - SnapRAID unknown status"
+    NOTIFY_OUTPUT="$SUBJECT"
+    notify_warning "fatal"
+    exit 1
+  fi
 
   # pause configured containers
   if [ "$MANAGE_SERVICES" -eq 1 ]; then
@@ -258,7 +257,7 @@ fi
 
   # Custom Hook - Before
   if [ "$CUSTOM_HOOK" -eq 1 ]; then
-    echo "### Custom Hook [$BEFORE_HOOK_NAME]";
+    echo "### Custom Hook [$BEFORE_HOOK_NAME]"
     bash -c "$BEFORE_HOOK_CMD"
   fi
 
@@ -272,11 +271,13 @@ fi
   echo "### SnapRAID DIFF [$(date)]"
   mklog "INFO: SnapRAID DIFF started"
   echo "\`\`\`"
+  DIFF_START=$SECONDS
   "$SNAPRAID_BIN" -c "$SNAPRAID_CONF" diff
   close_output_and_wait
   output_to_file_screen
   echo "\`\`\`"
-  echo "DIFF finished [$(date)]"
+  DIFF_ELAPSED=$((SECONDS - DIFF_START))
+  echo "DIFF finished [$((DIFF_ELAPSED / 60))m $((DIFF_ELAPSED % 60))s]"
   mklog "INFO: SnapRAID DIFF finished"
   JOBS_DONE="DIFF"
 
@@ -294,7 +295,7 @@ fi
     SUBJECT="[WARNING] - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning "fatal"
-    exit 1;
+    exit 1
   fi
   if [ ${#IGNORE_PATTERN[@]} -gt 0 ]; then
     echo "Ignore pattern is **enabled**. These counts will not include ignored files, which can be found in the full log."
@@ -325,6 +326,7 @@ fi
     echo "### SnapRAID SYNC [$(date)]"
     mklog "INFO: SnapRAID SYNC Job started"
     echo "\`\`\`"
+    SYNC_START=$SECONDS
     if [ "$PREHASH" -eq 1 ] && [ "$FORCE_ZERO" -eq 1 ]; then
       "$SNAPRAID_BIN" -c "$SNAPRAID_CONF" -h --force-zero -q sync
     elif [ "$PREHASH" -eq 1 ]; then
@@ -337,7 +339,8 @@ fi
     close_output_and_wait
     output_to_file_screen
     echo "\`\`\`"
-    echo "SYNC finished [$(date)]"
+    SYNC_ELAPSED=$((SECONDS - SYNC_START))
+    echo "SYNC finished [$((SYNC_ELAPSED / 60))m $((SYNC_ELAPSED % 60))s]"
     mklog "INFO: SnapRAID SYNC Job finished"
     JOBS_DONE="$JOBS_DONE + SYNC"
     # insert SYNC marker to 'Everything OK' or 'Nothing to do' string to
@@ -355,7 +358,7 @@ fi
 
   # Moving onto scrub now. Check if user has enabled scrub
   echo "### SnapRAID SCRUB [$(date)]"
-    mklog "INFO: SnapRAID SCRUB Job started"
+  mklog "INFO: SnapRAID SCRUB Job started"
   if [ "$SCRUB_PERCENT" -gt 0 ]; then
     # YES, first let's check if delete threshold has been breached and we have
     # not forced a sync.
@@ -390,35 +393,33 @@ fi
   echo "----------------------------------------"
   echo "## Postprocessing"
 
+  # Show SnapRAID SMART info and send notification
+  if [ "$SMART_LOG" -eq 1 ]; then
+    show_snapraid_info "$SNAPRAID_BIN -c $SNAPRAID_CONF smart" "### SnapRAID Smart"
+    if [ "$SMART_LOG_NOTIFY" -eq 1 ]; then
+      notify_snapraid_info
+    fi
+  fi
 
-# Show SnapRAID SMART info and send notification
-if [ "$SMART_LOG" -eq 1 ]; then
-  show_snapraid_info "$SNAPRAID_BIN -c $SNAPRAID_CONF smart" "### SnapRAID Smart"
-   if [ "$SMART_LOG_NOTIFY" -eq 1 ]; then
-    notify_snapraid_info
-   fi
-fi
+  # Show SnapRAID Status information and send notification
+  if [ "$SNAP_STATUS" -eq 1 ]; then
+    show_snapraid_info "$SNAPRAID_BIN -c $SNAPRAID_CONF status" "### SnapRAID Status"
+    if [ "$SNAP_STATUS_NOTIFY" -eq 1 ]; then
+      notify_snapraid_info
+    fi
+  fi
 
-# Show SnapRAID Status information and send notification
-if [ "$SNAP_STATUS" -eq 1 ]; then
-  show_snapraid_info "$SNAPRAID_BIN -c $SNAPRAID_CONF status" "### SnapRAID Status"
-   if [ "$SNAP_STATUS_NOTIFY" -eq 1 ]; then
-    notify_snapraid_info
-   fi
-fi
-
-# Custom Hook - After (if executed before drive spin down)
-if [ "$CUSTOM_HOOK" -eq 1 ] && [ "$EXECUTE_BEFORE_SPINDOWN" -eq 1 ]; then
-    echo "### Custom Hook - [$AFTER_HOOK_NAME]";
+  # Custom Hook - After (if executed before drive spin down)
+  if [ "$CUSTOM_HOOK" -eq 1 ] && [ "$EXECUTE_BEFORE_SPINDOWN" -eq 1 ]; then
+    echo "### Custom Hook - [$AFTER_HOOK_NAME]"
     bash -c "$AFTER_HOOK_CMD"
-fi
+  fi
 
-# Spin down disks (Method hd-idle - spins down all rotational devices)
+  # Spin down disks (Method hd-idle - spins down all rotational devices)
   # NOTE: Uses hd-idle rewrite
   if [ "$SPINDOWN" -eq 1 ]; then
     if command_exists smartctl; then
-      for DRIVE in $(lsblk -d -o name | tail -n +2)
-      do
+      for DRIVE in $(lsblk -d -o name | tail -n +2); do
         if [[ $(smartctl -a /dev/"$DRIVE" | grep 'Rotation Rate' | grep rpm) ]]; then
           echo "spinning down /dev/$DRIVE"
           hd-idle -t /dev/"$DRIVE"
@@ -439,7 +440,7 @@ fi
 
   # Custom Hook - After
   if [ "$CUSTOM_HOOK" -eq 1 ] && [ "$EXECUTE_BEFORE_SPINDOWN" -ne 1 ]; then
-    echo "### Custom Hook - [$AFTER_HOOK_NAME]";
+    echo "### Custom Hook - [$AFTER_HOOK_NAME]"
     bash -c "$AFTER_HOOK_CMD"
   fi
 
@@ -457,24 +458,24 @@ fi
   # if email or hook service are enabled, will be sent now
   if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ] || [ "$APPRISE_EMAIL" -eq 1 ] || [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ]; then
     # Add a topline to email body and send a long mail
-  sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
+    sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
     # send long mail if verbosity is set to 1
-  if [ "$VERBOSITY" -eq 1 ]; then
-      send_mail < "$TMP_OUTPUT"
+    if [ "$VERBOSITY" -eq 1 ]; then
+      send_mail <"$TMP_OUTPUT"
     else
-    # or send a short mail
-      trim_log < "$TMP_OUTPUT" | send_mail
+      # or send a short mail
+      trim_log <"$TMP_OUTPUT" | send_mail
     fi
   fi
 
   # Save and rotate logs if enabled
   if [ "$RETENTION_DAYS" -gt 0 ]; then
-    find "$SNAPRAID_LOG_DIR"/SnapRAID-* -mtime +"$RETENTION_DAYS" -delete  # delete old logs
+    find "$SNAPRAID_LOG_DIR"/SnapRAID-* -mtime +"$RETENTION_DAYS" -delete # delete old logs
     cp "$TMP_OUTPUT" "$SNAPRAID_LOG_DIR"/SnapRAID-"$(date +"%Y_%m_%d-%H%M")".txt
   fi
 
   # exit with success, letting the trap handle cleanup of file descriptors
-  exit 0;
+  exit 0
 }
 
 #######################
@@ -486,18 +487,18 @@ sanity_check() {
   mklog "INFO: Checking if all parity and content files are present..."
   for i in "${PARITY_FILES[@]}"; do
     if [ ! -e "$i" ]; then
-    echo "[$(date)] ERROR - Parity file ($i) not found!"
-    echo "ERROR - Parity file ($i) not found!" >> "$TMP_OUTPUT"
-    echo "**ERROR**: File not found. If this is a new array that has never been synced, run 'snapraid sync' manually first to initialize it. Otherwise, check the status of your disks."
-    mklog "WARN: Parity file ($i) not found!"
-    mklog "WARN: File not found. If this is a new array, run 'snapraid sync' manually first to initialize it."
+      echo "[$(date)] ERROR - Parity file ($i) not found!"
+      echo "ERROR - Parity file ($i) not found!" >>"$TMP_OUTPUT"
+      echo "**ERROR**: File not found. If this is a new array that has never been synced, run 'snapraid sync' manually first to initialize it. Otherwise, check the status of your disks."
+      mklog "WARN: Parity file ($i) not found!"
+      mklog "WARN: File not found. If this is a new array, run 'snapraid sync' manually first to initialize it."
 
-    # Add a topline to email body
-    SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
-    NOTIFY_OUTPUT="$SUBJECT"
-    notify_warning "fatal"
-    exit 1;
-  fi
+      # Add a topline to email body
+      SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
+      NOTIFY_OUTPUT="$SUBJECT"
+      notify_warning "fatal"
+      exit 1
+    fi
   done
   echo "All parity files found."
   mklog "INFO: All parity files found."
@@ -505,7 +506,7 @@ sanity_check() {
   for i in "${CONTENT_FILES[@]}"; do
     if [ ! -e "$i" ]; then
       echo "[$(date)] ERROR - Content file ($i) not found!"
-      echo "ERROR - Content file ($i) not found!" >> "$TMP_OUTPUT"
+      echo "ERROR - Content file ($i) not found!" >>"$TMP_OUTPUT"
       echo "**ERROR**: File not found. If this is a new array that has never been synced, run 'snapraid sync' manually first to initialize it. Otherwise, check the status of your disks."
       mklog "WARN: Content file ($i) not found!"
       mklog "WARN: File not found. If this is a new array, run 'snapraid sync' manually first to initialize it."
@@ -514,7 +515,7 @@ sanity_check() {
       SUBJECT="[WARNING] - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
       notify_warning "fatal"
-    exit 1;
+      exit 1
     fi
   done
   echo "All content files found."
@@ -543,33 +544,33 @@ count_actions_with_ignore() {
   local count=0
 
   while read -r act path; do
-      [[ $act == "$action" ]] || continue
+    [[ $act == "$action" ]] || continue
 
-      # check ignore globs
-      for glob in "${IGNORE_PATTERN[@]}"; do
-          # shellcheck disable=SC2053 # glob matching is wanted here
-          [[ $path == $glob ]] && continue 2
-      done
+    # check ignore globs
+    for glob in "${IGNORE_PATTERN[@]}"; do
+      # shellcheck disable=SC2053 # glob matching is wanted here
+      [[ $path == $glob ]] && continue 2
+    done
 
-      ((count++))
-  done < "$TMP_OUTPUT"
+    ((count++))
+  done <"$TMP_OUTPUT"
 
   echo "$count"
 }
 
-sed_me(){
+sed_me() {
   # Close the open output stream first, then perform sed and open a new tee
   # process and redirect output. We close stream because of the calls to new
   # wait function in between sed_me calls. If we do not do this we try to close
   # Processes which are not parents of the shell.
   # shellcheck disable=SC2261
-  exec >& "$OUT" 2>& "$ERROR"
+  exec >&"$OUT" 2>&"$ERROR"
   sed -i "$1" "$2"
 
   output_to_file_screen
 }
 
-chk_del(){
+chk_del() {
   if [ "$DEL_COUNT" -eq 0 ]; then
     echo "There are no deleted files, that's fine."
     DO_SYNC=1
@@ -602,13 +603,13 @@ chk_del(){
   fi
 }
 
-chk_updated(){
+chk_updated() {
   if [ "$UPDATE_COUNT" -eq 0 ]; then
     echo "There are no updated files, that's fine."
     DO_SYNC=1
   elif [ "$UPDATE_COUNT" -lt "$UP_THRESHOLD" ]; then
-      echo "There are updated files. The number of updated files ($UPDATE_COUNT) is below the threshold of ($UP_THRESHOLD)."
-      DO_SYNC=1
+    echo "There are updated files. The number of updated files ($UPDATE_COUNT) is below the threshold of ($UP_THRESHOLD)."
+    DO_SYNC=1
   else
     if [ "$RETENTION_DAYS" -gt 0 ]; then
       echo "**WARNING!** Updated files ($UPDATE_COUNT) reached/exceeded threshold ($UP_THRESHOLD)."
@@ -623,7 +624,7 @@ chk_updated(){
   fi
 }
 
-chk_sync_warn(){
+chk_sync_warn() {
   if [ "$SYNC_WARN_THRESHOLD" -gt -1 ]; then
     if [ "$SYNC_WARN_THRESHOLD" -eq 0 ]; then
       echo "Forced sync is enabled."
@@ -654,9 +655,9 @@ chk_sync_warn(){
     else
       # NO, so let's increment the warning count and skip the sync job
       ((sync_warn_count += 1))
-      echo "$sync_warn_count" > "$SYNC_WARN_FILE"
+      echo "$sync_warn_count" >"$SYNC_WARN_FILE"
       if [ "$sync_warn_count" == "$SYNC_WARN_THRESHOLD" ]; then
-        echo  "This is the **last** warning left. **NOT** proceeding with SYNC job. [$(date)]"
+        echo "This is the **last** warning left. **NOT** proceeding with SYNC job. [$(date)]"
         mklog "INFO: This is the **last** warning left. **NOT** proceeding with SYNC job. [$(date)]"
         DO_SYNC=0
       else
@@ -668,18 +669,18 @@ chk_sync_warn(){
   else
     # NO, so let's skip SYNC
     if [ "$RETENTION_DAYS" -gt 0 ]; then
-    echo "Forced sync is not enabled. **NOT** proceeding with SYNC job. [$(date)]"
-    mklog "INFO: Forced sync is not enabled. **NOT** proceeding with SYNC job."
-    DO_SYNC=0
+      echo "Forced sync is not enabled. **NOT** proceeding with SYNC job. [$(date)]"
+      mklog "INFO: Forced sync is not enabled. **NOT** proceeding with SYNC job."
+      DO_SYNC=0
     else
-    echo "Forced sync is not enabled. Check $TMP_OUTPUT for details. **NOT** proceeding with SYNC job. [$(date)]"
-    mklog "INFO: Forced sync is not enabled. Check $TMP_OUTPUT for details. **NOT** proceeding with SYNC job."
-    DO_SYNC=0
+      echo "Forced sync is not enabled. Check $TMP_OUTPUT for details. **NOT** proceeding with SYNC job. [$(date)]"
+      mklog "INFO: Forced sync is not enabled. Check $TMP_OUTPUT for details. **NOT** proceeding with SYNC job."
+      DO_SYNC=0
     fi
   fi
 }
 
-chk_zero(){
+chk_zero() {
   echo "### SnapRAID TOUCH [$(date)]"
   echo "Checking for zero sub-second files..."
   TIMESTATUS=$($SNAPRAID_BIN -c "$SNAPRAID_CONF" status | grep -E 'You have [1-9][0-9]* files with( a)? zero sub-second timestamp\.' | sed 's/^You have/Found/g')
@@ -687,17 +688,20 @@ chk_zero(){
     echo "$TIMESTATUS"
     echo "Running TOUCH job to timestamp. [$(date)]"
     echo "\`\`\`"
+    TOUCH_START=$SECONDS
     "$SNAPRAID_BIN" -c "$SNAPRAID_CONF" touch
     close_output_and_wait
     output_to_file_screen
     echo "\`\`\`"
+    TOUCH_ELAPSED=$((SECONDS - TOUCH_START))
+    echo "TOUCH finished [$((TOUCH_ELAPSED / 60))m $((TOUCH_ELAPSED % 60))s]"
   else
     echo "No zero sub-second timestamp file found."
+    echo "TOUCH finished [skipped]"
   fi
-  echo "TOUCH finished [$(date)]"
 }
 
-chk_scrub_settings(){
+chk_scrub_settings() {
   if [ "$SCRUB_DELAYED_RUN" -gt 0 ]; then
     echo "Delayed scrub is enabled."
     mklog "INFO: Delayed scrub is enabled.."
@@ -709,8 +713,8 @@ chk_scrub_settings(){
   : "${scrub_count:=0}"
 
   if [ "$scrub_count" -ge "$SCRUB_DELAYED_RUN" ]; then
-  # Run a scrub job. if the warn count is zero it means the scrub was already
-  # forced, do not output a dumb message and continue with the scrub job.
+    # Run a scrub job. if the warn count is zero it means the scrub was already
+    # forced, do not output a dumb message and continue with the scrub job.
     if [ "$scrub_count" -eq 0 ]; then
       echo
       run_scrub
@@ -723,12 +727,12 @@ chk_scrub_settings(){
       echo
       run_scrub
     fi
-    else
+  else
     # NO, so let's increment the warning count and skip the scrub job
     ((scrub_count += 1))
-    echo "$scrub_count" > "$SCRUB_COUNT_FILE"
+    echo "$scrub_count" >"$SCRUB_COUNT_FILE"
     if [ "$scrub_count" == "$SCRUB_DELAYED_RUN" ]; then
-      echo  "This is the **last** run left before running scrub job next time. [$(date)]"
+      echo "This is the **last** run left before running scrub job next time. [$(date)]"
       mklog "INFO: This is the **last** run left before running scrub job next time. [$(date)]"
     else
       echo "$((SCRUB_DELAYED_RUN - scrub_count)) runs until the next scrub. **NOT** proceeding with SCRUB job. [$(date)]"
@@ -737,9 +741,10 @@ chk_scrub_settings(){
   fi
 }
 
-run_scrub(){
+run_scrub() {
+  SCRUB_START=$SECONDS
   if [ "$SCRUB_NEW" -eq 1 ]; then
-  echo "SCRUB New Blocks [$(date)]"
+    echo "SCRUB New Blocks [$(date)]"
     echo "\`\`\`"
     "$SNAPRAID_BIN" -c "$SNAPRAID_CONF" -p new -q scrub
     close_output_and_wait
@@ -752,7 +757,8 @@ run_scrub(){
   close_output_and_wait
   output_to_file_screen
   echo "\`\`\`"
-  echo "SCRUB finished [$(date)]"
+  SCRUB_ELAPSED=$((SECONDS - SCRUB_START))
+  echo "SCRUB finished [$((SCRUB_ELAPSED / 60))m $((SCRUB_ELAPSED % 60))s]"
   mklog "INFO: SnapRAID SCRUB Job(s) finished"
   JOBS_DONE="$JOBS_DONE + SCRUB"
   # insert SCRUB marker to 'Everything OK' or 'Nothing to do' string to
@@ -804,24 +810,24 @@ service_array_setup() {
   fi
 }
 
-pause_services(){
-  echo "### $DOCKER_CMD1_LOG Containers [$(date)]";
+pause_services() {
+  echo "### $DOCKER_CMD1_LOG Containers [$(date)]"
   if [ "$DOCKER_LOCAL" -eq 1 ]; then
-    echo "$DOCKER_CMD1_LOG Local Container(s)";
+    echo "$DOCKER_CMD1_LOG Local Container(s)"
     docker $DOCKER_CMD1 $SERVICES
   fi
   if [ "$DOCKER_REMOTE" -eq 1 ]; then
     IFS=':, '
-    for (( i=0; i < "${#DOCKER_HOST_SERVICES[@]}"; i++ )); do
+    for ((i = 0; i < "${#DOCKER_HOST_SERVICES[@]}"; i++)); do
       # delete previous array/list (this is crucial!)
       unset tmpArray
-      read -r -a tmpArray <<< "${DOCKER_HOST_SERVICES[i]}"
+      read -r -a tmpArray <<<"${DOCKER_HOST_SERVICES[i]}"
       REMOTE_HOST="${tmpArray[0]}"
       REMOTE_SERVICES=""
-      for (( j=1; j < "${#tmpArray[@]}"; j++ )); do
+      for ((j = 1; j < "${#tmpArray[@]}"; j++)); do
         REMOTE_SERVICES="$REMOTE_SERVICES${tmpArray[j]} "
       done
-      echo "$DOCKER_CMD1_LOG Container(s) on $REMOTE_HOST";
+      echo "$DOCKER_CMD1_LOG Container(s) on $REMOTE_HOST"
       ssh "$DOCKER_USER"@"$REMOTE_HOST" docker "$DOCKER_CMD1" "$REMOTE_SERVICES"
       sleep "$DOCKER_DELAY"
     done
@@ -830,25 +836,25 @@ pause_services(){
   SERVICES_STOPPED=1
 }
 
-resume_services(){
+resume_services() {
   if [ "$SERVICES_STOPPED" -eq 1 ]; then
-    echo "### $DOCKER_CMD2_LOG Containers [$(date)]";
+    echo "### $DOCKER_CMD2_LOG Containers [$(date)]"
     if [ "$DOCKER_LOCAL" -eq 1 ]; then
-      echo "$DOCKER_CMD2_LOG Local Container(s)";
+      echo "$DOCKER_CMD2_LOG Local Container(s)"
       docker $DOCKER_CMD2 $SERVICES
     fi
     if [ "$DOCKER_REMOTE" -eq 1 ]; then
       IFS=':, '
-      for (( i=0; i < "${#DOCKER_HOST_SERVICES[@]}"; i++ )); do
+      for ((i = 0; i < "${#DOCKER_HOST_SERVICES[@]}"; i++)); do
         # delete previous array/list (this is crucial!)
         unset tmpArray
-        read -r -a tmpArray <<< "${DOCKER_HOST_SERVICES[i]}"
+        read -r -a tmpArray <<<"${DOCKER_HOST_SERVICES[i]}"
         REMOTE_HOST="${tmpArray[0]}"
         REMOTE_SERVICES=""
-        for (( j=1; j < "${#tmpArray[@]}"; j++ )); do
+        for ((j = 1; j < "${#tmpArray[@]}"; j++)); do
           REMOTE_SERVICES="$REMOTE_SERVICES${tmpArray[j]} "
         done
-        echo "$DOCKER_CMD2_LOG Container(s) on $REMOTE_HOST";
+        echo "$DOCKER_CMD2_LOG Container(s) on $REMOTE_HOST"
         ssh "$DOCKER_USER"@"$REMOTE_HOST" docker "$DOCKER_CMD2" "$REMOTE_SERVICES"
         sleep "$DOCKER_DELAY"
       done
@@ -858,9 +864,9 @@ resume_services(){
   fi
 }
 
-clean_desc(){
+clean_desc() {
   [[ $- == *i* ]] && exec &>/dev/tty
- }
+}
 
 final_cleanup() {
   if [ "${MANAGE_SERVICES:-0}" -eq 1 ]; then
@@ -870,9 +876,8 @@ final_cleanup() {
   exit
 }
 
-
 prepare_output() {
-# severe warning first
+  # severe warning first
   if [ -z "${JOBS_DONE##*"SYNC"*}" ] && ! grep -qw "$SYNC_MARKER" "$TMP_OUTPUT"; then
     # Sync ran but did not complete successfully so lets warn the user
     SUBJECT="[SEVERE WARNING] SYNC job ran but did not complete successfully $EMAIL_SUBJECT_PREFIX"
@@ -888,22 +893,22 @@ This is a severe warning, check your logs immediately.
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
     notify_warning
 
-# minor warnings, less critical
+    # minor warnings, less critical
   elif [ "$CHK_FAIL" -eq 1 ]; then
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
-    if [ "$(echo "$ADD_DEL_THRESHOLD == 0" | bc -l)" -eq 1 ]; then
-    MSG="Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
-       elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
+      if [ "$(echo "$ADD_DEL_THRESHOLD == 0" | bc -l)" -eq 1 ]; then
+        MSG="Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
+      elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
         MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD)"
       fi
     fi
 
     if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$DO_SYNC" -eq 1 ]; then
       if [ "$(echo "$ADD_DEL_THRESHOLD == 0" | bc -l)" -eq 1 ]; then
-      MSG="Forced sync with deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
+        MSG="Forced sync with deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) violation"
       elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
-      MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD)"
-    fi
+        MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD)"
+      fi
     fi
 
     if [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
@@ -914,28 +919,28 @@ SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [
       MSG="Forced sync with changed files ($UPDATE_COUNT) / ($UP_THRESHOLD) violation"
     fi
 
-    if [ "$DEL_COUNT" -ge  "$DEL_THRESHOLD" ] && [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
-    if [ "$(echo "$ADD_DEL_THRESHOLD == 0" | bc -l)" -eq 1 ]; then
-      MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+    if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 0 ]; then
+      if [ "$(echo "$ADD_DEL_THRESHOLD == 0" | bc -l)" -eq 1 ]; then
+        MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
       elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
         MSG="Multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+      fi
     fi
-  fi
 
-    if [ "$DEL_COUNT" -ge  "$DEL_THRESHOLD" ] && [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 1 ]; then
-    if [ "$(echo "$ADD_DEL_THRESHOLD == 0" | bc -l)" -eq 1 ]; then
-    MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+    if [ "$DEL_COUNT" -ge "$DEL_THRESHOLD" ] && [ "$UPDATE_COUNT" -ge "$UP_THRESHOLD" ] && [ "$DO_SYNC" -eq 1 ]; then
+      if [ "$(echo "$ADD_DEL_THRESHOLD == 0" | bc -l)" -eq 1 ]; then
+        MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD) and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
       elif [ "$(echo "$ADD_DEL_RATIO < $ADD_DEL_THRESHOLD" | bc -l)" -eq 1 ]; then
-      MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
-    fi
+        MSG="Sync forced with multiple violations - Deleted files ($DEL_COUNT) / ($DEL_THRESHOLD), add/delete ratio ($ADD_DEL_RATIO) / ($ADD_DEL_THRESHOLD), and changed files ($UPDATE_COUNT) / ($UP_THRESHOLD)"
+      fi
     fi
     SUBJECT="[WARNING] $MSG $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning
-# else a good run, no warnings
+    # else a good run, no warnings
   else
     SUBJECT="[COMPLETED] $JOBS_DONE Jobs $EMAIL_SUBJECT_PREFIX"
-      NOTIFY_OUTPUT="$SUBJECT
+    NOTIFY_OUTPUT="$SUBJECT
 SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [$MOVE_COUNT] - Copied [$COPY_COUNT] - Updated [$UPDATE_COUNT]"
     notify_success
   fi
@@ -943,33 +948,33 @@ SUMMARY: Equal [$EQ_COUNT] - Added [$ADD_COUNT] - Deleted [$DEL_COUNT] - Moved [
 
 ### Notify functions
 
-notify_success(){
+notify_success() {
   if [ "$HEALTHCHECKS" -eq 1 ]; then
     curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/0 --data-raw "$NOTIFY_OUTPUT"
   fi
   if [ "$TELEGRAM" -eq 1 ]; then
     curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-    -H 'Content-Type: application/json' \
-    -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
-    https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
+      -H 'Content-Type: application/json' \
+      -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
+      https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
   if [ "$DISCORD" -eq 1 ]; then
-  DISCORD_SUBJECT=$(echo "$NOTIFY_OUTPUT" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
+    DISCORD_SUBJECT=$(echo "$NOTIFY_OUTPUT" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
     curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-    -H 'Content-Type: application/json' \
-    -d '{"content": "'"$DISCORD_SUBJECT"'"}' \
-    "$DISCORD_WEBHOOK_URL"
+      -H 'Content-Type: application/json' \
+      -d '{"content": "'"$DISCORD_SUBJECT"'"}' \
+      "$DISCORD_WEBHOOK_URL"
   fi
-  
-if [ "$APPRISE" -eq 1 ] && [ "${APPRISE_ON_ERROR_ONLY:-0}" -ne 1 ]; then
+
+  if [ "$APPRISE" -eq 1 ] && [ "${APPRISE_ON_ERROR_ONLY:-0}" -ne 1 ]; then
     echo "Sending notification using Apprise service(s)."
 
     # Convert new line commands "\n" in true new lines
     APPRISE_BODY="${NOTIFY_OUTPUT//\\n/$'\n'}"
 
-      for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
+    for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
       "$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$APPRISE_BODY" "$APPRISE_URL_U"
-      done
+    done
   fi
 
   if [ "$APPRISE_EMAIL" -eq 1 ]; then
@@ -977,10 +982,10 @@ if [ "$APPRISE" -eq 1 ] && [ "${APPRISE_ON_ERROR_ONLY:-0}" -ne 1 ]; then
   fi
 
   mklog "INFO: $SUBJECT"
-  }
+}
 
-notify_warning(){
-  local MODE="${1:-nonfatal}"  # default to nonfatal if not specified
+notify_warning() {
+  local MODE="${1:-nonfatal}" # default to nonfatal if not specified
 
   if [ "$HEALTHCHECKS" -eq 1 ]; then
     curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
@@ -988,22 +993,22 @@ notify_warning(){
 
   if [ "$TELEGRAM" -eq 1 ]; then
     curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-    -H 'Content-Type: application/json' \
-    -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
-    https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
+      -H 'Content-Type: application/json' \
+      -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
+      https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
 
   if [ "$DISCORD" -eq 1 ]; then
     DISCORD_SUBJECT=$(echo "$NOTIFY_OUTPUT" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
     curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-    -H 'Content-Type: application/json' \
-    -d '{"content": "'"$DISCORD_SUBJECT"'"}' \
-    "$DISCORD_WEBHOOK_URL"
+      -H 'Content-Type: application/json' \
+      -d '{"content": "'"$DISCORD_SUBJECT"'"}' \
+      "$DISCORD_WEBHOOK_URL"
   fi
 
-if [ "$APPRISE" -eq 1 ]; then
+  if [ "$APPRISE" -eq 1 ]; then
     echo "Sending notification using Apprise service(s)."
-    
+
     # Convert new line commands "\n" in true new lines
     APPRISE_BODY="${NOTIFY_OUTPUT//\\n/$'\n'}"
 
@@ -1016,17 +1021,16 @@ if [ "$APPRISE" -eq 1 ]; then
     done
   fi
 
-if [ "$APPRISE_EMAIL" -eq 1 ]; then
+  if [ "$APPRISE_EMAIL" -eq 1 ]; then
     APPRISE_EMAIL_ATTACH_DO=1
-  fi    
+  fi
 
   if { [ -n "$EMAIL_ADDRESS" ] || [ "$APPRISE_EMAIL" -eq 1 ] || [ -x "$HOOK_NOTIFICATION" ]; } && [ "$MODE" == "fatal" ]; then
-    trim_log < "$TMP_OUTPUT" | send_mail
-  fi 
+    trim_log <"$TMP_OUTPUT" | send_mail
+  fi
 
   mklog "WARN: $SUBJECT"
 }
-
 
 show_snapraid_info() {
   # shellcheck disable=SC2155
@@ -1039,61 +1043,61 @@ show_snapraid_info() {
   echo "\`\`\`"
   INFO_MESSAGE="$2 - \`\`\`$command_output\`\`\`"
   INFO_MESSAGE_DISCORD="$2 - $command_output"
-  }
+}
 
 notify_snapraid_info() {
   if [ "$TELEGRAM" -eq 1 ]; then
-   curl -fsS -m 5 --retry 3 -o /dev/null -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
-   -d chat_id="$TELEGRAM_CHAT_ID" \
-   -d text="$INFO_MESSAGE" \
-   -d parse_mode="markdown"
+    curl -fsS -m 5 --retry 3 -o /dev/null -X POST "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" \
+      -d chat_id="$TELEGRAM_CHAT_ID" \
+      -d text="$INFO_MESSAGE" \
+      -d parse_mode="markdown"
   fi
-  
-if [ "$DISCORD" -eq 1 ]; then
-  if [ "${#INFO_MESSAGE_DISCORD}" -gt 2000 ]; then
-    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-      -H 'Content-Type: application/json' \
-      -d "{\"content\": \"⚠️ SnapRAID output exceeds Discord's 2000 character limit and was not posted. \"}" \
-      "$DISCORD_WEBHOOK_URL"
-  else
-    INFO_MESSAGE_ESCAPED=$(echo "$INFO_MESSAGE_DISCORD" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
-    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-      -H 'Content-Type: application/json' \
-      -d "{\"content\": \"\`\`\`\n${INFO_MESSAGE_ESCAPED}\n\`\`\`\"}" \
-      "$DISCORD_WEBHOOK_URL"
+
+  if [ "$DISCORD" -eq 1 ]; then
+    if [ "${#INFO_MESSAGE_DISCORD}" -gt 2000 ]; then
+      curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+        -H 'Content-Type: application/json' \
+        -d "{\"content\": \"⚠️ SnapRAID output exceeds Discord's 2000 character limit and was not posted. \"}" \
+        "$DISCORD_WEBHOOK_URL"
+    else
+      INFO_MESSAGE_ESCAPED=$(echo "$INFO_MESSAGE_DISCORD" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
+      curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+        -H 'Content-Type: application/json' \
+        -d "{\"content\": \"\`\`\`\n${INFO_MESSAGE_ESCAPED}\n\`\`\`\"}" \
+        "$DISCORD_WEBHOOK_URL"
+    fi
   fi
-fi
-  
-if [ "$APPRISE" -eq 1 ]; then
-  # Create temp file to attach if needed
-  if [ "${#INFO_MESSAGE}" -gt 2000 ]; then
-    echo "$INFO_MESSAGE" > /tmp/snapraid_info_msg.txt
-    APPRISE_ATTACHMENT="-a /tmp/snapraid_info_msg.txt"
-    APPRISE_BODY="⚠️ SnapRAID output exceeds 2000 characters. The output is attached."
-  else
-    APPRISE_ATTACHMENT=""
-    APPRISE_BODY="$INFO_MESSAGE"
-  fi
-  
+
+  if [ "$APPRISE" -eq 1 ]; then
+    # Create temp file to attach if needed
+    if [ "${#INFO_MESSAGE}" -gt 2000 ]; then
+      echo "$INFO_MESSAGE" >/tmp/snapraid_info_msg.txt
+      APPRISE_ATTACHMENT="-a /tmp/snapraid_info_msg.txt"
+      APPRISE_BODY="⚠️ SnapRAID output exceeds 2000 characters. The output is attached."
+    else
+      APPRISE_ATTACHMENT=""
+      APPRISE_BODY="$INFO_MESSAGE"
+    fi
+
     for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
-        if [[ "$APPRISE_URL_U" == *"discord://"* ]]; then
-            # For Discord, use the URL without format (markdown) parameter
-            "$APPRISE_BIN" -v -b "$APPRISE_BODY" $APPRISE_ATTACHMENT "$APPRISE_URL_U"
-        else
-            # For all other services, use markdown formatting
-            APPRISE_URL_FORMAT="${APPRISE_URL_U}?format=markdown"
-            "$APPRISE_BIN" -v -b "$APPRISE_BODY" $APPRISE_ATTACHMENT "$APPRISE_URL_FORMAT"
-        fi
+      if [[ "$APPRISE_URL_U" == *"discord://"* ]]; then
+        # For Discord, use the URL without format (markdown) parameter
+        "$APPRISE_BIN" -v -b "$APPRISE_BODY" $APPRISE_ATTACHMENT "$APPRISE_URL_U"
+      else
+        # For all other services, use markdown formatting
+        APPRISE_URL_FORMAT="${APPRISE_URL_U}?format=markdown"
+        "$APPRISE_BIN" -v -b "$APPRISE_BODY" $APPRISE_ATTACHMENT "$APPRISE_URL_FORMAT"
+      fi
     done
 
-  # Clean up temp file if it was used
-  [ -f /tmp/snapraid_info_msg.txt ] && rm /tmp/snapraid_info_msg.txt
-  
+    # Clean up temp file if it was used
+    [ -f /tmp/snapraid_info_msg.txt ] && rm /tmp/snapraid_info_msg.txt
+
   fi
 }
 
 # Trim the log file read from stdin.
-trim_log(){
+trim_log() {
   sed '
     /^Running TOUCH job to timestamp/,/^\TOUCH finished/{
       /^Running TOUCH job to timestamp/!{/^TOUCH finished/!d}
@@ -1104,11 +1108,12 @@ trim_log(){
     /^Unexpected /d;
     /^WARNING! You cannot modify files during a sync\./d;
     /^Rerun the sync command when finished\./d'
-  }
+}
 
 # Process and mail the email body read from stdin.
-send_mail(){
-  local body; body=$(cat)
+send_mail() {
+  local body
+  body=$(cat)
   # Send the raw $body and append the HTML.
   # Try to workaround py markdown 2.6.8 issues:
   # 1. Will not format code blocks with empty lines, so just remove
@@ -1119,52 +1124,52 @@ send_mail(){
   # 4. The HTML code blocks need to be modified to use <pre></pre> to display
   #    correctly.
 
-  body=$(echo "$body" | sed '/^[[:space:]]*$/d; /^ -*$/d; s/$/  /' |
-      python3 -m markdown |
-      sed 's/<code>/<pre>/;s%</code>%</pre>%')
+  body=$(echo "$body" | sed '/^[[:space:]]*$/d; /^ -*$/d; s/$/  /' \
+    | python3 -m markdown \
+    | sed 's/<code>/<pre>/;s%</code>%</pre>%')
 
-if [ -x "$HOOK_NOTIFICATION" ]; then
-  echo -e "Notification user script is set. Calling it as user ${AIO_CALLER_USER:-nobody} [$(date)]"
-  if command_exists runuser; then
-    runuser -u "${AIO_CALLER_USER:-nobody}" -- "$HOOK_NOTIFICATION" "$SUBJECT" "$body"
-  else
-    sudo -u "${AIO_CALLER_USER:-nobody}" "$HOOK_NOTIFICATION" "$SUBJECT" "$body"
-  fi
-elif [ "$APPRISE_EMAIL" -eq 1 ]; then
-  echo "Sending email report using Apprise service."
-  if [ "$APPRISE_EMAIL_ATTACH" -eq 1 ] && [ "$APPRISE_EMAIL_ATTACH_DO" -eq 1 ]; then
-    "$APPRISE_BIN" -vv -i "html" -t "$SUBJECT" -b "$body" -a "$TMP_OUTPUT" "$APPRISE_EMAIL_URL"
+  if [ -x "$HOOK_NOTIFICATION" ]; then
+    echo -e "Notification user script is set. Calling it as user ${AIO_CALLER_USER:-nobody} [$(date)]"
+    if command_exists runuser; then
+      runuser -u "${AIO_CALLER_USER:-nobody}" -- "$HOOK_NOTIFICATION" "$SUBJECT" "$body"
     else
-    "$APPRISE_BIN" -vv -i "html" -t "$SUBJECT" -b "$body" "$APPRISE_EMAIL_URL"
-  fi
-elif [ "$EMAIL_ADDRESS" ]; then
-  echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
-  if [ -z "$MAIL_BIN" ]; then
-    echo -e "No mail program set in MAIL_BIN, you must set it to send email."
-  else
-    # Check if mailx is executable
-    if ! command -v "$MAIL_BIN" &> /dev/null; then
-      echo -e "$MAIL_BIN not found, you must install it to send email."
+      sudo -u "${AIO_CALLER_USER:-nobody}" "$HOOK_NOTIFICATION" "$SUBJECT" "$body"
+    fi
+  elif [ "$APPRISE_EMAIL" -eq 1 ]; then
+    echo "Sending email report using Apprise service."
+    if [ "$APPRISE_EMAIL_ATTACH" -eq 1 ] && [ "$APPRISE_EMAIL_ATTACH_DO" -eq 1 ]; then
+      "$APPRISE_BIN" -vv -i "html" -t "$SUBJECT" -b "$body" -a "$TMP_OUTPUT" "$APPRISE_EMAIL_URL"
     else
-      # Try to determine if the mailx version is the incompatible one
-      MAILX_VERSION=$($MAIL_BIN -V 2>/dev/null || echo "unknown")
-      if [[ "$MAILX_VERSION" == *"12.5 7/5/10"* ]]; then
-        echo "Incompatible version of mailx found, using sendmail instead."
-        (
-          echo To: "$EMAIL_ADDRESS"
-          echo From: "$FROM_EMAIL_ADDRESS"
-          echo "Content-Type: text/html;"
-          echo Subject: "$SUBJECT"
-          echo
-          echo "$body"
-        ) | sendmail -t
+      "$APPRISE_BIN" -vv -i "html" -t "$SUBJECT" -b "$body" "$APPRISE_EMAIL_URL"
+    fi
+  elif [ "$EMAIL_ADDRESS" ]; then
+    echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
+    if [ -z "$MAIL_BIN" ]; then
+      echo -e "No mail program set in MAIL_BIN, you must set it to send email."
+    else
+      # Check if mailx is executable
+      if ! command -v "$MAIL_BIN" &>/dev/null; then
+        echo -e "$MAIL_BIN not found, you must install it to send email."
       else
-        $MAIL_BIN -a 'Content-Type: text/html; charset=UTF-8' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
-          < <(echo "$body")
+        # Try to determine if the mailx version is the incompatible one
+        MAILX_VERSION=$($MAIL_BIN -V 2>/dev/null || echo "unknown")
+        if [[ "$MAILX_VERSION" == *"12.5 7/5/10"* ]]; then
+          echo "Incompatible version of mailx found, using sendmail instead."
+          (
+            echo To: "$EMAIL_ADDRESS"
+            echo From: "$FROM_EMAIL_ADDRESS"
+            echo "Content-Type: text/html;"
+            echo Subject: "$SUBJECT"
+            echo
+            echo "$body"
+          ) | sendmail -t
+        else
+          $MAIL_BIN -a 'Content-Type: text/html; charset=UTF-8' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
+            < <(echo "$body")
+        fi
       fi
-     fi
-   fi
-fi
+    fi
+  fi
 
 }
 
@@ -1174,9 +1179,9 @@ fi
 # forever as newer bash version will wait for the process substitution to
 # finish. Probably not the best way of 'fixing' this issue. Someone with more
 # knowledge can provide better insight.
-close_output_and_wait(){
+close_output_and_wait() {
   # shellcheck disable=SC2261
-  exec >& "$OUT" 2>& "$ERROR"
+  exec >&"$OUT" 2>&"$ERROR"
   CHILD_PID=$(pgrep -P $$)
   if [ -n "$CHILD_PID" ]; then
     wait "$CHILD_PID"
@@ -1184,7 +1189,7 @@ close_output_and_wait(){
 }
 
 # Redirects output to file and screen. Open a new tee process.
-output_to_file_screen(){
+output_to_file_screen() {
   # redirect all output to screen and file
   exec {OUT}>&1 {ERROR}>&2
   # NOTE: Not preferred format but valid: exec &> >(tee -ia "${TMP_OUTPUT}" )
@@ -1193,22 +1198,22 @@ output_to_file_screen(){
 
 # Sends important messages to syslog
 mklog() {
-  [[ "$*" =~ ^([A-Za-z]*):\ (.*) ]] &&
-  {
-    PRIORITY=${BASH_REMATCH[1]} # INFO, DEBUG, WARN
-    LOGMESSAGE=${BASH_REMATCH[2]} # the Log-Message
-  }
-  echo "$(date '+[%Y-%m-%d %H:%M:%S]') $(basename "$0"): $PRIORITY: '$LOGMESSAGE'" >> "$SNAPRAID_LOG"
+  [[ "$*" =~ ^([A-Za-z]*):\ (.*) ]] \
+    && {
+      PRIORITY=${BASH_REMATCH[1]}   # INFO, DEBUG, WARN
+      LOGMESSAGE=${BASH_REMATCH[2]} # the Log-Message
+    }
+  echo "$(date '+[%Y-%m-%d %H:%M:%S]') $(basename "$0"): $PRIORITY: '$LOGMESSAGE'" >>"$SNAPRAID_LOG"
 }
 
 # Emergency syslog function when no config is found, using default log location
 mklog_noconfig() {
-  [[ "$*" =~ ^([A-Za-z]*):\ (.*) ]] &&
-  {
-    PRIORITY=${BASH_REMATCH[1]} # INFO, DEBUG, WARN
-    LOGMESSAGE=${BASH_REMATCH[2]} # the Log-Message
-  }
-  echo "$(date '+[%Y-%m-%d %H:%M:%S]') $(basename "$0"): $PRIORITY: '$LOGMESSAGE'" >> "/var/log/snapraid.log"
+  [[ "$*" =~ ^([A-Za-z]*):\ (.*) ]] \
+    && {
+      PRIORITY=${BASH_REMATCH[1]}   # INFO, DEBUG, WARN
+      LOGMESSAGE=${BASH_REMATCH[2]} # the Log-Message
+    }
+  echo "$(date '+[%Y-%m-%d %H:%M:%S]') $(basename "$0"): $PRIORITY: '$LOGMESSAGE'" >>"/var/log/snapraid.log"
 }
 
 # Function to check and install packages if not found
@@ -1227,7 +1232,7 @@ check_and_install() {
     echo "$PACKAGE_NAME not found. Attempting to install..."
     mklog "INFO: Attempting to install missing package: $PACKAGE_NAME"
 
-    if ! apt-get -qq install -y "$PACKAGE_NAME" > /dev/null 2>&1; then
+    if ! apt-get -qq install -y "$PACKAGE_NAME" >/dev/null 2>&1; then
       echo "ERROR: Failed to install $PACKAGE_NAME"
       mklog "ERROR: apt-get failed to install $PACKAGE_NAME"
       return 1
@@ -1250,7 +1255,8 @@ user_home() { getent passwd "$1" | awk -F: '{print $6}'; }
 
 # Run a one-liner as a login shell for user (prefer runuser, fallback to su)
 as_user_login() {
-  local u="$1" ; shift
+  local u="$1"
+  shift
   if command_exists runuser; then
     runuser -l "$u" -c "$*" 2>/dev/null
   else
@@ -1273,7 +1279,10 @@ check_and_install_apprise() {
     fi
     echo "Installing pipx..."
     apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y pipx \
-      || { echo "Error: pipx installation failed."; return 1; }
+      || {
+        echo "Error: pipx installation failed."
+        return 1
+      }
   fi
 
   # Resolve user's current pipx bin dir and look for apprise there
@@ -1325,85 +1334,85 @@ check_and_install_apprise() {
 
 # Check OMV Version
 check_omv_version() {
-    OMV_VERSION=0
-    if command_exists dpkg-query; then
-        if dpkg-query -W -f='${Status}' openmediavault 2>/dev/null | grep -q "install ok installed"; then
-            version=$(dpkg-query -W -f='${Version}' openmediavault)
-            if [[ -n "$version" ]]; then
-                major_version=$(echo "$version" | cut -d. -f1)
-                if [[ "$major_version" -ge 7 ]]; then
-                    OMV_VERSION=7
-                else
-                    OMV_VERSION=6
-                fi
-            fi
+  OMV_VERSION=0
+  if command_exists dpkg-query; then
+    if dpkg-query -W -f='${Status}' openmediavault 2>/dev/null | grep -q "install ok installed"; then
+      version=$(dpkg-query -W -f='${Version}' openmediavault)
+      if [[ -n "$version" ]]; then
+        major_version=$(echo "$version" | cut -d. -f1)
+        if [[ "$major_version" -ge 7 ]]; then
+          OMV_VERSION=7
+        else
+          OMV_VERSION=6
         fi
+      fi
     fi
+  fi
 }
 
 # Pick Snapraid config file for OMV7
 pick_snapraid_conf_file() {
-search_conf_files "/etc/snapraid"
-result=$?
-if [ $result -eq 0 ]; then
+  search_conf_files "/etc/snapraid"
+  result=$?
+  if [ $result -eq 0 ]; then
     # Only one SnapRAID config file found, proceeding
     echo "Proceeding with the omv-snapraid .conf file: $SNAPRAID_CONF"
-elif [ $result -eq 2 ]; then
+  elif [ $result -eq 2 ]; then
     # Multiple SnapRAID config files found, stopping the script
     local ERROR_MSG="Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings in the script-config file at $CONFIG_FILE. Available SnapRAID config files:"
     echo "$ERROR_MSG"
-    
+
     local FILE_LIST=""
     for file in "${conf_files[@]}"; do
-        echo "$file"
-        FILE_LIST="$FILE_LIST\n- $file"
+      echo "$file"
+      FILE_LIST="$FILE_LIST\n- $file"
     done
-	
-	mklog "WARN: Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings."
+
+    mklog "WARN: Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings."
     SUBJECT="[WARNING] - Multiple SnapRAID configuration files!"
     NOTIFY_OUTPUT="$SUBJECT\n\n$ERROR_MSG$FILE_LIST"
     notify_warning "fatal"
-    exit 1;
+    exit 1
 
-else
-  # No SnapRAID conf file found, stopping the script
+  else
+    # No SnapRAID conf file found, stopping the script
     echo "SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file ""$SNAPRAID_CONF"" does not exist."
     mklog "WARN: SnapRAID configuration file not found. The script cannot be run! Please check your settings, because the specified file ""$SNAPRAID_CONF"" does not exist."
-  SUBJECT="[WARNING] - SnapRAID configuration file not found!"
+    SUBJECT="[WARNING] - SnapRAID configuration file not found!"
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
-  NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
+    NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
     notify_warning "fatal"
-  exit 1;
-fi
+    exit 1
+  fi
 }
 # Search SnapRAID config file for OMV7
 search_conf_files() {
-    folder="$1"
+  folder="$1"
 
-    # Check if the directory exists
-    if [ ! -d "$folder" ]; then
-        echo "Directory $folder does not exist."
-        return 1
-    fi
+  # Check if the directory exists
+  if [ ! -d "$folder" ]; then
+    echo "Directory $folder does not exist."
+    return 1
+  fi
 
-    shopt -s nullglob
-    conf_files=("$folder"/omv-snapraid-*.conf)
-    shopt -u nullglob
+  shopt -s nullglob
+  conf_files=("$folder"/omv-snapraid-*.conf)
+  shopt -u nullglob
 
-    #echo "Searching in folder: $folder"
-    #echo "Found files matching pattern: ${conf_files[@]}"
+  #echo "Searching in folder: $folder"
+  #echo "Found files matching pattern: ${conf_files[@]}"
 
   # if no files are found
-    if [ ${#conf_files[@]} -eq 0 ]; then
-        return 1
-  # if one file is found
-    elif [ ${#conf_files[@]} -eq 1 ]; then
+  if [ ${#conf_files[@]} -eq 0 ]; then
+    return 1
+    # if one file is found
+  elif [ ${#conf_files[@]} -eq 1 ]; then
     SNAPRAID_CONF="${conf_files[0]}"
-        return 0
+    return 0
     # if multiple files are found
   else
-        return 2
-    fi
+    return 2
+  fi
 }
 
 # Extract SnapRAID info (content and parity files) from the config file
@@ -1413,21 +1422,18 @@ extract_snapraid_info() {
 
   IFS=$'\n'
   # Build an array of content files
-  CONTENT_FILES=(
-    $(echo "$SNAPRAID_CONF_LINES" \
-      | grep -E '^content ' \
-      | cut -d ' ' -f2 \
-      | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-  )
+  mapfile -t CONTENT_FILES < <(echo "$SNAPRAID_CONF_LINES" \
+    | grep -E '^content ' \
+    | cut -d ' ' -f2 \
+    | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
   # Build an array of parity files
-  PARITY_FILES=(
-    $(echo "$SNAPRAID_CONF_LINES" \
-      | grep -E '^([1-6z]-)*parity' \
-      | cut -d ' ' -f2- \
-      | tr ',' '\n' \
-      | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-  )
+  mapfile -t PARITY_FILES < <(echo "$SNAPRAID_CONF_LINES" \
+    | grep -E '^([1-6z]-)*parity' \
+    | cut -d ' ' -f2- \
+    | tr ',' '\n' \
+    | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
   unset IFS
 }
 
@@ -1442,7 +1448,7 @@ check_snapraid_status() {
     echo "Previous sync completed successfully, proceeding."
     mklog "INFO: Previous sync completed successfully, proceeding."
     SNAPRAID_STATUS=0
-        
+
     # Check for the "NOT fully synced" warning message
   elif echo "$snapraid_status_output" | grep -q "WARNING! The array is NOT fully synced."; then
     if [ "$BYPASS_SYNC_ERROR" = true ]; then
@@ -1453,7 +1459,7 @@ check_snapraid_status() {
       mklog "WARN: The array is NOT fully synced. Stopping the script."
       SNAPRAID_STATUS=1
     fi
-  else 
+  else
     # If neither message is found, handle the unknown state
     mklog "WARN: The array status is unknown. If this is a new array that has never been synced, run 'snapraid sync' manually first to initialize it. Stopping the script."
     SNAPRAID_STATUS=2
@@ -1472,39 +1478,39 @@ check_root() {
   fi
 }
 
-# Function to parse command arguments 
+# Function to parse command arguments
 parse_cmd_arguments() {
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --config)
-      if [[ -n "$2" && "$2" != --* ]]; then
-        CONFIG_FILE="$2"
-        shift 2
-      else
-        echo "Error: --config requires a path argument."
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --config)
+        if [[ -n "$2" && "$2" != --* ]]; then
+          CONFIG_FILE="$2"
+          shift 2
+        else
+          echo "Error: --config requires a path argument."
+          exit 1
+        fi
+        ;;
+      --force-sync)
+        FORCE_SYNC=true
+        SYNC_WARN_THRESHOLD=0
+        shift
+        ;;
+      --bypass-sync-error)
+        BYPASS_SYNC_ERROR=true
+        shift
+        ;;
+      --help)
+        echo "Usage: $0 [--config <path>] [--force-sync] [--bypass-sync-error]"
+        exit 0
+        ;;
+      *)
+        echo "Unknown option: $1"
+        echo "Use --help to see usage."
         exit 1
-      fi
-      ;;
-    --force-sync)
-      FORCE_SYNC=true
-      SYNC_WARN_THRESHOLD=0
-      shift
-      ;;
-    --bypass-sync-error)
-      BYPASS_SYNC_ERROR=true
-      shift
-      ;;
-    --help)
-      echo "Usage: $0 [--config <path>] [--force-sync] [--bypass-sync-error]"
-      exit 0
-      ;;
-    *)
-      echo "Unknown option: $1"
-      echo "Use --help to see usage."
-      exit 1
-      ;;
-  esac
-done
+        ;;
+    esac
+  done
 }
 
 # Basic email sanity check
