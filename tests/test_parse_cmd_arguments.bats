@@ -37,3 +37,19 @@ source "$(realpath "$(dirname "$BATS_TEST_FILENAME")")/helpers/test_helper.bash"
   [ "$DRY_RUN" = "true" ]
   [ "$FORCE_SYNC" = "true" ]
 }
+
+@test "parse_cmd_arguments: --bypass-sync-error sets BYPASS_SYNC_ERROR=true" {
+  BYPASS_SYNC_ERROR=false
+  parse_cmd_arguments --bypass-sync-error
+  [ "$BYPASS_SYNC_ERROR" = "true" ]
+}
+
+@test "parse_cmd_arguments: --help exits with status 0" {
+  run parse_cmd_arguments --help
+  [ "$status" -eq 0 ]
+}
+
+@test "parse_cmd_arguments: --config with no path argument exits with status 1" {
+  run parse_cmd_arguments --config
+  [ "$status" -eq 1 ]
+}
