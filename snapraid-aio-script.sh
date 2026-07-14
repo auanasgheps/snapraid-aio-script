@@ -42,6 +42,7 @@ CURRENT_DIR=$(dirname "${0}")
 CONFIG_FILE="$CURRENT_DIR/script-config.conf"
 FORCE_SYNC=false
 BYPASS_SYNC_ERROR=false
+DRY_RUN=false
 
 SYNC_MARKER="SYNC -"
 SCRUB_MARKER="SCRUB -"
@@ -120,41 +121,45 @@ main() {
   echo "## Preprocessing"
 
   # Check for basic dependencies
-  check_and_install python3-markdown
+  if ! is_dry_run; then
+    check_and_install python3-markdown
+  fi
   check_and_install bc
 
   # Initialize notification
-  if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ] || [ "$CHECK_UPDATES" -eq 1 ]; then
-    # Check for notification dependencies
-    check_and_install curl
-    check_and_install jq
+  if ! is_dry_run; then
+    if [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ] || [ "$CHECK_UPDATES" -eq 1 ]; then
+      # Check for notification dependencies
+      check_and_install curl
+      check_and_install jq
 
-    # invoke notification services if configured
-    if [ "$HEALTHCHECKS" -eq 1 ]; then
-      echo "Healthchecks.io notification is enabled. Notifications sent to $HEALTHCHECKS_URL."
-      curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/start
-    fi
-    if [ "$TELEGRAM" -eq 1 ]; then
-      echo "Telegram notification is enabled."
-      curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-        -H 'Content-Type: application/json' \
-        -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "SnapRAID Script Job started"}' \
-        https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
-    fi
-    if [ "$DISCORD" -eq 1 ]; then
-      echo "Discord notification is enabled."
-      curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
-        -H 'Content-Type: application/json' \
-        -d '{"content": "SnapRAID Script Job started"}' \
-        "$DISCORD_WEBHOOK_URL"
-    fi
-    if [ "$APPRISE" -eq 1 ] || [ "$APPRISE_EMAIL" -eq 1 ]; then
-      echo "Apprise service notification is enabled."
-      check_and_install_apprise
-      if [ "$APPRISE" -eq 1 ] && [ "${APPRISE_ON_ERROR_ONLY:-0}" -ne 1 ]; then
-        for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
-          "$APPRISE_BIN" -b "SnapRAID Script Job started" "$APPRISE_URL_U"
-        done
+      # invoke notification services if configured
+      if [ "$HEALTHCHECKS" -eq 1 ]; then
+        echo "Healthchecks.io notification is enabled. Notifications sent to $HEALTHCHECKS_URL."
+        curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/start
+      fi
+      if [ "$TELEGRAM" -eq 1 ]; then
+        echo "Telegram notification is enabled."
+        curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+          -H 'Content-Type: application/json' \
+          -d '{"chat_id": "'$TELEGRAM_CHAT_ID'", "text": "SnapRAID Script Job started"}' \
+          https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
+      fi
+      if [ "$DISCORD" -eq 1 ]; then
+        echo "Discord notification is enabled."
+        curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
+          -H 'Content-Type: application/json' \
+          -d '{"content": "SnapRAID Script Job started"}' \
+          "$DISCORD_WEBHOOK_URL"
+      fi
+      if [ "$APPRISE" -eq 1 ] || [ "$APPRISE_EMAIL" -eq 1 ]; then
+        echo "Apprise service notification is enabled."
+        check_and_install_apprise
+        if [ "$APPRISE" -eq 1 ] && [ "${APPRISE_ON_ERROR_ONLY:-0}" -ne 1 ]; then
+          for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
+            "$APPRISE_BIN" -b "SnapRAID Script Job started" "$APPRISE_URL_U"
+          done
+        fi
       fi
     fi
   fi
@@ -246,17 +251,19 @@ main() {
   fi
 
   # pause configured containers
-  if [ "$MANAGE_SERVICES" -eq 1 ]; then
-    service_array_setup
-    if [ "$DOCKERALLOK" = YES ]; then
-      echo
-      pause_services
-      echo
+  if ! is_dry_run; then
+    if [ "$MANAGE_SERVICES" -eq 1 ]; then
+      service_array_setup
+      if [ "$DOCKERALLOK" = YES ]; then
+        echo
+        pause_services
+        echo
+      fi
     fi
   fi
 
   # Custom Hook - Before
-  if [ "$CUSTOM_HOOK" -eq 1 ]; then
+  if [ "$CUSTOM_HOOK" -eq 1 ] && ! is_dry_run; then
     echo "### Custom Hook [$BEFORE_HOOK_NAME]"
     bash -c "$BEFORE_HOOK_CMD"
   fi
@@ -321,6 +328,15 @@ main() {
   fi
 
   # Now run sync if conditions are met
+  if is_dry_run; then
+    if [ "$DO_SYNC" -eq 1 ]; then
+      echo "[DRY RUN] SYNC would proceed."
+    else
+      echo "[DRY RUN] SYNC would be BLOCKED (threshold not met or no changes)."
+    fi
+    echo "[DRY RUN] Exiting without running SYNC, SCRUB, spindown, or sending notifications."
+    exit 0
+  fi
   if [ "$DO_SYNC" -eq 1 ]; then
     echo "SYNC is authorized. [$(date)]"
     echo "### SnapRAID SYNC [$(date)]"
@@ -655,7 +671,9 @@ chk_sync_warn() {
     else
       # NO, so let's increment the warning count and skip the sync job
       ((sync_warn_count += 1))
-      echo "$sync_warn_count" >"$SYNC_WARN_FILE"
+      if ! is_dry_run; then
+        echo "$sync_warn_count" >"$SYNC_WARN_FILE"
+      fi
       if [ "$sync_warn_count" == "$SYNC_WARN_THRESHOLD" ]; then
         echo "This is the **last** warning left. **NOT** proceeding with SYNC job. [$(date)]"
         mklog "INFO: This is the **last** warning left. **NOT** proceeding with SYNC job. [$(date)]"
@@ -1500,8 +1518,12 @@ parse_cmd_arguments() {
         BYPASS_SYNC_ERROR=true
         shift
         ;;
+      --dry-run)
+        DRY_RUN=true
+        shift
+        ;;
       --help)
-        echo "Usage: $0 [--config <path>] [--force-sync] [--bypass-sync-error]"
+        echo "Usage: $0 [--config <path>] [--force-sync] [--bypass-sync-error] [--dry-run]"
         exit 0
         ;;
       *)
@@ -1512,6 +1534,8 @@ parse_cmd_arguments() {
     esac
   done
 }
+
+is_dry_run() { [ "$DRY_RUN" = true ]; }
 
 # Basic email sanity check
 is_valid_email() {

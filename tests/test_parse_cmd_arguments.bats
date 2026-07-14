@@ -17,3 +17,23 @@ source "$(realpath "$(dirname "$BATS_TEST_FILENAME")")/helpers/test_helper.bash"
   run parse_cmd_arguments --badoption
   [ "$status" -eq 1 ]
 }
+
+@test "parse_cmd_arguments: --dry-run sets DRY_RUN=true" {
+  DRY_RUN=false
+  parse_cmd_arguments --dry-run
+  [ "$DRY_RUN" = "true" ]
+}
+
+@test "parse_cmd_arguments: --dry-run does not set FORCE_SYNC" {
+  FORCE_SYNC=false
+  parse_cmd_arguments --dry-run
+  [ "$FORCE_SYNC" = "false" ]
+}
+
+@test "parse_cmd_arguments: --dry-run combined with --force-sync sets both flags" {
+  DRY_RUN=false
+  FORCE_SYNC=false
+  parse_cmd_arguments --dry-run --force-sync
+  [ "$DRY_RUN" = "true" ]
+  [ "$FORCE_SYNC" = "true" ]
+}
