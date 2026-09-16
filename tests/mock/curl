@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Mock curl binary for tests.
+# Appends all arguments to $MOCK_CURL_LOG if configured.
+
+if [ -n "${MOCK_CURL_LOG:-}" ]; then
+  echo "$*" >>"$MOCK_CURL_LOG"
+fi
+
+exit 0
+

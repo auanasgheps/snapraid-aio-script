@@ -1,0 +1,4 @@
+You have 1 files with a zero sub-second timestamp.
+Run the 'touch' command to set them to a non-zero value.
+No sync is in progress.
+

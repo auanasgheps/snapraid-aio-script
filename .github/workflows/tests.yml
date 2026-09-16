@@ -32,13 +32,48 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Install dependencies
-        run: sudo apt-get update -qq && sudo apt-get install -y bats bc shellcheck
+        run: sudo apt-get update -qq && sudo apt-get install -y bats bc kcov shellcheck
 
       - name: ShellCheck
         run: shellcheck --severity=error snapraid-aio-script.sh
 
-      - name: Make mock snapraid executable
-        run: chmod +x tests/mock/snapraid
+      - name: Make test mocks executable
+        run: chmod +x tests/mock/*
 
-      - name: Run tests
-        run: bats tests/
+      - name: Run tests with coverage
+        run: kcov --include-pattern=snapraid-aio-script.sh,.sourced_functions.bash coverage/ bats tests/
+
+      - name: Display coverage summary
+        if: always()
+        run: |
+          python3 - <<'EOF'
+          import glob, json, os
+
+          files = glob.glob('coverage/**/coverage.json', recursive=True)
+          if files:
+              with open(files[0]) as f:
+                  data = json.load(f)
+              total = data.get('percent_covered', 'N/A')
+              summary = [
+                  '### 📊 Code Coverage Summary',
+                  f'**Overall Coverage:** `{total}%`\n',
+                  '| File | Coverage | Lines |',
+                  '| --- | :---: | :---: |'
+              ]
+              for item in data.get('files', []):
+                  fname = item['file'].split('/')[-1]
+                  summary.append(f"| `{fname}` | {item['percent_covered']}% | {item['covered_lines']}/{item['total_lines']} |")
+              summary_text = '\n'.join(summary)
+              print(summary_text)
+              step_summary = os.getenv('GITHUB_STEP_SUMMARY')
+              if step_summary:
+                  with open(step_summary, 'a') as f:
+                      f.write(summary_text + '\n')
+          EOF
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-coverage-report
+          path: coverage/

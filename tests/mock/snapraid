@@ -4,13 +4,22 @@
 # Ignores flags like -c <conf> and only acts on the subcommand.
 
 SUBCOMMAND=""
+SKIP_NEXT=0
 for arg in "$@"; do
+  if [ "$SKIP_NEXT" -eq 1 ]; then
+    SKIP_NEXT=0
+    continue
+  fi
   case "$arg" in
-    -c) ;;          # skip -c flag
-    -*) ;;          # skip other flags
-    *)  [ -z "$SUBCOMMAND" ] && SUBCOMMAND="$arg" ;;
+    -c) SKIP_NEXT=1 ;; # skip -c flag and its argument
+    -*) ;;             # skip other flags
+    *) [ -z "$SUBCOMMAND" ] && SUBCOMMAND="$arg" ;;
   esac
 done
+
+if [ -n "${MOCK_SNAPRAID_LOG:-}" ]; then
+  echo "$*" >>"$MOCK_SNAPRAID_LOG"
+fi
 
 FIXTURES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../fixtures" && pwd)"
 SCENARIO="${MOCK_SCENARIO:-status_synced}"
