@@ -45,6 +45,8 @@ setup() {
   SCRUB_AGE=10
   SCRUB_NEW=0
   PREHASH=1
+  FORCE_ZERO=0
+  FORCE_ZERO_CLI=false
   RETENTION_DAYS=0
 
   # Reset computed state

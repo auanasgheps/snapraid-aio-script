@@ -41,6 +41,7 @@ CURRENT_DIR=$(dirname "${0}")
 # Default argument values
 CONFIG_FILE="$CURRENT_DIR/script-config.conf"
 FORCE_SYNC=false
+FORCE_ZERO_CLI=false
 BYPASS_SYNC_ERROR=false
 DRY_RUN=false
 
@@ -88,6 +89,11 @@ main() {
   # check if sync has been forced by a command argument
   if [ "$FORCE_SYNC" = true ]; then
     SYNC_WARN_THRESHOLD=0
+  fi
+
+  # check if force-zero has been set by a command argument
+  if [ "$FORCE_ZERO_CLI" = true ]; then
+    FORCE_ZERO=1
   fi
 
   # create tmp file for output
@@ -1514,6 +1520,11 @@ parse_cmd_arguments() {
         SYNC_WARN_THRESHOLD=0
         shift
         ;;
+      --force-zero)
+        FORCE_ZERO_CLI=true
+        FORCE_ZERO=1
+        shift
+        ;;
       --bypass-sync-error)
         BYPASS_SYNC_ERROR=true
         shift
@@ -1523,7 +1534,7 @@ parse_cmd_arguments() {
         shift
         ;;
       --help)
-        echo "Usage: $0 [--config <path>] [--force-sync] [--bypass-sync-error] [--dry-run]"
+        echo "Usage: $0 [--config <path>] [--force-sync] [--force-zero] [--bypass-sync-error] [--dry-run]"
         exit 0
         ;;
       *)

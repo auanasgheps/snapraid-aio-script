@@ -47,9 +47,69 @@ source "$(realpath "$(dirname "$BATS_TEST_FILENAME")")/helpers/test_helper.bash"
 @test "parse_cmd_arguments: --help exits with status 0" {
   run parse_cmd_arguments --help
   [ "$status" -eq 0 ]
+  [[ "$output" =~ "--force-zero" ]]
 }
 
 @test "parse_cmd_arguments: --config with no path argument exits with status 1" {
   run parse_cmd_arguments --config
   [ "$status" -eq 1 ]
 }
+
+@test "parse_cmd_arguments: --force-zero sets FORCE_ZERO_CLI=true and FORCE_ZERO=1" {
+  FORCE_ZERO_CLI=false
+  FORCE_ZERO=0
+  parse_cmd_arguments --force-zero
+  [ "$FORCE_ZERO_CLI" = "true" ]
+  [ "$FORCE_ZERO" -eq 1 ]
+}
+
+@test "parse_cmd_arguments: --force-zero does not set FORCE_SYNC" {
+  FORCE_SYNC=false
+  FORCE_ZERO_CLI=false
+  parse_cmd_arguments --force-zero
+  [ "$FORCE_SYNC" = "false" ]
+  [ "$FORCE_ZERO_CLI" = "true" ]
+}
+
+@test "parse_cmd_arguments: --force-sync does not set FORCE_ZERO_CLI" {
+  FORCE_SYNC=false
+  FORCE_ZERO_CLI=false
+  parse_cmd_arguments --force-sync
+  [ "$FORCE_SYNC" = "true" ]
+  [ "$FORCE_ZERO_CLI" = "false" ]
+}
+
+@test "parse_cmd_arguments: --force-zero combined with --force-sync sets both flags" {
+  FORCE_SYNC=false
+  FORCE_ZERO_CLI=false
+  parse_cmd_arguments --force-zero --force-sync
+  [ "$FORCE_SYNC" = "true" ]
+  [ "$FORCE_ZERO_CLI" = "true" ]
+  [ "$SYNC_WARN_THRESHOLD" -eq 0 ]
+  [ "$FORCE_ZERO" -eq 1 ]
+}
+
+@test "parse_cmd_arguments: --force-sync combined with --force-zero sets both flags" {
+  FORCE_SYNC=false
+  FORCE_ZERO_CLI=false
+  parse_cmd_arguments --force-sync --force-zero
+  [ "$FORCE_SYNC" = "true" ]
+  [ "$FORCE_ZERO_CLI" = "true" ]
+  [ "$SYNC_WARN_THRESHOLD" -eq 0 ]
+  [ "$FORCE_ZERO" -eq 1 ]
+}
+
+@test "parse_cmd_arguments: --force-zero overrides FORCE_ZERO=0 from config" {
+  FORCE_ZERO_CLI=false
+  FORCE_ZERO=0
+  parse_cmd_arguments --force-zero
+  [ "$FORCE_ZERO_CLI" = "true" ]
+  # Sourcing config sets FORCE_ZERO=0
+  FORCE_ZERO=0
+  # Main script override logic
+  if [ "$FORCE_ZERO_CLI" = true ]; then
+    FORCE_ZERO=1
+  fi
+  [ "$FORCE_ZERO" -eq 1 ]
+}
+

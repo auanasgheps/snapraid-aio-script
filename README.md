@@ -124,6 +124,7 @@ If you don't know what to do, I recommend using the default values and see how i
 - Command line arguments
   	- Can be used to override the default behaviour.
   	- You can force a sync by adding `--force-sync`
+  	- You can force syncing zero-length files by adding `--force-zero`
   	- You can specify another config file when running the script by adding `--config /home/alternate_config.conf`
   	- You can validate your setup without making any changes by adding `--dry-run`
 - Custom Hooks
@@ -301,6 +302,7 @@ The script supports command line arguments to override the default behaviour:
 | ------------- | ------------- |
 | --config <path>  | Specifies an alternative path for the script configuration file (e.g., `script-config.conf`).  |
 | --force-sync  | Forces a SYNC job by ignoring the deleted and updated file thresholds (`DEL_THRESHOLD` and `UP_THRESHOLD`).  |
+| --force-zero  | Forces the operation of syncing a file with zero size that before was not (overrides `FORCE_ZERO` in config).  |
 | --bypass-sync-error  | Allows the script to proceed even if the SnapRAID array was not fully synced. **Use with caution!**  |
 | --dry-run  | Runs all pre-flight checks and `snapraid diff` with threshold evaluation, then exits without running SYNC, SCRUB, spindown, or sending any notifications. Useful to verify the setup or check whether a SYNC would be blocked. |
 | --help  | Displays a brief usage summary and exits. |
