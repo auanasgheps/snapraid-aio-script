@@ -7,18 +7,25 @@ source "$(dirname "${BASH_SOURCE[0]}")/load_functions.bash"
 # ---- Stub side-effecting functions ----
 # These override the sourced versions and must be declared AFTER load_functions.
 
-mklog()                 { :; }
-mklog_noconfig()        { :; }
+mklog() { :; }
+mklog_noconfig() { :; }
 output_to_file_screen() { :; }
 close_output_and_wait() { :; }
-notify_success()        { :; }
-notify_warning()        { :; }
+notify_success() { :; }
+notify_warning() { :; }
 
 # Sentinel for chk_scrub_settings tests: mirrors real run_scrub which deletes the counter file.
 run_scrub() {
   RUN_SCRUB_CALLED=1
   rm -f "$SCRUB_COUNT_FILE"
 }
+
+# Fallback for environments where BATS_TEST_TMPDIR is unset (e.g. older bats < 1.4.0)
+if [ -z "${BATS_TEST_TMPDIR:-}" ]; then
+  BATS_TEST_TMPDIR="${BATS_TMPDIR:-/tmp}/bats-test-$$-${RANDOM}"
+  mkdir -p "$BATS_TEST_TMPDIR"
+  export BATS_TEST_TMPDIR
+fi
 
 # ---- Per-test setup ----
 setup() {
@@ -55,9 +62,9 @@ setup() {
   IGNORE_PATTERN=()
 
   # Pre-create count files with 0 so sed doesn't exit 2 on missing files
-  echo "0" > "$SYNC_WARN_FILE"
-  echo "0" > "$SCRUB_COUNT_FILE"
-  true > "$TMP_OUTPUT"
+  echo "0" >"$SYNC_WARN_FILE"
+  echo "0" >"$SCRUB_COUNT_FILE"
+  true >"$TMP_OUTPUT"
 }
 
 teardown() { :; }

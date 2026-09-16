@@ -2,9 +2,8 @@
 # Mock curl binary for tests.
 # Appends all arguments to $MOCK_CURL_LOG if configured.
 
-if [ -n "${MOCK_CURL_LOG:-}" ]; then
+if [ -n "${MOCK_CURL_LOG:-}" ] && [ "$MOCK_CURL_LOG" != "/curl_mock.log" ]; then
   echo "$*" >>"$MOCK_CURL_LOG"
 fi
 
 exit 0
-

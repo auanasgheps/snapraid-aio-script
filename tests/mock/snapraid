@@ -17,7 +17,7 @@ for arg in "$@"; do
   esac
 done
 
-if [ -n "${MOCK_SNAPRAID_LOG:-}" ]; then
+if [ -n "${MOCK_SNAPRAID_LOG:-}" ] && [ "$MOCK_SNAPRAID_LOG" != "/snapraid_mock.log" ]; then
   echo "$*" >>"$MOCK_SNAPRAID_LOG"
 fi
 

@@ -3,8 +3,8 @@
 source "$(realpath "$(dirname "$BATS_TEST_FILENAME")")/helpers/test_helper.bash"
 
 setup() {
-  MOCK_DOCKER_LOG="$BATS_TEST_TMPDIR/docker_mock.log"
-  MOCK_SSH_LOG="$BATS_TEST_TMPDIR/ssh_mock.log"
+  MOCK_DOCKER_LOG="${BATS_TEST_TMPDIR:-/tmp}/docker_mock.log"
+  MOCK_SSH_LOG="${BATS_TEST_TMPDIR:-/tmp}/ssh_mock.log"
   export MOCK_DOCKER_LOG MOCK_SSH_LOG
   rm -f "$MOCK_DOCKER_LOG" "$MOCK_SSH_LOG"
 
@@ -92,4 +92,3 @@ setup() {
   run grep "snapuser@nas1 docker unpause plex" "$MOCK_SSH_LOG"
   [ "$status" -eq 0 ]
 }
-

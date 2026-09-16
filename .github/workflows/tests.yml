@@ -32,7 +32,9 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Install dependencies
-        run: sudo apt-get update -qq && sudo apt-get install -y bats bc kcov shellcheck
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y bc kcov shellcheck
+          sudo npm install -g bats
 
       - name: ShellCheck
         run: shellcheck --severity=error snapraid-aio-script.sh

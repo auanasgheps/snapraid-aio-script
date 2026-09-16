@@ -2,9 +2,8 @@
 # Mock docker binary for tests.
 # Appends all arguments to $MOCK_DOCKER_LOG if configured.
 
-if [ -n "${MOCK_DOCKER_LOG:-}" ]; then
+if [ -n "${MOCK_DOCKER_LOG:-}" ] && [ "$MOCK_DOCKER_LOG" != "/docker_mock.log" ]; then
   echo "$*" >>"$MOCK_DOCKER_LOG"
 fi
 
 exit 0
-

@@ -8,7 +8,7 @@ send_mail() { :; }
 mklog() { :; }
 
 setup() {
-  MOCK_CURL_LOG="$BATS_TEST_TMPDIR/curl_mock.log"
+  MOCK_CURL_LOG="${BATS_TEST_TMPDIR:-/tmp}/curl_mock.log"
   export MOCK_CURL_LOG
   rm -f "$MOCK_CURL_LOG"
 
@@ -75,4 +75,3 @@ setup() {
   run grep 'content' "$MOCK_CURL_LOG"
   [ "$status" -eq 0 ]
 }
-

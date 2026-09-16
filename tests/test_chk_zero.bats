@@ -5,7 +5,7 @@ source "$(realpath "$(dirname "$BATS_TEST_FILENAME")")/helpers/test_helper.bash"
 setup() {
   SNAPRAID_BIN="$(realpath "$(dirname "$BATS_TEST_FILENAME")")/mock/snapraid"
   SNAPRAID_CONF="/dev/null"
-  MOCK_SNAPRAID_LOG="$BATS_TEST_TMPDIR/snapraid_mock.log"
+  MOCK_SNAPRAID_LOG="${BATS_TEST_TMPDIR:-/tmp}/snapraid_mock.log"
   export SNAPRAID_BIN SNAPRAID_CONF MOCK_SNAPRAID_LOG
   rm -f "$MOCK_SNAPRAID_LOG"
 }

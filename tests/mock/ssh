@@ -2,9 +2,8 @@
 # Mock ssh binary for tests.
 # Appends all arguments to $MOCK_SSH_LOG if configured.
 
-if [ -n "${MOCK_SSH_LOG:-}" ]; then
+if [ -n "${MOCK_SSH_LOG:-}" ] && [ "$MOCK_SSH_LOG" != "/ssh_mock.log" ]; then
   echo "$*" >>"$MOCK_SSH_LOG"
 fi
 
 exit 0
-
