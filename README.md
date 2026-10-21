@@ -351,7 +351,7 @@ If the script stops unexpectedly, check the log for these common error messages:
     
 -   **The script has detected SnapRAID is already running**: Another SnapRAID process is active; the script stops to prevent data corruption or conflicts.
     
--   **Stopping the script because the previous SnapRAID sync did not complete correctly**: The array is not fully synced. You must resolve the issue manually or use the `--force-sync` argument if you are certain the data is safe.
+-   **Stopping the script because the previous SnapRAID sync did not complete correctly**: The array is not fully synced. You must resolve the issue manually or use the `--bypass-sync-error` argument if you are certain the data is safe.
     
 -   **Parity/Content file (...) not found!**: A required parity or content file is missing, often because a disk is not mounted.
     
