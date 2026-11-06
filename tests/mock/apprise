@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Mock apprise binary for tests.
+# Appends all arguments to $MOCK_APPRISE_LOG if configured.
+
+if [ -n "${MOCK_APPRISE_LOG:-}" ] && [ "$MOCK_APPRISE_LOG" != "/apprise_mock.log" ]; then
+  echo "$*" >>"$MOCK_APPRISE_LOG"
+fi
+
+exit 0

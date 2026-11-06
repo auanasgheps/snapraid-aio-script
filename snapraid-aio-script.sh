@@ -1115,7 +1115,7 @@ notify_snapraid_info() {
     done
 
     # Clean up temp file if it was used
-    [ -f /tmp/snapraid_info_msg.txt ] && rm /tmp/snapraid_info_msg.txt
+    rm -f /tmp/snapraid_info_msg.txt
 
   fi
 }

@@ -1,0 +1,10 @@
+SnapRAID SMART report:
+   Temp  Power   Error   FP Size
+      C OnDays   Count        TB  Serial  Device    Disk
+      0      -       -  SSD  0.0  -  /dev/sda  DATA
+      0      -       -  SSD  0.0  -  /dev/sdb  parity
+      0      -       -  SSD  0.0  -  /dev/sdc  -
+      -      -       -  n/a    -  -  /dev/sr0  -
+The FP column is the estimated probability (in percentage) that the disk
+is going to fail in the next year.
+Probability that at least one disk is going to fail in the next year is 0%.

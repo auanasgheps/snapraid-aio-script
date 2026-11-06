@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Mock mail/mailx binary for tests.
+# Appends all arguments to $MOCK_MAIL_LOG if configured.
+
+if [ -n "${MOCK_MAIL_LOG:-}" ] && [ "$MOCK_MAIL_LOG" != "/mail_mock.log" ]; then
+  echo "$*" >>"$MOCK_MAIL_LOG"
+fi
+
+if [ -n "${MOCK_MAIL_BODY:-}" ]; then
+  cat >"$MOCK_MAIL_BODY"
+fi
+
+exit 0

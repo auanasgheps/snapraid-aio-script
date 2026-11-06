@@ -30,7 +30,28 @@ case "$SUBCOMMAND" in
     exit 0
     ;;
   diff)
-    cat "$FIXTURES_DIR/${SCENARIO}.txt"
+    cat "$FIXTURES_DIR/${MOCK_DIFF_SCENARIO:-diff_clean}.txt"
+    if [ -n "${TMP_OUTPUT:-}" ] && [ -f "$TMP_OUTPUT" ]; then
+      cat "$FIXTURES_DIR/${MOCK_DIFF_SCENARIO:-diff_clean}.txt" >>"$TMP_OUTPUT"
+    fi
+    exit 0
+    ;;
+  scrub)
+    cat "$FIXTURES_DIR/${MOCK_SCRUB_SCENARIO:-scrub_ok}.txt"
+    if [ -n "${TMP_OUTPUT:-}" ] && [ -f "$TMP_OUTPUT" ]; then
+      cat "$FIXTURES_DIR/${MOCK_SCRUB_SCENARIO:-scrub_ok}.txt" >>"$TMP_OUTPUT"
+    fi
+    exit 0
+    ;;
+  sync)
+    cat "$FIXTURES_DIR/${MOCK_SYNC_SCENARIO:-sync_ok}.txt"
+    if [ -n "${TMP_OUTPUT:-}" ] && [ -f "$TMP_OUTPUT" ]; then
+      cat "$FIXTURES_DIR/${MOCK_SYNC_SCENARIO:-sync_ok}.txt" >>"$TMP_OUTPUT"
+    fi
+    exit 0
+    ;;
+  smart)
+    cat "$FIXTURES_DIR/${MOCK_SMART_SCENARIO:-smart_report}.txt"
     exit 0
     ;;
   *)
