@@ -21,7 +21,6 @@ Contributions are welcome!
 - [Installation and usage](#installation-and-usage)
   * [First Run](#first-run)
   * [Command Line Arguments](#command-line-arguments)
-  * [OMV and SnapRAID plugin](#omv-and-snapraid-plugin)
   * [Installing `hd-idle`](#installing-hd-idle-for-automatic-disk-spindown)
 - [Upgrade](#upgrade)
 - [Troubleshooting](#troubleshooting)
