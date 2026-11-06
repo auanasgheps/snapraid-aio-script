@@ -43,7 +43,171 @@ jobs:
         run: chmod +x tests/mock/*
 
       - name: Run tests with coverage
-        run: kcov --include-pattern=snapraid-aio-script.sh,.sourced_functions.bash coverage/ bats tests/
+        run: |
+          mkdir -p test-results
+          kcov --include-pattern=snapraid-aio-script.sh,.sourced_functions.bash coverage/ bats --timing --formatter pretty --report-formatter junit --output test-results/ -r tests/
+
+      - name: Display test summary
+        if: always()
+        run: |
+          python3 - <<'EOF'
+          import glob, os, re, sys
+          import xml.etree.ElementTree as ET
+
+          report_dir = "test-results"
+          files = sorted(glob.glob(os.path.join(report_dir, "**/*.xml"), recursive=True))
+          if not files:
+              msg = "⚠️ No JUnit XML test report found in `" + report_dir + "`. Tests may have failed before generating reports."
+              print(msg)
+              step_summary = os.getenv("GITHUB_STEP_SUMMARY")
+              if step_summary:
+                  with open(step_summary, "a", encoding="utf-8") as f:
+                      f.write(msg + "\n\n")
+              sys.exit(0)
+
+          total_tests = 0
+          total_passed = 0
+          total_failed = 0
+          total_skipped = 0
+          total_duration = 0.0
+
+          suites_data = []
+          failed_tests = []
+
+          for file_path in files:
+              try:
+                  tree = ET.parse(file_path)
+                  root = tree.getroot()
+              except Exception as e:
+                  print(f"Error parsing {file_path}: {e}", file=sys.stderr)
+                  continue
+
+              suites = root.findall("testsuite") if root.tag == "testsuites" else ([root] if root.tag == "testsuite" else [])
+
+              for suite in suites:
+                  suite_name = suite.get("name") or "unknown"
+                  suite_cases = suite.findall("testcase")
+                  suite_tests = len(suite_cases)
+                  suite_passed = 0
+                  suite_failed = 0
+                  suite_skipped = 0
+                  cases_list = []
+
+                  for case in suite_cases:
+                      case_name = case.get("name") or "unnamed"
+                      case_time = float(case.get("time") or 0.0)
+                      failure = case.find("failure")
+                      error = case.find("error")
+                      skipped = case.find("skipped")
+
+                      if failure is not None or error is not None:
+                          elem = failure if failure is not None else error
+                          msg = elem.get("message") or "failed"
+                          text = (elem.text or "").strip()
+                          suite_failed += 1
+                          status = "❌"
+                          failed_tests.append({
+                              "suite": suite_name,
+                              "name": case_name,
+                              "time": case_time,
+                              "message": msg,
+                              "details": text,
+                          })
+                      elif skipped is not None:
+                          suite_skipped += 1
+                          status = "⚠️"
+                      else:
+                          suite_passed += 1
+                          status = "✅"
+
+                      cases_list.append({
+                          "name": case_name,
+                          "time": case_time,
+                          "status": status,
+                      })
+
+                  suite_time_attr = suite.get("time")
+                  suite_time = float(suite_time_attr) if suite_time_attr else sum(c["time"] for c in cases_list)
+                  total_duration += suite_time
+
+                  total_tests += suite_tests
+                  total_passed += suite_passed
+                  total_failed += suite_failed
+                  total_skipped += suite_skipped
+
+                  suites_data.append({
+                      "name": suite_name,
+                      "tests": suite_tests,
+                      "passed": suite_passed,
+                      "failed": suite_failed,
+                      "skipped": suite_skipped,
+                      "time": suite_time,
+                      "cases": cases_list,
+                  })
+
+          md = []
+          title_icon = "✅" if total_failed == 0 else "❌"
+          title_status = "All Passed" if total_failed == 0 else f"{total_failed} Failed"
+          md.append(f"### 🧪 Bats Test Results: {title_icon} {title_status}")
+          md.append("")
+          md.append("| Total Tests | Passed | Failed | Skipped | Total Duration |")
+          md.append("| :---: | :---: | :---: | :---: | :---: |")
+          md.append(f"| {total_tests} | {total_passed} ✅ | {total_failed} ❌ | {total_skipped} ⚠️ | {total_duration:.2f}s ⏱️ |")
+          md.append("")
+
+          if failed_tests:
+              md.append("#### ❌ Failed Tests")
+              for fail in failed_tests:
+                  md.append(f"> **`{fail['suite']}`** → **{fail['name']}** ({fail['time']:.2f}s)")
+                  if fail["details"]:
+                      md.append("> ```text")
+                      for line in fail["details"].splitlines():
+                          md.append(f"> {line}")
+                      md.append("> ```")
+                  md.append("")
+
+                  line_match = re.search(r"line (\d+)", fail["details"])
+                  line_attr = f",line={line_match.group(1)}" if line_match else ""
+                  clean_msg = fail["message"].replace("\n", " ")
+                  print(f"::error file={fail['suite']}{line_attr},title={fail['name']}::{clean_msg}")
+
+          md.append("#### 📋 Test Suite Breakdown")
+          md.append("")
+          md.append("| Suite | Tests | Passed | Failed | Skipped | Duration |")
+          md.append("| :--- | :---: | :---: | :---: | :---: | :---: |")
+          for s in suites_data:
+              status_pass = f"{s['passed']} ✅" if s['passed'] > 0 else "0"
+              status_fail = f"{s['failed']} ❌" if s['failed'] > 0 else "0"
+              status_skip = f"{s['skipped']} ⚠️" if s['skipped'] > 0 else "0"
+              md.append(f"| `{s['name']}` | {s['tests']} | {status_pass} | {status_fail} | {status_skip} | {s['time']:.2f}s |")
+          md.append("")
+
+          md.append("<details>")
+          md.append(f"<summary>🔍 <b>View Detailed Test Cases ({total_tests} tests across {len(suites_data)} suites)</b></summary>")
+          md.append("")
+          for s in suites_data:
+              md.append(f"##### `{s['name']}`")
+              for c in s["cases"]:
+                  md.append(f"- {c['status']} {c['name']} (`{c['time']:.3f}s`)")
+              md.append("")
+          md.append("</details>")
+          md.append("")
+
+          summary_text = "\n".join(md)
+          print(summary_text)
+
+          step_summary = os.getenv("GITHUB_STEP_SUMMARY")
+          if step_summary:
+              with open(step_summary, "a", encoding="utf-8") as f:
+                  f.write(summary_text + "\n")
+          EOF
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: test-results
+          path: test-results/
 
       - name: Display coverage summary
         if: always()
