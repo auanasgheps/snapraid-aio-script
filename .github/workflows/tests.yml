@@ -43,17 +43,56 @@ jobs:
         run: chmod +x tests/mock/*
 
       - name: Run tests with coverage
+        id: bats
         run: |
           mkdir -p test-results
-          kcov --include-pattern=snapraid-aio-script.sh,.sourced_functions.bash coverage/ bats --timing --formatter pretty --report-formatter junit --output test-results/ -r tests/
+          kcov --include-pattern=snapraid-aio-script.sh,.sourced_functions.bash coverage/ bats --timing --report-formatter junit --output test-results/ tests/
+
+      - name: Display coverage summary
+        if: always()
+        run: |
+          python3 - <<'EOF'
+          import glob, json, os
+
+          files = glob.glob('coverage/**/coverage.json', recursive=True)
+          if files:
+              with open(files[0]) as f:
+                  data = json.load(f)
+              total = data.get('percent_covered', 'N/A')
+              summary = [
+                  '### 📊 Code Coverage Summary',
+                  f'**Overall Coverage:** `{total}%`\n',
+                  '| File | Coverage | Lines |',
+                  '| --- | :---: | :---: |'
+              ]
+              for item in data.get('files', []):
+                  fname = item['file'].split('/')[-1]
+                  summary.append(f"| `{fname}` | {item['percent_covered']}% | {item['covered_lines']}/{item['total_lines']} |")
+              summary_text = '\n'.join(summary)
+              print(summary_text)
+              step_summary = os.getenv('GITHUB_STEP_SUMMARY')
+              if step_summary:
+                  with open(step_summary, 'a') as f:
+                      f.write(summary_text + '\n\n')
+          EOF
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: code-coverage-report
+          path: coverage/
 
       - name: Display test summary
         if: always()
+        env:
+          BATS_OUTCOME: ${{ steps.bats.outcome }}
         run: |
           python3 - <<'EOF'
           import glob, os, re, sys
           import xml.etree.ElementTree as ET
 
+          bats_outcome = os.getenv("BATS_OUTCOME", "success")
           report_dir = "test-results"
           files = sorted(glob.glob(os.path.join(report_dir, "**/*.xml"), recursive=True))
           if not files:
@@ -146,10 +185,24 @@ jobs:
                   })
 
           md = []
-          title_icon = "✅" if total_failed == 0 else "❌"
-          title_status = "All Passed" if total_failed == 0 else f"{total_failed} Failed"
+          if total_failed > 0:
+              title_icon = "❌"
+              title_status = f"{total_failed} Failed"
+          elif bats_outcome != "success":
+              title_icon = "❌"
+              title_status = "Runner Error"
+          else:
+              title_icon = "✅"
+              title_status = "All Passed"
+
           md.append(f"### 🧪 Bats Test Results: {title_icon} {title_status}")
           md.append("")
+
+          if bats_outcome != "success" and total_failed == 0:
+              md.append("> [!CAUTION]")
+              md.append("> **Test runner step exited with an error.** Although all recorded test cases in the XML report succeeded, the step itself exited with a non-zero status. Check the workflow logs for runner or pipeline failures.")
+              md.append("")
+
           md.append("| Total Tests | Passed | Failed | Skipped | Total Duration |")
           md.append("| :---: | :---: | :---: | :---: | :---: |")
           md.append(f"| {total_tests} | {total_passed} ✅ | {total_failed} ❌ | {total_skipped} ⚠️ | {total_duration:.2f}s ⏱️ |")
@@ -208,38 +261,3 @@ jobs:
         with:
           name: test-results
           path: test-results/
-
-      - name: Display coverage summary
-        if: always()
-        run: |
-          python3 - <<'EOF'
-          import glob, json, os
-
-          files = glob.glob('coverage/**/coverage.json', recursive=True)
-          if files:
-              with open(files[0]) as f:
-                  data = json.load(f)
-              total = data.get('percent_covered', 'N/A')
-              summary = [
-                  '### 📊 Code Coverage Summary',
-                  f'**Overall Coverage:** `{total}%`\n',
-                  '| File | Coverage | Lines |',
-                  '| --- | :---: | :---: |'
-              ]
-              for item in data.get('files', []):
-                  fname = item['file'].split('/')[-1]
-                  summary.append(f"| `{fname}` | {item['percent_covered']}% | {item['covered_lines']}/{item['total_lines']} |")
-              summary_text = '\n'.join(summary)
-              print(summary_text)
-              step_summary = os.getenv('GITHUB_STEP_SUMMARY')
-              if step_summary:
-                  with open(step_summary, 'a') as f:
-                      f.write(summary_text + '\n')
-          EOF
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: code-coverage-report
-          path: coverage/
