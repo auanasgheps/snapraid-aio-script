@@ -67,3 +67,54 @@ setup() {
   [ "$status" -eq 1 ]
   [[ "$output" =~ "c2_missing.content" ]]
 }
+
+@test "sanity_check: full 6-parity configuration — all parity files present exits 0" {
+  touch "$BATS_TEST_TMPDIR/p1.parity"
+  touch "$BATS_TEST_TMPDIR/p2.parity"
+  touch "$BATS_TEST_TMPDIR/p3.parity"
+  touch "$BATS_TEST_TMPDIR/p4.parity"
+  touch "$BATS_TEST_TMPDIR/p5.parity"
+  touch "$BATS_TEST_TMPDIR/p6.parity"
+  touch "$BATS_TEST_TMPDIR/c1.content"
+
+  PARITY_FILES=(
+    "$BATS_TEST_TMPDIR/p1.parity"
+    "$BATS_TEST_TMPDIR/p2.parity"
+    "$BATS_TEST_TMPDIR/p3.parity"
+    "$BATS_TEST_TMPDIR/p4.parity"
+    "$BATS_TEST_TMPDIR/p5.parity"
+    "$BATS_TEST_TMPDIR/p6.parity"
+  )
+  CONTENT_FILES=("$BATS_TEST_TMPDIR/c1.content")
+
+  run sanity_check
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "All parity files found." ]]
+  [[ "$output" =~ "All content files found." ]]
+}
+
+@test "sanity_check: full 6-parity configuration — missing 5-parity exits 1 with specific error" {
+  touch "$BATS_TEST_TMPDIR/p1.parity"
+  touch "$BATS_TEST_TMPDIR/p2.parity"
+  touch "$BATS_TEST_TMPDIR/p3.parity"
+  touch "$BATS_TEST_TMPDIR/p4.parity"
+  touch "$BATS_TEST_TMPDIR/p6.parity"
+  touch "$BATS_TEST_TMPDIR/c1.content"
+
+  PARITY_FILES=(
+    "$BATS_TEST_TMPDIR/p1.parity"
+    "$BATS_TEST_TMPDIR/p2.parity"
+    "$BATS_TEST_TMPDIR/p3.parity"
+    "$BATS_TEST_TMPDIR/p4.parity"
+    "$BATS_TEST_TMPDIR/missing_p5.parity"
+    "$BATS_TEST_TMPDIR/p6.parity"
+  )
+  CONTENT_FILES=("$BATS_TEST_TMPDIR/c1.content")
+
+  run sanity_check
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "ERROR - Parity file" ]]
+  [[ "$output" =~ "missing_p5.parity" ]]
+  run grep -q "missing_p5.parity" "$TMP_OUTPUT"
+  [ "$status" -eq 0 ]
+}

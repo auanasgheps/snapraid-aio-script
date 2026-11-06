@@ -1441,22 +1441,22 @@ search_conf_files() {
 
 # Extract SnapRAID info (content and parity files) from the config file
 extract_snapraid_info() {
-  # Extract info from SnapRAID config
-  SNAPRAID_CONF_LINES=$(grep -E '^[^#;]' "$SNAPRAID_CONF")
+  # Extract info from SnapRAID config (ignore comments and empty lines)
+  SNAPRAID_CONF_LINES=$(grep -v -E '^[[:space:]]*([#;]|$)' "$SNAPRAID_CONF")
 
   IFS=$'\n'
   # Build an array of content files
   mapfile -t CONTENT_FILES < <(echo "$SNAPRAID_CONF_LINES" \
-    | grep -E '^content ' \
-    | cut -d ' ' -f2 \
-    | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    | sed -nE 's/^[[:space:]]*content[[:space:]]+//p' \
+    | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+    | sed '/^[[:space:]]*$/d')
 
   # Build an array of parity files
   mapfile -t PARITY_FILES < <(echo "$SNAPRAID_CONF_LINES" \
-    | grep -E '^([1-6z]-)*parity' \
-    | cut -d ' ' -f2- \
+    | sed -nE 's/^[[:space:]]*([1-6z]-)?parity[[:space:]]+//p' \
     | tr ',' '\n' \
-    | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+    | sed '/^[[:space:]]*$/d')
 
   unset IFS
 }

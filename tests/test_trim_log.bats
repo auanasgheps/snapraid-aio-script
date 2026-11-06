@@ -78,3 +78,27 @@ EOF
   [ "${lines[2]}" = "SUMMARY: Equal [10] - Added [2] - Deleted [0] - Moved [0] - Copied [0] - Updated [1]" ]
   [ "${lines[4]}" = "Everything OK" ]
 }
+
+@test "trim_log: preserves multi-parity sync/scrub progress lines" {
+  input=$(
+    cat <<'EOF'
+parity 0% |
+2-parity 0% |
+3-parity 0% |
+4-parity 0% |
+5-parity 0% |
+6-parity 0% |
+raid 5% |
+hash 3% |
+EOF
+  )
+  run trim_log <<<"$input"
+  [ "$status" -eq 0 ]
+  [ "${#lines[@]}" -eq 8 ]
+  [ "${lines[0]}" = "parity 0% |" ]
+  [ "${lines[1]}" = "2-parity 0% |" ]
+  [ "${lines[2]}" = "3-parity 0% |" ]
+  [ "${lines[3]}" = "4-parity 0% |" ]
+  [ "${lines[4]}" = "5-parity 0% |" ]
+  [ "${lines[5]}" = "6-parity 0% |" ]
+}
