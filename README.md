@@ -5,7 +5,7 @@ There are many SnapRAID scripts out there, but none had the features I wanted. S
 
 It is meant to be run periodically (daily), do the heavy lifting and send an email you will actually read.
 
-Supports single and multi-parity configurations (up to 6 parity levels, z-parity, and split parity). It is highly customizable and has been tested with Debian 12 and [OpenMediaVault 7](https://github.com/openmediavault/openmediavault).
+Supports single and multi-parity configurations (up to 6 parity levels, z-parity, and split parity). It is highly customizable and has been tested with Debian 13 and [OpenMediaVault 8](https://github.com/openmediavault/openmediavault).
 
 Contributions are welcome!
 
@@ -274,6 +274,10 @@ Dependencies that require manual installation:
 
 # Installation and usage
 
+> ### 💡OMV and SnapRAID plugin
+> If you are a OpenMediaVault 8 user, install `openmediavault-snapraid-aio` plugin from the official repo, it's this exact script but nicely packaged for OMV. Everything can be configured from the WebGUI and you don't need to handle the config file manually. 
+> I am in charge for this plugin.
+
 1. Install the packages listed in the Requirements section if you're not running a distro with `apt` package manager
 2. Download the latest version from [Releases](https://github.com/auanasgheps/snapraid-aio-script/releases) 
 3. Extract the archive wherever you prefer 
@@ -291,8 +295,8 @@ Dependencies that require manual installation:
      - Use [Crontab Guru](https://crontab.guru/) to easily pick your preferred time
      - Add Command Line arguments if needed (see below).
 	   
-It is tested on OMV7 (Debian 12), but will work on other distros. In such case you may have to change the mail binary or SnapRAID location. 
-If your distro doesn't have apt or is not Debian-based, you'll need to manually install the dependencies.  
+It is tested on OMV8 (Debian 13), but will work on any Linux distro. In such case you may have to change the mail binary or SnapRAID location.
+If your distro doesn't have `apt` or is not Debian-based, you'll need to manually install the dependencies.  
 
 ### Command Line arguments
 
@@ -311,11 +315,6 @@ The script supports command line arguments to override the default behaviour:
 If you start with empty disks, you cannot use (yet) this script, since it expects SnapRAID files which would not be found.
 
 First, manually run `snapraid sync`. Once completed, the array will be ready to be used with this script.
-
-## OMV and SnapRAID plugin
-This script perfectly replaces the OMV built-in script. 
-In the OMV GUI, browse to _System > Scheduled Tasks_ and remove/disable the `omv-snapraid-diff` job. 
-Also, you can igore all the settings you find at _Services > SnapRAID > Diff Script Settings_, since they only apply to the plugin's built-in script. 
 
 ### Running on OMV7 and later 
 Since OMV7, SnapRAID plugins introduced support for multiple arrays. This means each SnapRAID config file does not have a predictable name, unlike what occurred with OMV6 or standard SnapRAID installs. 
