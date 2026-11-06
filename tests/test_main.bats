@@ -129,4 +129,47 @@ EOF
   [ "$status" -eq 0 ]
   run grep "scrub" "$MOCK_SNAPRAID_LOG"
   [ "$status" -eq 0 ]
+  run grep -- "--force-zero" "$MOCK_SNAPRAID_LOG"
+  [ "$status" -ne 0 ]
 }
+
+@test "main: executes full workflow with --force-zero CLI flag passed to snapraid sync" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+
+  run main --config "$CONF_FILE" --force-zero
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "SnapRAID SYNC" ]]
+  [ -f "$MOCK_SNAPRAID_LOG" ]
+  run grep -- "-h --force-zero -q sync" "$MOCK_SNAPRAID_LOG"
+  [ "$status" -eq 0 ]
+}
+
+@test "main: executes full workflow with FORCE_ZERO=1 in config passed to snapraid sync" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^FORCE_ZERO=.*/FORCE_ZERO=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "SnapRAID SYNC" ]]
+  [ -f "$MOCK_SNAPRAID_LOG" ]
+  run grep -- "-h --force-zero -q sync" "$MOCK_SNAPRAID_LOG"
+  [ "$status" -eq 0 ]
+}
+
+@test "main: executes full workflow with --force-zero and PREHASH=0" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^PREHASH=.*/PREHASH=0/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE" --force-zero
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "SnapRAID SYNC" ]]
+  [ -f "$MOCK_SNAPRAID_LOG" ]
+  run grep -- "--force-zero -q sync" "$MOCK_SNAPRAID_LOG"
+  [ "$status" -eq 0 ]
+  run grep -- "-h" "$MOCK_SNAPRAID_LOG"
+  [ "$status" -ne 0 ]
+}
+
