@@ -64,6 +64,19 @@ EOF
   [ "$status" -eq 0 ]
 }
 
+@test "send_mail: warns when APPRISE_EMAIL=1 and APPRISE_BIN is not set or not executable" {
+  APPRISE_EMAIL=1
+  APPRISE_BIN="/nonexistent/apprise"
+
+  run send_mail <<'EOF'
+Body text
+EOF
+
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "Error: Apprise binary not found or not executable" ]]
+  [[ ! "$output" =~ "command not found" ]]
+}
+
 @test "send_mail: warns when MAIL_BIN is not set" {
   EMAIL_ADDRESS="admin@example.com"
   MAIL_BIN=""

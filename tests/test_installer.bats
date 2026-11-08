@@ -80,6 +80,18 @@ setup() {
   [[ "$output" =~ "SU: - testuser -c echo hello" ]]
 }
 
+@test "check_and_install_apprise: resolves immediately when apprise is available in PATH" {
+  command_exists() { [ "$1" = "apprise" ]; }
+  command() {
+    if [ "$1" = "-v" ] && [ "$2" = "apprise" ]; then
+      echo "/custom/bin/apprise"
+    fi
+  }
+
+  check_and_install_apprise
+  [ "$APPRISE_BIN" = "/custom/bin/apprise" ]
+}
+
 @test "check_and_install_apprise: returns 1 when pipx and apt-get are missing" {
   command_exists() { return 1; }
 
@@ -89,7 +101,7 @@ setup() {
 }
 
 @test "check_and_install_apprise: resolves immediately if apprise exists in PIPX_BIN_DIR" {
-  command_exists() { return 0; }
+  command_exists() { [ "$1" = "pipx" ]; }
   local fake_bin_dir="$BATS_TEST_TMPDIR/pipx_bin"
   mkdir -p "$fake_bin_dir"
   touch "$fake_bin_dir/apprise"
@@ -104,7 +116,7 @@ setup() {
 }
 
 @test "check_and_install_apprise: resolves from user .local/bin/apprise" {
-  command_exists() { return 0; }
+  command_exists() { [ "$1" = "pipx" ]; }
   local fake_home="$BATS_TEST_TMPDIR/fake_home"
   mkdir -p "$fake_home/.local/bin"
   touch "$fake_home/.local/bin/apprise"
@@ -118,7 +130,7 @@ setup() {
 }
 
 @test "check_and_install_apprise: installs via pipx if not initially found" {
-  command_exists() { return 0; }
+  command_exists() { [ "$1" = "pipx" ]; }
   local fake_home="$BATS_TEST_TMPDIR/fake_home"
   mkdir -p "$fake_home/.local/bin"
   user_home() { echo "$fake_home"; }
@@ -141,7 +153,7 @@ setup() {
 }
 
 @test "check_and_install_apprise: returns 1 when installation cannot resolve binary" {
-  command_exists() { return 0; }
+  command_exists() { [ "$1" = "pipx" ]; }
   user_home() { echo "$BATS_TEST_TMPDIR/nonexistent"; }
   as_user_login() { echo ""; }
   pipx() { return 1; }

@@ -163,9 +163,11 @@ main() {
       echo "Apprise service notification is enabled."
       if check_and_install_apprise; then
         if [ "$APPRISE" -eq 1 ] && [ "${APPRISE_ON_ERROR_ONLY:-0}" -ne 1 ]; then
-          for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
-            "$APPRISE_BIN" -b "SnapRAID Script Job started" "$APPRISE_URL_U"
-          done
+          if [ -n "${APPRISE_BIN:-}" ] && [ -x "$APPRISE_BIN" ]; then
+            for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
+              "$APPRISE_BIN" -b "SnapRAID Script Job started" "$APPRISE_URL_U"
+            done
+          fi
         fi
       fi
     fi
@@ -994,12 +996,17 @@ notify_success() {
   if [ "$APPRISE" -eq 1 ] && [ "${APPRISE_ON_ERROR_ONLY:-0}" -ne 1 ]; then
     echo "Sending notification using Apprise service(s)."
 
-    # Convert new line commands "\n" in true new lines
-    APPRISE_BODY="${NOTIFY_OUTPUT//\\n/$'\n'}"
+    if [ -z "${APPRISE_BIN:-}" ] || [ ! -x "$APPRISE_BIN" ]; then
+      echo "Error: Apprise binary not found or not executable. Notification could not be sent."
+      mklog "ERROR: Apprise binary not found or not executable. Notification could not be sent."
+    else
+      # Convert new line commands "\n" in true new lines
+      APPRISE_BODY="${NOTIFY_OUTPUT//\\n/$'\n'}"
 
-    for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
-      "$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$APPRISE_BODY" "$APPRISE_URL_U"
-    done
+      for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
+        "$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$APPRISE_BODY" "$APPRISE_URL_U"
+      done
+    fi
   fi
 
   if [ "$APPRISE_EMAIL" -eq 1 ]; then
@@ -1034,16 +1041,21 @@ notify_warning() {
   if [ "$APPRISE" -eq 1 ]; then
     echo "Sending notification using Apprise service(s)."
 
-    # Convert new line commands "\n" in true new lines
-    APPRISE_BODY="${NOTIFY_OUTPUT//\\n/$'\n'}"
+    if [ -z "${APPRISE_BIN:-}" ] || [ ! -x "$APPRISE_BIN" ]; then
+      echo "Error: Apprise binary not found or not executable. Notification could not be sent."
+      mklog "WARN: Apprise binary not found or not executable. Notification could not be sent."
+    else
+      # Convert new line commands "\n" in true new lines
+      APPRISE_BODY="${NOTIFY_OUTPUT//\\n/$'\n'}"
 
-    for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
-      if [ "$APPRISE_ATTACH" -eq 1 ]; then
-        "$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$APPRISE_BODY" -a "$TMP_OUTPUT" "$APPRISE_URL_U"
-      else
-        "$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$APPRISE_BODY" "$APPRISE_URL_U"
-      fi
-    done
+      for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
+        if [ "$APPRISE_ATTACH" -eq 1 ]; then
+          "$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$APPRISE_BODY" -a "$TMP_OUTPUT" "$APPRISE_URL_U"
+        else
+          "$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$APPRISE_BODY" "$APPRISE_URL_U"
+        fi
+      done
+    fi
   fi
 
   if [ "$APPRISE_EMAIL" -eq 1 ]; then
@@ -1094,30 +1106,34 @@ notify_snapraid_info() {
   fi
 
   if [ "$APPRISE" -eq 1 ]; then
-    # Create temp file to attach if needed
-    if [ "${#INFO_MESSAGE}" -gt 2000 ]; then
-      echo "$INFO_MESSAGE" >/tmp/snapraid_info_msg.txt
-      APPRISE_ATTACHMENT="-a /tmp/snapraid_info_msg.txt"
-      APPRISE_BODY="⚠️ SnapRAID output exceeds 2000 characters. The output is attached."
+    if [ -z "${APPRISE_BIN:-}" ] || [ ! -x "$APPRISE_BIN" ]; then
+      echo "Error: Apprise binary not found or not executable. Summary notification could not be sent."
+      mklog "WARN: Apprise binary not found or not executable. Summary notification could not be sent."
     else
-      APPRISE_ATTACHMENT=""
-      APPRISE_BODY="$INFO_MESSAGE"
-    fi
-
-    for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
-      if [[ "$APPRISE_URL_U" == *"discord://"* ]]; then
-        # For Discord, use the URL without format (markdown) parameter
-        "$APPRISE_BIN" -v -b "$APPRISE_BODY" $APPRISE_ATTACHMENT "$APPRISE_URL_U"
+      # Create temp file to attach if needed
+      if [ "${#INFO_MESSAGE}" -gt 2000 ]; then
+        echo "$INFO_MESSAGE" >/tmp/snapraid_info_msg.txt
+        APPRISE_ATTACHMENT="-a /tmp/snapraid_info_msg.txt"
+        APPRISE_BODY="⚠️ SnapRAID output exceeds 2000 characters. The output is attached."
       else
-        # For all other services, use markdown formatting
-        APPRISE_URL_FORMAT="${APPRISE_URL_U}?format=markdown"
-        "$APPRISE_BIN" -v -b "$APPRISE_BODY" $APPRISE_ATTACHMENT "$APPRISE_URL_FORMAT"
+        APPRISE_ATTACHMENT=""
+        APPRISE_BODY="$INFO_MESSAGE"
       fi
-    done
 
-    # Clean up temp file if it was used
-    rm -f /tmp/snapraid_info_msg.txt
+      for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
+        if [[ "$APPRISE_URL_U" == *"discord://"* ]]; then
+          # For Discord, use the URL without format (markdown) parameter
+          "$APPRISE_BIN" -v -b "$APPRISE_BODY" $APPRISE_ATTACHMENT "$APPRISE_URL_U"
+        else
+          # For all other services, use markdown formatting
+          APPRISE_URL_FORMAT="${APPRISE_URL_U}?format=markdown"
+          "$APPRISE_BIN" -v -b "$APPRISE_BODY" $APPRISE_ATTACHMENT "$APPRISE_URL_FORMAT"
+        fi
+      done
 
+      # Clean up temp file if it was used
+      rm -f /tmp/snapraid_info_msg.txt
+    fi
   fi
 }
 
@@ -1162,7 +1178,10 @@ send_mail() {
     fi
   elif [ "$APPRISE_EMAIL" -eq 1 ]; then
     echo "Sending email report using Apprise service."
-    if [ "$APPRISE_EMAIL_ATTACH" -eq 1 ] && [ "$APPRISE_EMAIL_ATTACH_DO" -eq 1 ]; then
+    if [ -z "${APPRISE_BIN:-}" ] || [ ! -x "$APPRISE_BIN" ]; then
+      echo "Error: Apprise binary not found or not executable. Email report could not be sent."
+      mklog "ERROR: Apprise binary not found or not executable. Email report could not be sent."
+    elif [ "$APPRISE_EMAIL_ATTACH" -eq 1 ] && [ "$APPRISE_EMAIL_ATTACH_DO" -eq 1 ]; then
       "$APPRISE_BIN" -vv -i "html" -t "$SUBJECT" -b "$body" -a "$TMP_OUTPUT" "$APPRISE_EMAIL_URL"
     else
       "$APPRISE_BIN" -vv -i "html" -t "$SUBJECT" -b "$body" "$APPRISE_EMAIL_URL"
@@ -1290,6 +1309,21 @@ as_user_login() {
 }
 
 check_and_install_apprise() {
+  # Fast path: check if apprise is already available in PATH or standard system locations
+  if command_exists apprise; then
+    APPRISE_BIN="$(command -v apprise)"
+    export APPRISE_BIN
+    return 0
+  elif [ -x "/usr/local/bin/apprise" ]; then
+    APPRISE_BIN="/usr/local/bin/apprise"
+    export APPRISE_BIN
+    return 0
+  elif [ -x "/usr/bin/apprise" ]; then
+    APPRISE_BIN="/usr/bin/apprise"
+    export APPRISE_BIN
+    return 0
+  fi
+
   # Decide owner: original caller if available, else root
   local USER_TO_RUN="${AIO_CALLER_USER:-root}"
   local HOME_TO_RUN
@@ -1341,6 +1375,12 @@ check_and_install_apprise() {
     APPRISE_BIN="$PIPX_BIN_DIR_USER/apprise"
   elif [ -x "$HOME_TO_RUN/.local/bin/apprise" ]; then
     APPRISE_BIN="$HOME_TO_RUN/.local/bin/apprise"
+  elif command_exists apprise; then
+    APPRISE_BIN="$(command -v apprise)"
+  elif [ -x "/usr/local/bin/apprise" ]; then
+    APPRISE_BIN="/usr/local/bin/apprise"
+  elif [ -x "/usr/bin/apprise" ]; then
+    APPRISE_BIN="/usr/bin/apprise"
   fi
 
   # Final check & export
