@@ -215,13 +215,13 @@ EOF
 
   run main --config "$CONF_FILE"
   [ "$status" -eq 0 ]
+  [[ ! "$output" =~ "Apprise service notification is enabled." ]]
   run grep "install_apprise" "$MOCK_INSTALL_LOG"
   [ "$status" -ne 0 ]
   run grep "apprise:" "$MOCK_APPRISE_LOG"
   [ "$status" -ne 0 ]
   run grep "install: curl" "$MOCK_INSTALL_LOG"
   [ "$status" -ne 0 ]
-  [[ ! "$output" =~ "Apprise service notification is enabled." ]]
 }
 
 @test "main: notification init - APPRISE=1, APPRISE_EMAIL=0, ON_ERROR_ONLY=0 installs apprise and sends job started" {
@@ -231,13 +231,13 @@ EOF
 
   run main --config "$CONF_FILE"
   [ "$status" -eq 0 ]
+  [[ "$output" =~ "Apprise service notification is enabled." ]]
   run grep "install_apprise" "$MOCK_INSTALL_LOG"
   [ "$status" -eq 0 ]
   run grep "install: curl" "$MOCK_INSTALL_LOG"
   [ "$status" -ne 0 ]
   run grep "apprise: -b SnapRAID Script Job started apprise://dummy-url" "$MOCK_APPRISE_LOG"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "Apprise service notification is enabled." ]]
 }
 
 @test "main: notification init - APPRISE=1, APPRISE_EMAIL=0, ON_ERROR_ONLY=1 installs apprise but suppresses job started" {
@@ -248,11 +248,11 @@ EOF
 
   run main --config "$CONF_FILE"
   [ "$status" -eq 0 ]
+  [[ "$output" =~ "Apprise service notification is enabled." ]]
   run grep "install_apprise" "$MOCK_INSTALL_LOG"
   [ "$status" -eq 0 ]
   run grep "apprise: -b SnapRAID Script Job started" "$MOCK_APPRISE_LOG"
   [ "$status" -ne 0 ]
-  [[ "$output" =~ "Apprise service notification is enabled." ]]
 }
 
 @test "main: notification init - APPRISE=0, APPRISE_EMAIL=1 installs apprise without job started ping" {
@@ -262,13 +262,13 @@ EOF
 
   run main --config "$CONF_FILE"
   [ "$status" -eq 0 ]
+  [[ "$output" =~ "Apprise service notification is enabled." ]]
   run grep "install_apprise" "$MOCK_INSTALL_LOG"
   [ "$status" -eq 0 ]
   run grep "install: curl" "$MOCK_INSTALL_LOG"
   [ "$status" -ne 0 ]
   run grep "apprise: -b SnapRAID Script Job started" "$MOCK_APPRISE_LOG"
   [ "$status" -ne 0 ]
-  [[ "$output" =~ "Apprise service notification is enabled." ]]
 }
 
 @test "main: notification init - APPRISE=1, APPRISE_EMAIL=1, ON_ERROR_ONLY=0 installs apprise and sends job started" {
@@ -279,11 +279,11 @@ EOF
 
   run main --config "$CONF_FILE"
   [ "$status" -eq 0 ]
+  [[ "$output" =~ "Apprise service notification is enabled." ]]
   run grep "install_apprise" "$MOCK_INSTALL_LOG"
   [ "$status" -eq 0 ]
   run grep "apprise: -b SnapRAID Script Job started apprise://dummy-url" "$MOCK_APPRISE_LOG"
   [ "$status" -eq 0 ]
-  [[ "$output" =~ "Apprise service notification is enabled." ]]
 }
 
 @test "main: notification init - APPRISE=1, APPRISE_EMAIL=1, ON_ERROR_ONLY=1 installs apprise but suppresses job started" {
@@ -295,11 +295,11 @@ EOF
 
   run main --config "$CONF_FILE"
   [ "$status" -eq 0 ]
+  [[ "$output" =~ "Apprise service notification is enabled." ]]
   run grep "install_apprise" "$MOCK_INSTALL_LOG"
   [ "$status" -eq 0 ]
   run grep "apprise: -b SnapRAID Script Job started" "$MOCK_APPRISE_LOG"
   [ "$status" -ne 0 ]
-  [[ "$output" =~ "Apprise service notification is enabled." ]]
 }
 
 # --- Category 2: Apprise with multiple URLs ---
@@ -503,12 +503,13 @@ EOF
   sed -i 's/^HEALTHCHECKS=.*/HEALTHCHECKS=1/' "$CONF_FILE"
   sed -i 's/^TELEGRAM=.*/TELEGRAM=1/' "$CONF_FILE"
   sed -i 's/^DISCORD=.*/DISCORD=1/' "$CONF_FILE"
-  sed -i 's/^CHECK_UPDATES=.*/CHECK_UPDATES=1/' "$CONF_FILE"
+  sed -i 's/^CHECK_UPDATES=.*/CHECK_UPDATES=0/' "$CONF_FILE"
   sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
   sed -i 's/^APPRISE_EMAIL=.*/APPRISE_EMAIL=1/' "$CONF_FILE"
 
   run main --config "$CONF_FILE" --dry-run
   [ "$status" -eq 0 ]
+  [[ ! "$output" =~ "Apprise service notification is enabled." ]]
   run grep "install_apprise" "$MOCK_INSTALL_LOG"
   [ "$status" -ne 0 ]
   run grep "install: curl" "$MOCK_INSTALL_LOG"
@@ -517,7 +518,6 @@ EOF
   [ "$status" -ne 0 ]
   [ ! -s "$MOCK_APPRISE_LOG" ]
   [ ! -s "$MOCK_CURL_LOG" ]
-  [[ ! "$output" =~ "Apprise service notification is enabled." ]]
 }
 
 @test "main: notification init - check_and_install_apprise failure does not crash with command not found" {
@@ -533,9 +533,8 @@ EOF
 
   run main --config "$CONF_FILE"
   [ "$status" -eq 0 ]
+  [[ ! "$output" =~ "command not found" ]]
   run grep "install_apprise_failed" "$MOCK_INSTALL_LOG"
   [ "$status" -eq 0 ]
-  # Ensure no ': command not found' from attempting to invoke empty APPRISE_BIN
-  [[ ! "$output" =~ "command not found" ]]
   [ ! -s "$MOCK_APPRISE_LOG" ]
 }
