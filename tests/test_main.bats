@@ -6,14 +6,22 @@ source "$(realpath "$(dirname "$BATS_TEST_FILENAME")")/helpers/load_functions.ba
 output_to_file_screen() { :; }
 close_output_and_wait() { :; }
 check_root() { :; }
-check_and_install() { :; }
-check_and_install_apprise() { :; }
+check_and_install() {
+  echo "install: $1" >>"${MOCK_INSTALL_LOG}"
+}
+check_and_install_apprise() {
+  echo "install_apprise" >>"${MOCK_INSTALL_LOG}"
+  APPRISE_BIN="$BATS_TEST_TMPDIR/bin/apprise"
+  export APPRISE_BIN
+}
 mklog() { :; }
 mklog_noconfig() { :; }
 notify_warning() { :; }
 notify_success() { :; }
 send_mail() { :; }
-curl() { :; }
+curl() {
+  echo "curl: $*" >>"${MOCK_CURL_LOG}"
+}
 
 setup() {
   export PATH="$(realpath "$(dirname "$BATS_TEST_FILENAME")")/mock:$PATH"
@@ -33,6 +41,21 @@ setup() {
   SNAPRAID_LOG="$BATS_TEST_TMPDIR/snapraid.log"
   export TMP_OUTPUT TMP_WARN_FILE SYNC_WARN_FILE SCRUB_COUNT_FILE SNAPRAID_LOG
 
+  MOCK_CURL_LOG="${BATS_TEST_TMPDIR}/curl_main.log"
+  MOCK_APPRISE_LOG="${BATS_TEST_TMPDIR}/apprise_main.log"
+  MOCK_INSTALL_LOG="${BATS_TEST_TMPDIR}/install_main.log"
+  export MOCK_CURL_LOG MOCK_APPRISE_LOG MOCK_INSTALL_LOG
+  rm -f "$MOCK_CURL_LOG" "$MOCK_APPRISE_LOG" "$MOCK_INSTALL_LOG"
+  touch "$MOCK_CURL_LOG" "$MOCK_APPRISE_LOG" "$MOCK_INSTALL_LOG"
+
+  # Create mock apprise binary that records arguments
+  mkdir -p "$BATS_TEST_TMPDIR/bin"
+  cat >"$BATS_TEST_TMPDIR/bin/apprise" <<'EOF'
+#!/usr/bin/env bash
+echo "apprise: $*" >>"${MOCK_APPRISE_LOG}"
+EOF
+  chmod +x "$BATS_TEST_TMPDIR/bin/apprise"
+
   SNAPRAID_CONF_FILE="$BATS_TEST_TMPDIR/snapraid.conf"
   cat >"$SNAPRAID_CONF_FILE" <<'EOF'
 parity /dev/null
@@ -48,10 +71,17 @@ SNAPRAID_LOG="$SNAPRAID_LOG"
 EMAIL_ADDRESS=""
 CHECK_UPDATES=0
 HEALTHCHECKS=0
+HEALTHCHECKS_ID="dummy-id"
+HEALTHCHECKS_URL="https://hc-ping.com/"
 TELEGRAM=0
+TELEGRAM_TOKEN="dummy-token"
+TELEGRAM_CHAT_ID="dummy-chat"
 DISCORD=0
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/dummy"
 APPRISE=0
 APPRISE_EMAIL=0
+APPRISE_URL=("apprise://dummy-url")
+APPRISE_ON_ERROR_ONLY=0
 MANAGE_SERVICES=0
 CUSTOM_HOOK=0
 SPINDOWN=0
@@ -173,3 +203,339 @@ EOF
   [ "$status" -ne 0 ]
 }
 
+# ==============================================================================
+# Notification Initialization Matrix Tests
+# ==============================================================================
+
+# --- Category 1: Apprise alone with other notification channels disabled ---
+
+@test "main: notification init - APPRISE=0, APPRISE_EMAIL=0 skips apprise entirely" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -ne 0 ]
+  run grep "apprise:" "$MOCK_APPRISE_LOG"
+  [ "$status" -ne 0 ]
+  run grep "install: curl" "$MOCK_INSTALL_LOG"
+  [ "$status" -ne 0 ]
+  [[ ! "$output" =~ "Apprise service notification is enabled." ]]
+}
+
+@test "main: notification init - APPRISE=1, APPRISE_EMAIL=0, ON_ERROR_ONLY=0 installs apprise and sends job started" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install: curl" "$MOCK_INSTALL_LOG"
+  [ "$status" -ne 0 ]
+  run grep "apprise: -b SnapRAID Script Job started apprise://dummy-url" "$MOCK_APPRISE_LOG"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "Apprise service notification is enabled." ]]
+}
+
+@test "main: notification init - APPRISE=1, APPRISE_EMAIL=0, ON_ERROR_ONLY=1 installs apprise but suppresses job started" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE_ON_ERROR_ONLY=.*/APPRISE_ON_ERROR_ONLY=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "apprise: -b SnapRAID Script Job started" "$MOCK_APPRISE_LOG"
+  [ "$status" -ne 0 ]
+  [[ "$output" =~ "Apprise service notification is enabled." ]]
+}
+
+@test "main: notification init - APPRISE=0, APPRISE_EMAIL=1 installs apprise without job started ping" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^APPRISE_EMAIL=.*/APPRISE_EMAIL=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install: curl" "$MOCK_INSTALL_LOG"
+  [ "$status" -ne 0 ]
+  run grep "apprise: -b SnapRAID Script Job started" "$MOCK_APPRISE_LOG"
+  [ "$status" -ne 0 ]
+  [[ "$output" =~ "Apprise service notification is enabled." ]]
+}
+
+@test "main: notification init - APPRISE=1, APPRISE_EMAIL=1, ON_ERROR_ONLY=0 installs apprise and sends job started" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE_EMAIL=.*/APPRISE_EMAIL=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "apprise: -b SnapRAID Script Job started apprise://dummy-url" "$MOCK_APPRISE_LOG"
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ "Apprise service notification is enabled." ]]
+}
+
+@test "main: notification init - APPRISE=1, APPRISE_EMAIL=1, ON_ERROR_ONLY=1 installs apprise but suppresses job started" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE_EMAIL=.*/APPRISE_EMAIL=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE_ON_ERROR_ONLY=.*/APPRISE_ON_ERROR_ONLY=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "apprise: -b SnapRAID Script Job started" "$MOCK_APPRISE_LOG"
+  [ "$status" -ne 0 ]
+  [[ "$output" =~ "Apprise service notification is enabled." ]]
+}
+
+# --- Category 2: Apprise with multiple URLs ---
+
+@test "main: notification init - APPRISE=1 sends job started to multiple URLs" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
+  sed -i 's|^APPRISE_URL=.*|APPRISE_URL=("apprise://service1" "apprise://service2" "apprise://service3")|' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "apprise: -b SnapRAID Script Job started apprise://service1" "$MOCK_APPRISE_LOG"
+  [ "$status" -eq 0 ]
+  run grep "apprise: -b SnapRAID Script Job started apprise://service2" "$MOCK_APPRISE_LOG"
+  [ "$status" -eq 0 ]
+  run grep "apprise: -b SnapRAID Script Job started apprise://service3" "$MOCK_APPRISE_LOG"
+  [ "$status" -eq 0 ]
+}
+
+# --- Category 3: Interactions between Apprise and other channels ---
+
+@test "main: notification init - HEALTHCHECKS=1 with APPRISE=1 initializes both" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^HEALTHCHECKS=.*/HEALTHCHECKS=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install: curl" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install: jq" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "https://hc-ping.com/dummy-id/start" "$MOCK_CURL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "apprise: -b SnapRAID Script Job started" "$MOCK_APPRISE_LOG"
+  [ "$status" -eq 0 ]
+}
+
+@test "main: notification init - HEALTHCHECKS=1 with APPRISE=0 skips apprise" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^HEALTHCHECKS=.*/HEALTHCHECKS=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "https://hc-ping.com/dummy-id/start" "$MOCK_CURL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -ne 0 ]
+  run grep "apprise:" "$MOCK_APPRISE_LOG"
+  [ "$status" -ne 0 ]
+}
+
+@test "main: notification init - TELEGRAM=1 with APPRISE=1 initializes both" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^TELEGRAM=.*/TELEGRAM=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install: curl" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install: jq" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "https://api.telegram.org/botdummy-token/sendMessage" "$MOCK_CURL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "apprise: -b SnapRAID Script Job started" "$MOCK_APPRISE_LOG"
+  [ "$status" -eq 0 ]
+}
+
+@test "main: notification init - TELEGRAM=1 with APPRISE=0 skips apprise" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^TELEGRAM=.*/TELEGRAM=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "https://api.telegram.org/botdummy-token/sendMessage" "$MOCK_CURL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -ne 0 ]
+}
+
+@test "main: notification init - DISCORD=1 with APPRISE=1 initializes both" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^DISCORD=.*/DISCORD=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install: curl" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install: jq" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "https://discord.com/api/webhooks/dummy" "$MOCK_CURL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "apprise: -b SnapRAID Script Job started" "$MOCK_APPRISE_LOG"
+  [ "$status" -eq 0 ]
+}
+
+@test "main: notification init - DISCORD=1 with APPRISE=0 skips apprise" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^DISCORD=.*/DISCORD=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "https://discord.com/api/webhooks/dummy" "$MOCK_CURL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -ne 0 ]
+}
+
+@test "main: notification init - CHECK_UPDATES=1 with APPRISE=1 initializes both" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^CHECK_UPDATES=.*/CHECK_UPDATES=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install: curl" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "apprise: -b SnapRAID Script Job started" "$MOCK_APPRISE_LOG"
+  [ "$status" -eq 0 ]
+}
+
+@test "main: notification init - CHECK_UPDATES=1 with APPRISE=0, APPRISE_EMAIL=1 initializes apprise" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^CHECK_UPDATES=.*/CHECK_UPDATES=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE_EMAIL=.*/APPRISE_EMAIL=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install: curl" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "apprise: -b SnapRAID Script Job started" "$MOCK_APPRISE_LOG"
+  [ "$status" -ne 0 ]
+}
+
+@test "main: notification init - CHECK_UPDATES=1 with APPRISE=0, APPRISE_EMAIL=0 skips apprise" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^CHECK_UPDATES=.*/CHECK_UPDATES=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install: curl" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -ne 0 ]
+}
+
+@test "main: notification init - ALL channels enabled initializes all services" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^HEALTHCHECKS=.*/HEALTHCHECKS=1/' "$CONF_FILE"
+  sed -i 's/^TELEGRAM=.*/TELEGRAM=1/' "$CONF_FILE"
+  sed -i 's/^DISCORD=.*/DISCORD=1/' "$CONF_FILE"
+  sed -i 's/^CHECK_UPDATES=.*/CHECK_UPDATES=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE_EMAIL=.*/APPRISE_EMAIL=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install: curl" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "https://hc-ping.com/dummy-id/start" "$MOCK_CURL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "https://api.telegram.org/botdummy-token/sendMessage" "$MOCK_CURL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "https://discord.com/api/webhooks/dummy" "$MOCK_CURL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  run grep "apprise: -b SnapRAID Script Job started" "$MOCK_APPRISE_LOG"
+  [ "$status" -eq 0 ]
+}
+
+# --- Category 4: Dry-run and failure modes ---
+
+@test "main: notification init - --dry-run suppresses all notification checks and pings" {
+  pgrep() { return 1; }
+  sed -i 's/^HEALTHCHECKS=.*/HEALTHCHECKS=1/' "$CONF_FILE"
+  sed -i 's/^TELEGRAM=.*/TELEGRAM=1/' "$CONF_FILE"
+  sed -i 's/^DISCORD=.*/DISCORD=1/' "$CONF_FILE"
+  sed -i 's/^CHECK_UPDATES=.*/CHECK_UPDATES=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
+  sed -i 's/^APPRISE_EMAIL=.*/APPRISE_EMAIL=1/' "$CONF_FILE"
+
+  run main --config "$CONF_FILE" --dry-run
+  [ "$status" -eq 0 ]
+  run grep "install_apprise" "$MOCK_INSTALL_LOG"
+  [ "$status" -ne 0 ]
+  run grep "install: curl" "$MOCK_INSTALL_LOG"
+  [ "$status" -ne 0 ]
+  run grep "install: jq" "$MOCK_INSTALL_LOG"
+  [ "$status" -ne 0 ]
+  [ ! -s "$MOCK_APPRISE_LOG" ]
+  [ ! -s "$MOCK_CURL_LOG" ]
+  [[ ! "$output" =~ "Apprise service notification is enabled." ]]
+}
+
+@test "main: notification init - check_and_install_apprise failure does not crash with command not found" {
+  pgrep() { return 1; }
+  export MOCK_DIFF_SCENARIO="diff_adds_only"
+  sed -i 's/^APPRISE=.*/APPRISE=1/' "$CONF_FILE"
+
+  # Stub check_and_install_apprise to simulate failure: returns 1 without exporting APPRISE_BIN
+  check_and_install_apprise() {
+    echo "install_apprise_failed" >>"${MOCK_INSTALL_LOG}"
+    return 1
+  }
+
+  run main --config "$CONF_FILE"
+  [ "$status" -eq 0 ]
+  run grep "install_apprise_failed" "$MOCK_INSTALL_LOG"
+  [ "$status" -eq 0 ]
+  # Ensure no ': command not found' from attempting to invoke empty APPRISE_BIN
+  [[ ! "$output" =~ "command not found" ]]
+  [ ! -s "$MOCK_APPRISE_LOG" ]
+}
